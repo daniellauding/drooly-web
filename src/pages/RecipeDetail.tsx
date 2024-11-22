@@ -1,5 +1,5 @@
-import { useParams } from "react-router-dom";
-import { Clock, ChefHat, Heart, Share2, Printer, BookOpen } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -40,6 +40,7 @@ const RECIPE_DATA = {
 
 export default function RecipeDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const recipe = RECIPE_DATA[id as keyof typeof RECIPE_DATA];
 
   console.log("Rendering recipe detail for ID:", id);
@@ -54,6 +55,16 @@ export default function RecipeDetail() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white/90"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </Button>
+
       {/* Hero Section */}
       <div className="relative h-[50vh] w-full">
         <img
