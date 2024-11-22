@@ -4,39 +4,35 @@ import { RecipeCard } from "@/components/RecipeCard";
 
 const SAMPLE_RECIPES = [
   {
-    title: "Neon Sushi Rolls",
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=500&q=80",
+    title: "Homemade Pizza",
+    image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&q=80",
     time: "45 mins",
-    difficulty: "Cyberpunk",
+    difficulty: "Medium",
     isFavorite: true,
   },
   {
-    title: "Robot's Breakfast",
-    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=500&q=80",
+    title: "Chocolate Cake",
+    image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&q=80",
     time: "60 mins",
-    difficulty: "AI Level",
+    difficulty: "Easy",
   },
   {
-    title: "Matrix Meatballs",
-    image: "https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=500&q=80",
+    title: "Fresh Salad",
+    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80",
     time: "15 mins",
-    difficulty: "Digital",
+    difficulty: "Easy",
   },
 ];
 
 const Index = () => {
   return (
-    <div className="min-h-screen pb-16 pt-16 bg-gradient-to-br from-purple-900 via-violet-800 to-fuchsia-900">
+    <div className="min-h-screen pb-16 pt-16">
       <TopBar />
       <main className="container py-6">
-        <h2 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 animate-pulse">
-          Recipes from Another Dimension
-        </h2>
-        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 [transform-style:preserve-3d] hover:[transform:rotateX(10deg)]">
+        <h2 className="text-2xl font-bold mb-6">Popular Recipes</h2>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {SAMPLE_RECIPES.map((recipe, index) => (
-            <div key={index} className="animate-bounce-in" style={{ animationDelay: `${index * 150}ms` }}>
-              <RecipeCard {...recipe} />
-            </div>
+            <RecipeCard key={index} {...recipe} />
           ))}
         </div>
       </main>
