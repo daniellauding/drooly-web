@@ -59,8 +59,18 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     setProgress(0);
   };
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    // Only close if clicking the backdrop (not the story card)
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
+    <div 
+      className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center"
+      onClick={handleBackdropClick}
+    >
       <Card className="relative w-full max-w-lg aspect-[9/16] overflow-hidden">
         <div className="absolute top-0 left-0 right-0 z-10 p-4">
           <div className="flex gap-1 mb-4">
