@@ -25,12 +25,12 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#FFA07A",
-          foreground: "#8B4513",
+          DEFAULT: "#FF6B6B",
+          foreground: "#2C3E50",
         },
         secondary: {
-          DEFAULT: "#87CEEB",
-          foreground: "#8B4513",
+          DEFAULT: "#4ECDC4",
+          foreground: "#2C3E50",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -41,22 +41,22 @@ export default {
           foreground: "hsl(var(--muted-foreground))",
         },
         accent: {
-          DEFAULT: "#FF7F50",
-          foreground: "#8B4513",
+          DEFAULT: "#FFE66D",
+          foreground: "#2C3E50",
         },
         popover: {
-          DEFAULT: "#FFF8DC",
-          foreground: "#8B4513",
+          DEFAULT: "#F7F9FC",
+          foreground: "#2C3E50",
         },
         card: {
-          DEFAULT: "#FFF8DC",
-          foreground: "#8B4513",
+          DEFAULT: "#F7F9FC",
+          foreground: "#2C3E50",
         },
       },
       borderRadius: {
-        lg: "1rem",
-        md: "0.875rem",
-        sm: "0.75rem",
+        lg: "1.5rem",
+        md: "1.25rem",
+        sm: "1rem",
       },
       keyframes: {
         "accordion-down": {
@@ -71,11 +71,17 @@ export default {
           "0%": { transform: "scale(0.95)", opacity: "0" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
+        "bounce-in": {
+          "0%": { transform: "translateY(10px)", opacity: "0" },
+          "60%": { transform: "translateY(-5px)" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "scale-in": "scale-in 0.2s ease-out",
+        "bounce-in": "bounce-in 0.3s ease-out",
       },
     },
   },

@@ -6,33 +6,33 @@
 
 @layer base {
   :root {
-    --background: 48 100% 93%;
-    --foreground: 25 71% 27%;
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
 
-    --card: 48 100% 93%;
-    --card-foreground: 25 71% 27%;
+    --card: 210 40% 98%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 48 100% 93%;
-    --popover-foreground: 25 71% 27%;
+    --popover: 210 40% 98%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 17 100% 74%;
-    --primary-foreground: 25 71% 27%;
+    --primary: 0 84% 70%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 197 71% 73%;
-    --secondary-foreground: 25 71% 27%;
+    --secondary: 174 61% 55%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 48 47% 87%;
-    --muted-foreground: 25 71% 47%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 16 100% 65%;
-    --accent-foreground: 25 71% 27%;
+    --accent: 49 89% 71%;
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 25 71% 87%;
-    --input: 25 71% 87%;
-    --ring: 25 71% 67%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222 47% 11%;
 
     --radius: 1rem;
   }
@@ -49,7 +49,7 @@
 }
 
 .recipe-card {
-  @apply transition-all duration-200 hover:scale-[1.02] hover:shadow-lg;
+  @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:-rotate-1;
 }
 
 .nav-item {
