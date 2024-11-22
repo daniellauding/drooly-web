@@ -7,6 +7,7 @@ import { EventMenu } from "./EventMenu";
 import { EventDiscussion } from "./EventDiscussion";
 import { RecipeCard } from "../RecipeCard";
 import { useToast } from "../ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface EventDetailViewProps {
   onBack: () => void;
@@ -14,6 +15,7 @@ interface EventDetailViewProps {
 
 export function EventDetailView({ onBack }: EventDetailViewProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleVote = (recipeId: string) => {
     console.log('Voted for recipe:', recipeId);
@@ -23,13 +25,18 @@ export function EventDetailView({ onBack }: EventDetailViewProps) {
     });
   };
 
+  const handleBack = () => {
+    console.log('Navigating back from event detail');
+    onBack();
+  };
+
   return (
     <div className="space-y-6">
       <Button
         variant="ghost"
         size="icon"
         className="mb-4"
-        onClick={onBack}
+        onClick={handleBack}
       >
         <ArrowLeft className="h-5 w-5" />
       </Button>
