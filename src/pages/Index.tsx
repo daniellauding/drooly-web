@@ -42,6 +42,8 @@ const FRIENDS_RECIPES = [
 ];
 
 const Index = () => {
+  console.log("Rendering Index page"); // Added for debugging
+
   return (
     <div className="min-h-screen pb-16 pt-16">
       <TopBar />
