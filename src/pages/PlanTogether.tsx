@@ -2,35 +2,83 @@ import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Users } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Plus, Users, MessageCircle, UtensilsCrossed } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+
+interface Message {
+  id: string;
+  sender: string;
+  text: string;
+  timestamp: Date;
+}
+
+interface Dish {
+  name: string;
+  assignedTo: string;
+  ingredients: string[];
+}
 
 interface Event {
   id: string;
   title: string;
   date: Date;
-  participants: string[];
-  dishes: {
+  description: string;
+  participants: {
     name: string;
-    assignedTo: string;
+    status: 'accepted' | 'pending' | 'declined';
+    avatar: string;
   }[];
+  dishes: Dish[];
+  messages: Message[];
 }
 
 export default function PlanTogether() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
   
-  // Mock events - in a real app, this would come from a backend
+  // Mock event data
   const [events] = useState<Event[]>([
     {
       id: "1",
       title: "New Year's Eve Dinner",
       date: new Date(2024, 11, 31),
-      participants: ["Sarah", "Mike", "Emma"],
+      description: "Let's celebrate the new year together with a festive dinner! Everyone brings their signature dish.",
+      participants: [
+        { name: "Sarah", status: 'accepted', avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80" },
+        { name: "Mike", status: 'accepted', avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80" },
+        { name: "Emma", status: 'pending', avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80" }
+      ],
       dishes: [
-        { name: "Roast Turkey", assignedTo: "Sarah" },
-        { name: "Apple Pie", assignedTo: "Mike" },
-        { name: "Mashed Potatoes", assignedTo: "Emma" }
+        { 
+          name: "Roast Turkey", 
+          assignedTo: "Sarah",
+          ingredients: ["Turkey", "Herbs", "Butter", "Garlic", "Onion"]
+        },
+        { 
+          name: "Apple Pie", 
+          assignedTo: "Mike",
+          ingredients: ["Apples", "Flour", "Sugar", "Cinnamon", "Butter"]
+        },
+        { 
+          name: "Mashed Potatoes", 
+          assignedTo: "Emma",
+          ingredients: ["Potatoes", "Milk", "Butter", "Salt", "Pepper"]
+        }
+      ],
+      messages: [
+        {
+          id: "m1",
+          sender: "Sarah",
+          text: "I'll bring my special roast turkey recipe!",
+          timestamp: new Date(2024, 11, 30, 10, 30)
+        },
+        {
+          id: "m2",
+          sender: "Mike",
+          text: "Great! I can make my famous apple pie for dessert.",
+          timestamp: new Date(2024, 11, 30, 10, 35)
+        }
       ]
     }
   ]);
@@ -85,41 +133,83 @@ export default function PlanTogether() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Upcoming Events</h2>
           {events.map((event) => (
-            <Card key={event.id} className="p-4 space-y-4">
+            <Card key={event.id} className="p-4 space-y-6">
               <div>
-                <h3 className="font-semibold">{event.title}</h3>
+                <h3 className="font-semibold text-xl">{event.title}</h3>
                 <p className="text-sm text-gray-500">
                   {event.date.toLocaleDateString()}
                 </p>
+                <p className="mt-2 text-gray-600">{event.description}</p>
               </div>
               
               <div>
-                <h4 className="text-sm font-medium mb-2">Participants:</h4>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Participants
+                </h4>
                 <div className="flex flex-wrap gap-2">
                   {event.participants.map((participant) => (
-                    <span 
-                      key={participant}
-                      className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs"
+                    <div 
+                      key={participant.name}
+                      className="flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm"
                     >
-                      {participant}
-                    </span>
+                      <img 
+                        src={participant.avatar} 
+                        alt={participant.name} 
+                        className="w-6 h-6 rounded-full"
+                      />
+                      <span>{participant.name}</span>
+                      <span className="text-xs">
+                        ({participant.status})
+                      </span>
+                    </div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <h4 className="text-sm font-medium mb-2">Dishes:</h4>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <UtensilsCrossed className="h-4 w-4" />
+                  Menu & Responsibilities
+                </h4>
                 <div className="space-y-2">
                   {event.dishes.map((dish) => (
                     <div 
                       key={dish.name}
-                      className="flex justify-between items-center text-sm"
+                      className="p-3 bg-gray-50 rounded-lg"
                     >
-                      <span>{dish.name}</span>
-                      <span className="text-gray-500">{dish.assignedTo}</span>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-medium">{dish.name}</span>
+                        <span className="text-gray-500">by {dish.assignedTo}</span>
+                      </div>
+                      <div className="mt-1 text-xs text-gray-500">
+                        Ingredients: {dish.ingredients.join(", ")}
+                      </div>
                     </div>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Discussion
+                </h4>
+                <ScrollArea className="h-[200px] rounded-md border p-4">
+                  <div className="space-y-4">
+                    {event.messages.map((message) => (
+                      <div key={message.id} className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{message.sender}</span>
+                          <span className="text-xs text-gray-500">
+                            {message.timestamp.toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <p className="text-sm">{message.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
               </div>
             </Card>
           ))}
