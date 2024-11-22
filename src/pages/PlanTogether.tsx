@@ -10,7 +10,6 @@ import { BottomBar } from "@/components/BottomBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EventDetailView } from "@/components/event/EventDetailView";
 
-// Mock data for upcoming events
 const UPCOMING_EVENTS = [
   {
     id: "1",
@@ -40,6 +39,7 @@ export default function PlanTogether() {
   };
 
   const handleBack = () => {
+    console.log('Navigating back');
     if (selectedEvent) {
       setSelectedEvent(null);
     } else {
@@ -47,41 +47,33 @@ export default function PlanTogether() {
     }
   };
 
-  if (selectedEvent) {
-    return (
-      <div className="min-h-screen bg-[#F7F9FC] pb-20">
-        <TopBar />
-        <div className="container max-w-md mx-auto space-y-6 pt-4">
-          <EventDetailView onBack={handleBack} />
-        </div>
-        <BottomBar />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#F7F9FC] pb-20">
       <TopBar />
-      <div className="container max-w-md mx-auto space-y-6 pt-4">
+      <div className="container max-w-md mx-auto pt-20">
         <Button
           variant="ghost"
           size="icon"
-          className="mb-4"
+          className="fixed top-4 left-4 z-50 bg-white/80 backdrop-blur-sm hover:bg-white/90"
           onClick={handleBack}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
 
-        <h1 className="text-2xl font-bold">Plan Together</h1>
-        
-        <Card className="p-4">
-          <Calendar
-            mode="single"
-            selected={date}
-            onSelect={setDate}
-            className="rounded-md border"
-          />
-        </Card>
+        {selectedEvent ? (
+          <EventDetailView />
+        ) : (
+          <div className="space-y-6 px-4">
+            <h1 className="text-2xl font-bold">Plan Together</h1>
+            
+            <Card className="p-4">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                className="rounded-md border"
+              />
+            </Card>
 
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Upcoming Events</h2>
@@ -141,6 +133,8 @@ export default function PlanTogether() {
             Join Event
           </Button>
         </div>
+          </div>
+        )}
       </div>
       <BottomBar />
     </div>

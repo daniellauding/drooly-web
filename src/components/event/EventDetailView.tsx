@@ -7,7 +7,6 @@ import { EventMenu } from "./EventMenu";
 import { EventDiscussion } from "./EventDiscussion";
 import { RecipeCard } from "../RecipeCard";
 import { useToast } from "../ui/use-toast";
-import { useNavigate } from "react-router-dom";
 
 interface EventDetailViewProps {
   onBack: () => void;
@@ -15,7 +14,6 @@ interface EventDetailViewProps {
 
 export function EventDetailView({ onBack }: EventDetailViewProps) {
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   const handleVote = (recipeId: string) => {
     console.log('Voted for recipe:', recipeId);
@@ -25,18 +23,13 @@ export function EventDetailView({ onBack }: EventDetailViewProps) {
     });
   };
 
-  const handleBack = () => {
-    console.log('Navigating back from event detail');
-    onBack();
-  };
-
   return (
     <div className="space-y-6">
       <Button
         variant="ghost"
         size="icon"
         className="mb-4"
-        onClick={handleBack}
+        onClick={onBack}
       >
         <ArrowLeft className="h-5 w-5" />
       </Button>
@@ -52,48 +45,6 @@ export function EventDetailView({ onBack }: EventDetailViewProps) {
           Join us for an amazing New Year's celebration with delicious food and great company!
         </p>
       </Card>
-
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Suggested Recipes</h2>
-        <div className="grid gap-4">
-          {[
-            {
-              id: "1",
-              title: "Spicy Ramen Bowl",
-              image: "https://images.unsplash.com/photo-1623341214825-9f4f963727da?w=500&q=80",
-              time: "30 mins",
-              difficulty: "Medium",
-              chef: "Chef Mike",
-              date: "2 days ago",
-              votes: 3
-            },
-            {
-              id: "2",
-              title: "Avocado Toast",
-              image: "https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=500&q=80",
-              time: "15 mins",
-              difficulty: "Easy",
-              chef: "Chef Sarah",
-              date: "Yesterday",
-              votes: 1
-            }
-          ].map((recipe) => (
-            <div key={recipe.id} className="space-y-2">
-              <RecipeCard {...recipe} />
-              <div className="flex justify-between items-center px-4">
-                <span className="text-sm text-gray-600">{recipe.votes} votes</span>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleVote(recipe.id)}
-                >
-                  Vote
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
 
       <EventParticipants 
         participants={[
