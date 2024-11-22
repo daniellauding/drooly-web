@@ -1,4 +1,4 @@
-import { Home, Search, Heart, User } from "lucide-react";
+import { Home, Search, Heart, User, Calendar } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export function BottomBar() {
@@ -12,6 +12,12 @@ export function BottomBar() {
             <Home className="h-6 w-6" />
           </div>
           <span className="text-xs font-medium">Home</span>
+        </Link>
+        <Link to="/plan" className={`nav-item ${location.pathname === "/plan" ? "active" : ""}`}>
+          <div className="p-2 rounded-xl hover:bg-[#F7F9FC] transition-colors">
+            <Calendar className="h-6 w-6" />
+          </div>
+          <span className="text-xs font-medium">Plan</span>
         </Link>
         <Link to="/search" className={`nav-item ${location.pathname === "/search" ? "active" : ""}`}>
           <div className="p-2 rounded-xl hover:bg-[#F7F9FC] transition-colors">
