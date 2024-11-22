@@ -1,4 +1,4 @@
-import { Avatar } from "./ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 
 interface StoryUser {
@@ -23,8 +23,8 @@ export function WeeklyStories() {
           <div key={user.id} className="text-center">
             <div className="relative mb-2">
               <Avatar className="w-16 h-16 ring-2 ring-primary p-0.5 cursor-pointer hover:ring-offset-2 transition-all">
-                <Avatar.Image src={user.avatar} alt={user.name} />
-                <Avatar.Fallback>{user.name[0]}</Avatar.Fallback>
+                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarFallback>{user.name[0]}</AvatarFallback>
               </Avatar>
             </div>
             <span className="text-sm text-muted-foreground">{user.name}</span>
