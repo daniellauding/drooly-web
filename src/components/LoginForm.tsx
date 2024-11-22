@@ -14,39 +14,36 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md p-8 animate-bounce-in bg-gradient-to-br from-white via-white/95 to-white/90 backdrop-blur-xl border-none shadow-xl">
+    <Card className="w-full max-w-md p-8 bg-white rounded-3xl border shadow-sm">
       <div className="text-center mb-8">
-        <div className="relative w-24 h-24 mx-auto mb-4">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent rounded-2xl rotate-6" />
-          <div className="absolute inset-0 bg-white rounded-2xl">
-            <img src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" alt="Recipe App" className="h-full w-full p-4" />
-          </div>
+        <div className="w-20 h-20 mx-auto mb-6">
+          <img src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" alt="Recipe App" className="w-full h-full" />
         </div>
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Welcome Back!</h2>
-        <p className="text-muted-foreground mt-2">Sign in to access your recipes</p>
+        <h2 className="text-2xl font-bold text-[#2C3E50]">Welcome Back</h2>
+        <p className="text-gray-600 mt-2">Sign in to access your recipes</p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="relative">
-          <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <Input
             type="email"
             placeholder="Email"
-            className="pl-10 bg-white/50 hover:bg-white/80 transition-colors border-none"
+            className="pl-10 bg-[#F7F9FC] border-none rounded-xl"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+          <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <Input
             type="password"
             placeholder="Password"
-            className="pl-10 bg-white/50 hover:bg-white/80 transition-colors border-none"
+            className="pl-10 bg-[#F7F9FC] border-none rounded-xl"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
-        <Button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-white font-medium">
+        <Button type="submit" className="w-full bg-[#4ECDC4] hover:bg-[#45B8B0] text-white font-medium rounded-xl h-12">
           Sign In
         </Button>
       </form>

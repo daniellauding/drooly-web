@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,32 +8,23 @@
   :root {
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
-
-    --card: 210 40% 98%;
+    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-
-    --popover: 210 40% 98%;
+    --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-
-    --primary: 0 84% 70%;
+    --primary: 174 61% 55%;
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 174 61% 55%;
+    --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
-
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
-
-    --accent: 49 89% 71%;
+    --accent: 210 40% 96%;
     --accent-foreground: 222 47% 11%;
-
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 222 47% 11%;
-
     --radius: 1rem;
   }
 }
@@ -42,20 +33,15 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-background text-foreground font-['Nunito'];
+    @apply bg-background text-foreground font-['Inter'];
   }
 }
 
-.recipe-card {
-  @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:-rotate-1;
-}
-
 .nav-item {
-  @apply flex flex-col items-center justify-center gap-1 text-muted-foreground transition-colors hover:text-foreground;
+  @apply flex flex-col items-center justify-center gap-1 text-gray-400 transition-colors hover:text-gray-900;
 }
 
 .nav-item.active {
-  @apply text-primary;
+  @apply text-[#4ECDC4];
 }
