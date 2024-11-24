@@ -42,12 +42,17 @@ export function IngredientSuggestions({ onSelect, onClose, initialValue = "" }: 
     }
   };
 
+  const allIngredients = Object.values(COMMON_INGREDIENTS).flat();
+  const hasExactMatch = allIngredients.some(
+    ing => ing.toLowerCase() === searchValue.toLowerCase()
+  );
+
   return (
     <div ref={ref}>
       <Command className="border rounded-lg bg-popover shadow-md">
         <CommandInput 
           ref={inputRef}
-          placeholder="Search ingredients or type to add custom..." 
+          placeholder="Search ingredients..." 
           value={searchValue}
           onValueChange={setSearchValue}
           onKeyDown={handleKeyDown}
@@ -92,6 +97,22 @@ export function IngredientSuggestions({ onSelect, onClose, initialValue = "" }: 
                 ))}
             </CommandGroup>
           ))}
+          {!hasExactMatch && (
+            <div className="p-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full h-9"
+                onClick={handleAddCustom}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {searchValue.trim() 
+                  ? `+ Add "${searchValue}" as custom ingredient`
+                  : "+ Add custom ingredient"
+                }
+              </Button>
+            </div>
+          )}
         </CommandList>
       </Command>
     </div>
