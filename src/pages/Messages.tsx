@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { MessageSquare, MessagePlus } from "lucide-react";
+import { MessageSquare, PlusSquare } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -53,7 +53,7 @@ export default function Messages() {
         Start a conversation with someone to begin messaging
       </p>
       <Button onClick={handleNewMessage} className="gap-2">
-        <MessagePlus className="h-5 w-5" />
+        <PlusSquare className="h-5 w-5" />
         New Message
       </Button>
     </div>
@@ -69,7 +69,7 @@ export default function Messages() {
               <div className="p-4 border-b flex justify-between items-center">
                 <h2 className="text-lg font-semibold">Messages</h2>
                 <Button onClick={handleNewMessage} size="icon" variant="ghost">
-                  <MessagePlus className="h-5 w-5" />
+                  <PlusSquare className="h-5 w-5" />
                 </Button>
               </div>
               {conversations?.length === 0 ? (
