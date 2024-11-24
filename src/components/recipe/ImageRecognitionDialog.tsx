@@ -18,22 +18,71 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
   const { toast } = useToast();
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const extractRecipeInfo = (text: string) => {
+    console.log("Extracting recipe info from text:", text);
+    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+    
+    // Extract title (usually first non-empty line)
+    const title = lines[0] || "";
+    
+    // Extract ingredients
+    const ingredients = extractIngredients(text);
+    
+    // Try to identify cooking time
+    const timeMatch = text.toLowerCase().match(/(\d+)[-\s]*(min|minutes|hour|hours)/);
+    const totalTime = timeMatch ? timeMatch[0] : "";
+    
+    // Try to identify servings
+    const servingsMatch = text.toLowerCase().match(/(\d+)\s*(servings|portions|persons|people)/);
+    const servings = servingsMatch ? {
+      amount: parseInt(servingsMatch[1]),
+      unit: "serving"
+    } : undefined;
+    
+    // Try to extract cooking instructions
+    const instructionsStart = lines.findIndex(line => 
+      line.toLowerCase().includes("instructions") || 
+      line.toLowerCase().includes("directions") ||
+      line.toLowerCase().includes("method") ||
+      line.toLowerCase().includes("steps")
+    );
+    
+    const description = instructionsStart !== -1 
+      ? lines.slice(1, instructionsStart).join("\n")
+      : lines.slice(1, Math.min(5, lines.length)).join("\n");
+    
+    const steps = instructionsStart !== -1 
+      ? [{ 
+          title: "Instructions",
+          instructions: lines.slice(instructionsStart + 1).join("\n"),
+          duration: "",
+          media: []
+        }]
+      : undefined;
+
+    return {
+      title,
+      description,
+      ingredients,
+      totalTime,
+      servings,
+      steps
+    };
+  };
+
   const extractIngredients = (text: string): { name: string, amount: string, unit: string }[] => {
     console.log("Extracting ingredients from text:", text);
     const lines = text.split('\n');
     const ingredients: { name: string, amount: string, unit: string }[] = [];
     
-    // Flatten all ingredients from COMMON_INGREDIENTS into a single array
     const allIngredients = Object.values(COMMON_INGREDIENTS).flat();
     
     lines.forEach(line => {
-      // Try to match known ingredients
       const matchedIngredient = allIngredients.find(ingredient => 
         line.toLowerCase().includes(ingredient.toLowerCase())
       );
       
       if (matchedIngredient) {
-        // Basic pattern for amount and unit: number followed by unit
         const amountMatch = line.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?/);
         
         ingredients.push({
@@ -61,15 +110,19 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       const { data: { text } } = await worker.recognize(imageUrl);
       console.log("Recognized text:", text);
 
-      // Extract ingredients from the recognized text
-      const ingredients = extractIngredients(text);
-
-      // Update recipe with extracted ingredients
+      const extractedInfo = extractRecipeInfo(text);
+      
       const recipeData: Partial<Recipe> = {
-        ingredients: ingredients.map(ing => ({
+        title: extractedInfo.title,
+        description: extractedInfo.description,
+        ingredients: extractedInfo.ingredients.map(ing => ({
           ...ing,
           group: "Main Ingredients"
-        }))
+        })),
+        totalTime: extractedInfo.totalTime,
+        ...(extractedInfo.servings && { servings: extractedInfo.servings }),
+        ...(extractedInfo.steps && { steps: extractedInfo.steps }),
+        images: [imageUrl]
       };
 
       await worker.terminate();
@@ -77,14 +130,14 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       onOpenChange(false);
       
       toast({
-        title: `${ingredients.length} ingredients found`,
-        description: "The ingredients have been extracted and added to your recipe.",
+        title: "Recipe details extracted",
+        description: `Found ${extractedInfo.ingredients.length} ingredients and additional recipe details.`,
       });
     } catch (error) {
-      console.error("Error scanning ingredients:", error);
+      console.error("Error scanning recipe:", error);
       toast({
-        title: "Failed to scan ingredients",
-        description: "Could not extract ingredients from the image. Please try again or enter them manually.",
+        title: "Failed to scan recipe",
+        description: "Could not extract recipe details from the image. Please try again or enter them manually.",
         variant: "destructive",
       });
     } finally {
@@ -96,9 +149,9 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Take Photo of Ingredients</DialogTitle>
+          <DialogTitle>Take Photo of Recipe</DialogTitle>
           <DialogDescription>
-            Take a photo of your ingredient list to automatically import them
+            Take a photo of your recipe to automatically import all details
           </DialogDescription>
         </DialogHeader>
         
