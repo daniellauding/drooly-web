@@ -15,7 +15,6 @@ export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestio
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Auto focus the search input when component mounts
     inputRef.current?.focus();
 
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,14 +34,22 @@ export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestio
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && searchValue.trim() && !Object.values(COMMON_INGREDIENTS).flat().includes(searchValue.trim())) {
+      e.preventDefault();
+      handleAddCustom();
+    }
+  };
+
   return (
     <div ref={ref}>
       <Command className="border rounded-lg bg-popover shadow-md">
         <CommandInput 
           ref={inputRef}
-          placeholder="Search common ingredients..." 
+          placeholder="Search ingredients or type to add custom..." 
           value={searchValue}
           onValueChange={setSearchValue}
+          onKeyDown={handleKeyDown}
           className="h-10"
         />
         <CommandList className="max-h-[300px]">
@@ -64,20 +71,24 @@ export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestio
           </CommandEmpty>
           {Object.entries(COMMON_INGREDIENTS).map(([category, ingredients]) => (
             <CommandGroup key={category} heading={category}>
-              {ingredients.map((ingredient) => (
-                <CommandItem
-                  key={ingredient}
-                  value={ingredient}
-                  onSelect={() => {
-                    onSelect(ingredient);
-                    setSearchValue("");
-                  }}
-                  className="h-9"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {ingredient}
-                </CommandItem>
-              ))}
+              {ingredients
+                .filter(ingredient => 
+                  ingredient.toLowerCase().includes(searchValue.toLowerCase())
+                )
+                .map((ingredient) => (
+                  <CommandItem
+                    key={ingredient}
+                    value={ingredient}
+                    onSelect={() => {
+                      onSelect(ingredient);
+                      setSearchValue("");
+                    }}
+                    className="h-9"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {ingredient}
+                  </CommandItem>
+                ))}
             </CommandGroup>
           ))}
         </CommandList>
