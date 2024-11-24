@@ -1,49 +1,50 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-// Mock data - in a real app, this would come from an API
-const RECIPE_DATA = {
-  "1": {
-    id: "1",
-    title: "Spicy Ramen Bowl",
-    image: "https://images.unsplash.com/photo-1623341214825-9f4f963727da?w=1200&q=80",
-    chef: "Chef Mike",
-    date: "2 days ago",
-    cookTime: "30 mins",
-    difficulty: "Medium",
-    servings: 2,
-    description: "A warming bowl of spicy ramen with fresh vegetables and perfectly cooked noodles. This recipe brings authentic Asian flavors right to your kitchen.",
-    ingredients: [
-      "200g ramen noodles",
-      "2 cups vegetable broth",
-      "2 tbsp soy sauce",
-      "1 tbsp chili oil",
-      "2 soft-boiled eggs",
-      "1 cup fresh spinach",
-      "2 green onions, sliced",
-      "Sesame seeds for garnish"
-    ],
-    instructions: [
-      "Bring a large pot of water to boil for the noodles.",
-      "In a separate pot, heat the vegetable broth and add soy sauce.",
-      "Cook noodles according to package instructions.",
-      "Prepare soft-boiled eggs by cooking for 6-7 minutes.",
-      "Assemble bowls with noodles, broth, vegetables, and eggs.",
-      "Top with green onions and sesame seeds.",
-      "Serve hot with chili oil on the side."
-    ]
-  }
-};
+import { useQuery } from "@tanstack/react-query";
+import { fetchRecipeById } from "@/services/recipeService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const recipe = RECIPE_DATA[id as keyof typeof RECIPE_DATA];
 
-  console.log("Rendering recipe detail for ID:", id);
+  const { data: recipe, isLoading, error } = useQuery({
+    queryKey: ['recipe', id],
+    queryFn: () => fetchRecipeById(id!),
+    enabled: !!id,
+  });
+
+  console.log("Rendering recipe detail for ID:", id, "Recipe:", recipe);
+
+  if (error) {
+    console.error("Error loading recipe:", error);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg text-muted-foreground">Error loading recipe</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F7F9FC]">
+        <div className="h-[50vh]">
+          <Skeleton className="w-full h-full" />
+        </div>
+        <div className="container max-w-4xl mx-auto px-4 py-8">
+          <Skeleton className="h-8 w-64 mb-4" />
+          <Skeleton className="h-4 w-32 mb-8" />
+          <div className="space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!recipe) {
     return (
@@ -55,7 +56,6 @@ export default function RecipeDetail() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
-      {/* Back Button */}
       <Button
         variant="ghost"
         size="icon"
@@ -65,7 +65,6 @@ export default function RecipeDetail() {
         <ArrowLeft className="h-5 w-5" />
       </Button>
 
-      {/* Hero Section */}
       <div className="relative h-[50vh] w-full">
         <img
           src={recipe.image}
@@ -83,9 +82,7 @@ export default function RecipeDetail() {
         </div>
       </div>
 
-      {/* Content Section */}
       <div className="container max-w-4xl mx-auto px-4 py-8">
-        {/* Action Buttons */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex gap-4">
             <Button variant="outline" size="sm" className="gap-2">
@@ -107,7 +104,6 @@ export default function RecipeDetail() {
           </Button>
         </div>
 
-        {/* Recipe Info */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white p-4 rounded-xl shadow-sm">
             <Clock className="w-5 h-5 text-primary mb-2" />
@@ -122,17 +118,15 @@ export default function RecipeDetail() {
           <div className="bg-white p-4 rounded-xl shadow-sm">
             <div className="w-5 h-5 text-primary mb-2">👥</div>
             <p className="text-sm text-muted-foreground">Servings</p>
-            <p className="font-medium">{recipe.servings} servings</p>
+            <p className="font-medium">2 servings</p>
           </div>
         </div>
 
-        {/* Description */}
         <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
           <h2 className="text-xl font-semibold mb-4">Description</h2>
           <p className="text-muted-foreground">{recipe.description}</p>
         </div>
 
-        {/* Ingredients & Instructions */}
         <div className="grid md:grid-cols-2 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-sm">
             <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
