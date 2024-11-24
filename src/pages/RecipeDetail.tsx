@@ -63,13 +63,13 @@ export default function RecipeDetail() {
 
       <div className="relative h-[50vh] w-full">
         <img
-          src={recipe.imageUrls?.[recipe.featuredImageIndex || 0] || '/placeholder.svg'}
-          alt={recipe.name}
+          src={recipe.images?.[recipe.featuredImageIndex || 0] || '/placeholder.svg'}
+          alt={recipe.title}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <h1 className="text-4xl font-bold mb-2">{recipe.name}</h1>
+          <h1 className="text-4xl font-bold mb-2">{recipe.title}</h1>
           <div className="flex items-center gap-2 text-sm">
             <span>{recipe.creatorName || 'Anonymous'}</span>
             <span>•</span>
