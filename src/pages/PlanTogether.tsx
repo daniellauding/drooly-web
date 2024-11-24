@@ -61,7 +61,7 @@ export default function PlanTogether() {
         </Button>
 
         {selectedEvent ? (
-          <EventDetailView />
+          <EventDetailView onBack={handleBack} />
         ) : (
           <div className="space-y-6 px-4">
             <h1 className="text-2xl font-bold">Plan Together</h1>
@@ -75,64 +75,64 @@ export default function PlanTogether() {
               />
             </Card>
 
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">Upcoming Events</h2>
-          <ScrollArea className="h-[300px]">
             <div className="space-y-4">
-              {UPCOMING_EVENTS.map((event) => (
-                <Card 
-                  key={event.id}
-                  className="p-4 cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleEventClick(event.id)}
-                >
-                  <div className="flex gap-4">
-                    <img 
-                      src={event.image} 
-                      alt={event.title}
-                      className="w-20 h-20 rounded-lg object-cover"
-                    />
-                    <div className="space-y-2">
-                      <h3 className="font-semibold">{event.title}</h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <CalendarDays className="h-4 w-4" />
-                        <span>{event.date}</span>
+              <h2 className="text-lg font-semibold">Upcoming Events</h2>
+              <ScrollArea className="h-[300px]">
+                <div className="space-y-4">
+                  {UPCOMING_EVENTS.map((event) => (
+                    <Card 
+                      key={event.id}
+                      className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => handleEventClick(event.id)}
+                    >
+                      <div className="flex gap-4">
+                        <img 
+                          src={event.image} 
+                          alt={event.title}
+                          className="w-20 h-20 rounded-lg object-cover"
+                        />
+                        <div className="space-y-2">
+                          <h3 className="font-semibold">{event.title}</h3>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <CalendarDays className="h-4 w-4" />
+                            <span>{event.date}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Users className="h-4 w-4" />
+                            <span>{event.participants} participants</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Users className="h-4 w-4" />
-                        <span>{event.participants} participants</span>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                    </Card>
+                  ))}
+                </div>
+              </ScrollArea>
             </div>
-          </ScrollArea>
-        </div>
 
-        <div className="space-y-4">
-          <Button 
-            className="w-full gap-2" 
-            onClick={() => toast({
-              title: "Coming Soon",
-              description: "The ability to create new events will be available soon!",
-            })}
-          >
-            <Plus className="h-4 w-4" />
-            Create New Event
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full gap-2"
-            onClick={() => toast({
-              title: "Coming Soon",
-              description: "The ability to join events will be available soon!",
-            })}
-          >
-            <Users className="h-4 w-4" />
-            Join Event
-          </Button>
-        </div>
+            <div className="space-y-4">
+              <Button 
+                className="w-full gap-2" 
+                onClick={() => toast({
+                  title: "Coming Soon",
+                  description: "The ability to create new events will be available soon!",
+                })}
+              >
+                <Plus className="h-4 w-4" />
+                Create New Event
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full gap-2"
+                onClick={() => toast({
+                  title: "Coming Soon",
+                  description: "The ability to join events will be available soon!",
+                })}
+              >
+                <Users className="h-4 w-4" />
+                Join Event
+              </Button>
+            </div>
           </div>
         )}
       </div>

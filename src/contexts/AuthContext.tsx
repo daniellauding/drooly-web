@@ -43,12 +43,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         title: "Welcome back!",
         description: "You've successfully logged in.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+      let errorMessage = "Please check your credentials and try again.";
+      
+      if (error.code === "auth/invalid-login-credentials") {
+        errorMessage = "Invalid email or password. Please try again.";
+      } else if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email.";
+      } else if (error.code === "auth/wrong-password") {
+        errorMessage = "Incorrect password.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: "Please check your credentials and try again.",
+        description: errorMessage,
       });
       throw error;
     }
