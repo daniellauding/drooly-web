@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy, startAt, endAt } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   CommandDialog,
@@ -33,12 +33,16 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
     queryFn: async () => {
       console.log("Fetching users with query:", searchQuery);
       const usersRef = collection(db, "users");
+      const searchLower = searchQuery.toLowerCase();
       const q = query(
         usersRef,
-        where("name", ">=", searchQuery),
-        where("name", "<=", searchQuery + "\uf8ff")
+        orderBy("nameLower"),
+        startAt(searchLower),
+        endAt(searchLower + "\uf8ff")
       );
+      
       const snapshot = await getDocs(q);
+      console.log("Found users:", snapshot.size);
       return snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -49,7 +53,6 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
 
   const handleSelectUser = async (user: User) => {
     console.log("Selected user:", user);
-    // For now, just show a toast. In the future, this will create a conversation
     toast({
       title: "Coming Soon",
       description: `Starting a conversation with ${user.name} will be available soon!`,
