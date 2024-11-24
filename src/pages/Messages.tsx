@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { MessageCircle, Users, Trash2, Edit, Eye } from "lucide-react";
+import { MessageSquare, MessagePlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
@@ -32,18 +31,64 @@ export default function Messages() {
     );
   }
 
+  const handleNewMessage = () => {
+    toast({
+      title: "Coming Soon",
+      description: "The ability to start new conversations will be available soon!",
+    });
+  };
+
+  const NoMessagesPlaceholder = () => (
+    <div className="flex flex-col items-center justify-center h-full space-y-4">
+      <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden mb-4">
+        <img
+          src="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b"
+          alt="No messages"
+          className="object-cover w-full h-full"
+        />
+      </div>
+      <MessageSquare className="h-16 w-16 text-muted-foreground" />
+      <h3 className="text-xl font-semibold">No messages yet</h3>
+      <p className="text-muted-foreground text-center max-w-sm">
+        Start a conversation with someone to begin messaging
+      </p>
+      <Button onClick={handleNewMessage} className="gap-2">
+        <MessagePlus className="h-5 w-5" />
+        New Message
+      </Button>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-background">
       <div className="flex flex-col w-full max-w-screen-xl mx-auto">
         <div className="flex h-[calc(100vh-4rem)] mt-16">
           {/* Conversations List */}
           <div className="w-80 border-r">
-            <ConversationList conversations={conversations || []} />
+            <div className="h-full flex flex-col">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h2 className="text-lg font-semibold">Messages</h2>
+                <Button onClick={handleNewMessage} size="icon" variant="ghost">
+                  <MessagePlus className="h-5 w-5" />
+                </Button>
+              </div>
+              {conversations?.length === 0 ? (
+                <NoMessagesPlaceholder />
+              ) : (
+                <ConversationList conversations={conversations || []} />
+              )}
+            </div>
           </div>
           
           {/* Chat View */}
           <div className="flex-1">
-            <ChatView />
+            {conversations?.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-muted-foreground">
+                Select a conversation or start a new one
+              </div>
+            ) : (
+              <ChatView />
+            )}
           </div>
         </div>
       </div>
