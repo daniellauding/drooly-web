@@ -1,0 +1,57 @@
+import { Meta, ColorPalette, ColorItem } from '@storybook/blocks';
+
+<Meta title="Design System/Design Tokens" />
+
+# Design Tokens
+
+## Colors
+
+<ColorPalette>
+  <ColorItem 
+    title="Primary" 
+    subtitle="Brand primary color" 
+    colors={{ 
+      DEFAULT: '#FF6B6B',
+      foreground: '#2C3E50'
+    }} 
+  />
+  <ColorItem 
+    title="Secondary" 
+    subtitle="Brand secondary color" 
+    colors={{ 
+      DEFAULT: '#4ECDC4',
+      foreground: '#2C3E50'
+    }} 
+  />
+  <ColorItem 
+    title="Accent" 
+    subtitle="Accent color" 
+    colors={{ 
+      DEFAULT: '#FFE66D',
+      foreground: '#2C3E50'
+    }} 
+  />
+</ColorPalette>
+
+## Typography
+
+- Font Family: Inter
+- Base Size: 16px
+- Scale: 1.25 (Major Third)
+
+## Spacing
+
+- Base: 0.25rem (4px)
+- Scale: 4, 8, 12, 16, 24, 32, 48, 64, 96
+
+## Border Radius
+
+- sm: 1rem
+- md: 1.25rem
+- lg: 1.5rem
+
+## Shadows
+
+- sm: 0 1px 2px 0 rgb(0 0 0 / 0.05)
+- md: 0 4px 6px -1px rgb(0 0 0 / 0.1)
+- lg: 0 10px 15px -3px rgb(0 0 0 / 0.1)
