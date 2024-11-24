@@ -85,11 +85,12 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <Label>Ingredients</Label>
+        <Label className="text-sm font-medium">Ingredients</Label>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowAdvanced(!showAdvanced)}
+          className="h-9"
         >
           Advanced
           <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
@@ -98,7 +99,9 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
 
       <div className="relative">
         <div
-          className={`w-full border rounded-md p-2 flex items-center justify-between cursor-pointer ${!showSuggestions ? 'hover:bg-accent hover:text-accent-foreground' : ''}`}
+          className={`w-full h-10 border rounded-md px-3 flex items-center justify-between cursor-pointer text-sm ${
+            !showSuggestions ? 'hover:bg-accent hover:text-accent-foreground' : ''
+          }`}
           onClick={() => !showSuggestions && setShowSuggestions(true)}
         >
           <span className="text-muted-foreground">Search or add ingredients...</span>
@@ -106,7 +109,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         </div>
 
         {showSuggestions && (
-          <div className="absolute w-full z-50">
+          <div className="absolute w-full z-50 mt-1">
             <IngredientSuggestions 
               onSelect={(ingredientName) => addIngredient(ingredientName)}
               onClose={() => setShowSuggestions(false)}
@@ -114,7 +117,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
           </div>
         )}
       </div>
-      
+
       {Object.entries(groupedIngredients).map(([group, groupIngredients]) => (
         <div key={group} className="space-y-2">
           <h4 className="font-medium text-sm">{group}</h4>

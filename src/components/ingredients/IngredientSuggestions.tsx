@@ -38,6 +38,7 @@ export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestio
           placeholder="Search common ingredients..." 
           value={searchValue}
           onValueChange={setSearchValue}
+          className="h-10"
         />
         <CommandList className="max-h-[300px]">
           <CommandEmpty className="p-4">
@@ -47,7 +48,7 @@ export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestio
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="w-full"
+                  className="w-full h-9"
                   onClick={handleAddCustom}
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -66,6 +67,7 @@ export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestio
                     onSelect(ingredient);
                     setSearchValue("");
                   }}
+                  className="h-9"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   {ingredient}
