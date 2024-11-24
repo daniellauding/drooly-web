@@ -78,10 +78,9 @@ const Index = () => {
     console.error("Error loading recipes:", error);
   }
 
-  // Split recipes into different sections
-  const discoverRecipes = recipes?.slice(0, 3) || [];
+  // Only show available recipes, don't force specific numbers
+  const discoverRecipes = recipes || [];
   const popularRecipes = recipes?.slice(0, 3) || [];
-  const friendsRecipes = recipes?.slice(3, 5) || [];
 
   const mapRecipeToProps = (recipe: Recipe): RecipeCardProps => ({
     id: recipe.id || '',
@@ -102,50 +101,37 @@ const Index = () => {
           <WeeklyStories users={WEEKLY_STORIES} onUserClick={setSelectedStoryIndex} />
         </section>
 
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Discover New Recipes</h2>
-          {isLoading ? (
-            <div className="w-full max-w-md mx-auto h-[400px]">
-              <Skeleton className="w-full h-full rounded-xl" />
-            </div>
-          ) : (
-            <RecipeSwiper recipes={discoverRecipes} />
-          )}
-        </section>
+        {discoverRecipes.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold mb-6">Discover New Recipes</h2>
+            {isLoading ? (
+              <div className="w-full max-w-md mx-auto h-[400px]">
+                <Skeleton className="w-full h-full rounded-xl" />
+              </div>
+            ) : (
+              <RecipeSwiper recipes={discoverRecipes} />
+            )}
+          </section>
+        )}
 
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Popular Recipes</h2>
-          {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-[300px] rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {popularRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} {...mapRecipeToProps(recipe)} />
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Friends' Recipes</h2>
-          {isLoading ? (
-            <div className="grid gap-6 md:grid-cols-2">
-              {[1, 2].map((i) => (
-                <Skeleton key={i} className="h-[300px] rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2">
-              {friendsRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} {...mapRecipeToProps(recipe)} />
-              ))}
-            </div>
-          )}
-        </section>
+        {popularRecipes.length > 0 && (
+          <section>
+            <h2 className="text-2xl font-bold mb-6">Popular Recipes</h2>
+            {isLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-[300px] rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {popularRecipes.map((recipe) => (
+                  <RecipeCard key={recipe.id} {...mapRecipeToProps(recipe)} />
+                ))}
+              </div>
+            )}
+          </section>
+        )}
       </main>
       <BottomBar />
       
