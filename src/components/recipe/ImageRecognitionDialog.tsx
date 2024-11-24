@@ -3,9 +3,12 @@ import { Worker, createWorker } from "tesseract.js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera } from "lucide-react";
+import { Loader2, Camera, Check, X } from "lucide-react";
 import { Recipe } from "@/types/recipe";
-import { COMMON_INGREDIENTS } from "@/components/ingredients/CommonIngredients";
+import { analyzeRecipeText } from "@/utils/recipeTextAnalysis";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 interface ImageRecognitionDialogProps {
   open: boolean;
@@ -13,89 +16,22 @@ interface ImageRecognitionDialogProps {
   onRecipeScanned: (recipe: Partial<Recipe>) => void;
 }
 
+interface ExtractedData {
+  title: string;
+  cuisine: string;
+  servings?: { amount: number; unit: string };
+  cookingMethods: string[];
+  equipment: string[];
+  ingredients: { name: string; amount: string; unit: string; }[];
+  steps: { title: string; instructions: string; duration: string; media: string[]; }[];
+}
+
 export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
+  const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  const extractRecipeInfo = (text: string) => {
-    console.log("Extracting recipe info from text:", text);
-    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-    
-    // Extract title (usually first non-empty line)
-    const title = lines[0] || "";
-    
-    // Extract ingredients
-    const ingredients = extractIngredients(text);
-    
-    // Try to identify cooking time
-    const timeMatch = text.toLowerCase().match(/(\d+)[-\s]*(min|minutes|hour|hours)/);
-    const totalTime = timeMatch ? timeMatch[0] : "";
-    
-    // Try to identify servings
-    const servingsMatch = text.toLowerCase().match(/(\d+)\s*(servings|portions|persons|people)/);
-    const servings = servingsMatch ? {
-      amount: parseInt(servingsMatch[1]),
-      unit: "serving"
-    } : undefined;
-    
-    // Try to extract cooking instructions
-    const instructionsStart = lines.findIndex(line => 
-      line.toLowerCase().includes("instructions") || 
-      line.toLowerCase().includes("directions") ||
-      line.toLowerCase().includes("method") ||
-      line.toLowerCase().includes("steps")
-    );
-    
-    const description = instructionsStart !== -1 
-      ? lines.slice(1, instructionsStart).join("\n")
-      : lines.slice(1, Math.min(5, lines.length)).join("\n");
-    
-    const steps = instructionsStart !== -1 
-      ? [{ 
-          title: "Instructions",
-          instructions: lines.slice(instructionsStart + 1).join("\n"),
-          duration: "",
-          media: []
-        }]
-      : undefined;
-
-    return {
-      title,
-      description,
-      ingredients,
-      totalTime,
-      servings,
-      steps
-    };
-  };
-
-  const extractIngredients = (text: string): { name: string, amount: string, unit: string }[] => {
-    console.log("Extracting ingredients from text:", text);
-    const lines = text.split('\n');
-    const ingredients: { name: string, amount: string, unit: string }[] = [];
-    
-    const allIngredients = Object.values(COMMON_INGREDIENTS).flat();
-    
-    lines.forEach(line => {
-      const matchedIngredient = allIngredients.find(ingredient => 
-        line.toLowerCase().includes(ingredient.toLowerCase())
-      );
-      
-      if (matchedIngredient) {
-        const amountMatch = line.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?/);
-        
-        ingredients.push({
-          name: matchedIngredient,
-          amount: amountMatch?.[1] || "",
-          unit: amountMatch?.[2] || ""
-        });
-      }
-    });
-
-    console.log("Extracted ingredients:", ingredients);
-    return ingredients;
-  };
 
   const handleImageCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -106,32 +42,25 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       const worker = await createWorker();
       const imageUrl = URL.createObjectURL(file);
       
-      await worker.load();
       const { data: { text } } = await worker.recognize(imageUrl);
       console.log("Recognized text:", text);
 
-      const extractedInfo = extractRecipeInfo(text);
+      const analyzed = analyzeRecipeText(text);
+      setExtractedData(analyzed);
       
-      const recipeData: Partial<Recipe> = {
-        title: extractedInfo.title,
-        description: extractedInfo.description,
-        ingredients: extractedInfo.ingredients.map(ing => ({
-          ...ing,
-          group: "Main Ingredients"
-        })),
-        totalTime: extractedInfo.totalTime,
-        ...(extractedInfo.servings && { servings: extractedInfo.servings }),
-        ...(extractedInfo.steps && { steps: extractedInfo.steps }),
-        images: [imageUrl]
-      };
+      // Initialize all fields as selected
+      setSelectedFields(
+        Object.keys(analyzed).reduce((acc, key) => ({
+          ...acc,
+          [key]: true
+        }), {})
+      );
 
       await worker.terminate();
-      onRecipeScanned(recipeData);
-      onOpenChange(false);
       
       toast({
-        title: "Recipe details extracted",
-        description: `Found ${extractedInfo.ingredients.length} ingredients and additional recipe details.`,
+        title: "Text extracted successfully",
+        description: "Please review and confirm the extracted information.",
       });
     } catch (error) {
       console.error("Error scanning recipe:", error);
@@ -145,9 +74,29 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
     }
   };
 
+  const handleConfirm = () => {
+    if (!extractedData) return;
+
+    const selectedData = Object.entries(selectedFields).reduce((acc, [key, selected]) => {
+      if (selected && extractedData[key as keyof ExtractedData]) {
+        acc[key as keyof ExtractedData] = extractedData[key as keyof ExtractedData];
+      }
+      return acc;
+    }, {} as Partial<ExtractedData>);
+
+    onRecipeScanned({
+      ...selectedData,
+      ingredients: selectedData.ingredients?.map(ing => ({
+        ...ing,
+        group: "Main Ingredients"
+      }))
+    });
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Take Photo of Recipe</DialogTitle>
           <DialogDescription>
@@ -155,19 +104,42 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <Button
-            onClick={() => cameraInputRef.current?.click()}
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Camera className="mr-2 h-4 w-4" />
-            )}
-            {loading ? "Processing..." : "Take Photo"}
-          </Button>
+        <div className="space-y-6">
+          {!extractedData ? (
+            <Button
+              onClick={() => cameraInputRef.current?.click()}
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Camera className="mr-2 h-4 w-4" />
+              )}
+              {loading ? "Processing..." : "Take Photo"}
+            </Button>
+          ) : (
+            <ScrollArea className="h-[400px] rounded-md border p-4">
+              <div className="space-y-4">
+                {Object.entries(extractedData).map(([key, value]) => (
+                  <div key={key} className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <Label className="text-sm font-medium capitalize">{key}</Label>
+                      <pre className="mt-1 whitespace-pre-wrap text-sm">
+                        {JSON.stringify(value, null, 2)}
+                      </pre>
+                    </div>
+                    <Switch
+                      checked={selectedFields[key]}
+                      onCheckedChange={(checked) => 
+                        setSelectedFields(prev => ({...prev, [key]: checked}))
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
           
           <input
             ref={cameraInputRef}
@@ -177,6 +149,19 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
             className="hidden"
             onChange={handleImageCapture}
           />
+
+          {extractedData && (
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => setExtractedData(null)}>
+                <X className="mr-2 h-4 w-4" />
+                Retake Photo
+              </Button>
+              <Button onClick={handleConfirm}>
+                <Check className="mr-2 h-4 w-4" />
+                Confirm Selection
+              </Button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
