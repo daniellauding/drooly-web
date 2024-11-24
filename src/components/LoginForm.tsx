@@ -4,13 +4,18 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { User, Lock } from "lucide-react";
 
-export function LoginForm() {
+interface LoginFormProps {
+  onSubmit: (email: string, password: string) => Promise<void>;
+  loading?: boolean;
+}
+
+export function LoginForm({ onSubmit, loading = false }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt with:", { email, password });
+    await onSubmit(email, password);
   };
 
   return (
@@ -31,6 +36,7 @@ export function LoginForm() {
             className="pl-10 bg-[#F7F9FC] border-none rounded-xl"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
         </div>
         <div className="relative">
@@ -41,10 +47,15 @@ export function LoginForm() {
             className="pl-10 bg-[#F7F9FC] border-none rounded-xl"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
         </div>
-        <Button type="submit" className="w-full bg-[#4ECDC4] hover:bg-[#45B8B0] text-white font-medium rounded-xl h-12">
-          Sign In
+        <Button 
+          type="submit" 
+          className="w-full bg-[#4ECDC4] hover:bg-[#45B8B0] text-white font-medium rounded-xl h-12"
+          disabled={loading}
+        >
+          {loading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
     </Card>
