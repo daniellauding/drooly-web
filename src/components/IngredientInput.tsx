@@ -54,6 +54,7 @@ const COMMON_UNITS = [
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
 
   const addIngredient = (name = "", group = "Main Ingredients") => {
     onChange([
@@ -121,12 +122,29 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
             const globalIndex = ingredients.findIndex(ing => ing === ingredient);
             return (
               <div key={index} className="flex gap-2">
-                <Input
-                  placeholder="Ingredient name"
-                  value={ingredient.name}
-                  onChange={(e) => updateIngredient(globalIndex, { name: e.target.value })}
-                  className="flex-1"
-                />
+                <div className="flex-1 relative">
+                  <div
+                    className={`w-full border rounded-md p-2 flex items-center justify-between cursor-pointer ${editingIngredientIndex !== globalIndex ? 'hover:bg-accent hover:text-accent-foreground' : ''}`}
+                    onClick={() => setEditingIngredientIndex(globalIndex)}
+                  >
+                    <span className={ingredient.name ? 'text-foreground' : 'text-muted-foreground'}>
+                      {ingredient.name || 'Search or add ingredient...'}
+                    </span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${editingIngredientIndex === globalIndex ? 'rotate-180' : ''}`} />
+                  </div>
+
+                  {editingIngredientIndex === globalIndex && (
+                    <div className="absolute w-full z-50">
+                      <IngredientSuggestions 
+                        onSelect={(name) => {
+                          updateIngredient(globalIndex, { name });
+                          setEditingIngredientIndex(null);
+                        }}
+                        onClose={() => setEditingIngredientIndex(null)}
+                      />
+                    </div>
+                  )}
+                </div>
                 <Input
                   placeholder="Amount"
                   value={ingredient.amount}
