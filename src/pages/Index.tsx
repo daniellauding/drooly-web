@@ -10,6 +10,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Recipe } from "@/types/recipe";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useToast } from "@/components/ui/use-toast";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const WEEKLY_STORIES = [
   {
@@ -66,6 +69,7 @@ const WEEKLY_STORIES = [
 
 const Index = () => {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const { data: recipes, isLoading, error } = useQuery({
     queryKey: ['recipes'],
@@ -80,22 +84,27 @@ const Index = () => {
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const fetchedRecipes = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         image: doc.data().images?.[doc.data().featuredImageIndex || 0],
         chef: doc.data().creatorName || 'Anonymous',
-        date: new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString(),
+        date: new Date(doc.data().createdAt?.seconds * 1000).toLocaleDateString(),
         cookTime: doc.data().totalTime || '30 min'
       })) as Recipe[];
+
+      console.log('Fetched recipes:', fetchedRecipes);
+      return fetchedRecipes;
+    },
+    onError: (error) => {
+      console.error('Error fetching recipes:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading recipes",
+        description: "Please try again later.",
+      });
     }
   });
-
-  console.log("Rendering Index page with Firebase recipes:", recipes);
-
-  if (error) {
-    console.error("Error loading recipes:", error);
-  }
 
   const discoverRecipes = recipes || [];
   const popularRecipes = recipes?.slice(0, 3) || [];
@@ -109,45 +118,57 @@ const Index = () => {
           <WeeklyStories users={WEEKLY_STORIES} onUserClick={setSelectedStoryIndex} />
         </section>
 
-        {discoverRecipes.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6">Discover New Recipes</h2>
-            {isLoading ? (
-              <div className="w-full max-w-md mx-auto h-[400px]">
-                <Skeleton className="w-full h-full rounded-xl" />
-              </div>
-            ) : (
-              <RecipeSwiper recipes={discoverRecipes} />
-            )}
-          </section>
-        )}
+        {error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              Failed to load recipes. Please try refreshing the page.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <>
+            <section>
+              <h2 className="text-2xl font-bold mb-6">Discover New Recipes</h2>
+              {isLoading ? (
+                <div className="w-full max-w-md mx-auto h-[400px]">
+                  <Skeleton className="w-full h-full rounded-xl" />
+                </div>
+              ) : discoverRecipes.length > 0 ? (
+                <RecipeSwiper recipes={discoverRecipes} />
+              ) : (
+                <p className="text-center text-gray-500">No recipes available yet.</p>
+              )}
+            </section>
 
-        {popularRecipes.length > 0 && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6">Popular Recipes</h2>
-            {isLoading ? (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-[300px] rounded-xl" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {popularRecipes.map((recipe) => (
-                  <RecipeCard 
-                    key={recipe.id}
-                    id={recipe.id}
-                    title={recipe.title}
-                    image={recipe.images?.[recipe.featuredImageIndex || 0]}
-                    cookTime={recipe.totalTime}
-                    difficulty={recipe.difficulty}
-                    chef={recipe.creatorName}
-                    date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
+            <section>
+              <h2 className="text-2xl font-bold mb-6">Popular Recipes</h2>
+              {isLoading ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-[300px] rounded-xl" />
+                  ))}
+                </div>
+              ) : popularRecipes.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {popularRecipes.map((recipe) => (
+                    <RecipeCard 
+                      key={recipe.id}
+                      id={recipe.id}
+                      title={recipe.title}
+                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
+                      cookTime={recipe.totalTime}
+                      difficulty={recipe.difficulty}
+                      chef={recipe.creatorName}
+                      date={new Date(recipe.createdAt?.seconds * 1000).toLocaleDateString()}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500">No popular recipes available yet.</p>
+              )}
+            </section>
+          </>
         )}
       </main>
       <BottomBar />
