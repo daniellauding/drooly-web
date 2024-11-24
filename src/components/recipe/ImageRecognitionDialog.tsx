@@ -26,8 +26,10 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       const worker = await createWorker();
       const imageUrl = URL.createObjectURL(file);
       
-      await worker.loadLanguage("eng");
-      await worker.initialize("eng");
+      // Initialize worker with English language data
+      await worker.load();
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
       
       const { data: { text } } = await worker.recognize(imageUrl);
       console.log("Recognized text:", text);
