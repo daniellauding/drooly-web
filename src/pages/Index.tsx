@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Recipe } from "@/types/recipe";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useToast } from "@/components/ui/use-toast";
 
 const WEEKLY_STORIES = [
   {
@@ -66,28 +67,48 @@ const WEEKLY_STORIES = [
 
 const Index = () => {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
+  const { toast } = useToast();
 
   const { data: recipes, isLoading, error } = useQuery({
     queryKey: ['recipes'],
     queryFn: async () => {
       console.log('Fetching recipes for home page');
-      const recipesRef = collection(db, 'recipes');
-      const q = query(
-        recipesRef,
-        where('status', '==', 'published'),
-        orderBy('createdAt', 'desc'),
-        limit(10)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        image: doc.data().images?.[doc.data().featuredImageIndex || 0],
-        chef: doc.data().creatorName || 'Anonymous',
-        date: new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString(),
-        cookTime: doc.data().totalTime || '30 min'
-      })) as Recipe[];
+      try {
+        const recipesRef = collection(db, 'recipes');
+        const q = query(
+          recipesRef,
+          where('status', '==', 'published'),
+          orderBy('createdAt', 'desc'),
+          limit(10)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        console.log('Fetched recipes count:', querySnapshot.size);
+        
+        const mappedRecipes = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('Recipe data:', data);
+          return {
+            id: doc.id,
+            ...data,
+            image: data.images?.[data.featuredImageIndex || 0],
+            chef: data.creatorName || 'Anonymous',
+            date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
+            cookTime: data.totalTime || '30 min'
+          };
+        }) as Recipe[];
+        
+        console.log('Mapped recipes:', mappedRecipes);
+        return mappedRecipes;
+      } catch (err) {
+        console.error('Error fetching recipes:', err);
+        toast({
+          title: "Error loading recipes",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+        throw err;
+      }
     }
   });
 
