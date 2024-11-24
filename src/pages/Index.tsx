@@ -8,8 +8,9 @@ import { StoryViewer } from "@/components/StoryViewer";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipes } from "@/services/recipeService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Recipe } from "@/types/recipe";
+import type { RecipeCardProps } from "@/components/RecipeCard";
 
-// Keep the WEEKLY_STORIES mock data for now
 const WEEKLY_STORIES = [
   {
     id: "1",

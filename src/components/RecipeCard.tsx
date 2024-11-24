@@ -3,7 +3,7 @@ import { Card } from "./ui/card";
 import { useNavigate } from "react-router-dom";
 import { Recipe } from "@/types/recipe";
 
-interface RecipeCardProps {
+export interface RecipeCardProps {
   id: string;
   title: string;
   image?: string;

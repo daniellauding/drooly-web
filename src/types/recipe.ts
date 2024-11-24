@@ -17,6 +17,10 @@ export interface Recipe {
   images: string[];
   featuredImageIndex: number;
   ingredients: any[];
+  ingredientSections?: Array<{
+    title?: string;
+    ingredients: string[];
+  }>;
   servings: {
     amount: number;
     unit: string;
@@ -26,7 +30,6 @@ export interface Recipe {
   totalTime: string;
   worksWith: string[];
   serveWith: string[];
-  // New fields
   dietaryInfo: {
     isVegetarian: boolean;
     isVegan: boolean;
@@ -43,6 +46,10 @@ export interface Recipe {
   creatorId?: string;
   creatorName?: string;
   status?: string;
+  image?: string;
+  chef?: string;
+  date?: string;
+  cookTime?: string;
 }
 
 export const CUISINES = [
