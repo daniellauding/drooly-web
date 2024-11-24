@@ -54,9 +54,10 @@ const COMMON_UNITS = [
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState("Main Ingredients");
   const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
 
-  const addIngredient = (name = "", group = "Main Ingredients") => {
+  const addIngredient = (name = "", group = selectedGroup) => {
     onChange([
       ...ingredients,
       { name, amount: "", unit: "", group }
@@ -111,12 +112,27 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         {showSuggestions && (
           <div className="absolute w-full z-50 mt-1">
             <IngredientSuggestions 
-              onSelect={(ingredientName) => addIngredient(ingredientName)}
+              onSelect={(ingredientName) => addIngredient(ingredientName, selectedGroup)}
               onClose={() => setShowSuggestions(false)}
             />
           </div>
         )}
       </div>
+
+      {showAdvanced && (
+        <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+          <SelectTrigger className="h-10">
+            <SelectValue placeholder="Select ingredient group" />
+          </SelectTrigger>
+          <SelectContent>
+            {INGREDIENT_GROUPS.map(group => (
+              <SelectItem key={group} value={group}>
+                {group}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {Object.entries(groupedIngredients).map(([group, groupIngredients]) => (
         <div key={group} className="space-y-2">
@@ -191,15 +207,6 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
           </Button>
         </div>
       ))}
-
-      <Collapsible open={showAdvanced}>
-        <CollapsibleContent>
-          <AdvancedIngredientSection 
-            onAddIngredient={addIngredient}
-            groups={INGREDIENT_GROUPS}
-          />
-        </CollapsibleContent>
-      </Collapsible>
     </div>
   );
 }
