@@ -1,6 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ImageUploadProps {
@@ -10,6 +10,8 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploadProps) {
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     // Convert files to URLs
     const newImages = acceptedFiles.map(file => URL.createObjectURL(file));
@@ -23,6 +25,14 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
     },
     multiple: true
   });
+
+  const handleCameraCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const imageUrl = URL.createObjectURL(file);
+      onChange([...images, imageUrl], featuredImageIndex);
+    }
+  };
 
   const removeImage = (index: number) => {
     const newImages = images.filter((_, i) => i !== index);
@@ -38,20 +48,39 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
 
   return (
     <div className="space-y-4">
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-          ${isDragActive ? "border-primary bg-primary/5" : "border-gray-300 hover:border-primary"}`}
-      >
-        <input {...getInputProps()} />
-        <div className="flex flex-col items-center gap-2">
-          <ImageIcon className="w-8 h-8 text-gray-400" />
-          <p className="text-sm text-gray-600">
-            {isDragActive
-              ? "Drop the images here"
-              : "Drag & drop images here, or click to select"}
-          </p>
+      <div className="flex gap-4">
+        <div
+          {...getRootProps()}
+          className={`flex-1 border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+            ${isDragActive ? "border-primary bg-primary/5" : "border-gray-300 hover:border-primary"}`}
+        >
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center gap-2">
+            <ImageIcon className="w-8 h-8 text-gray-400" />
+            <p className="text-sm text-gray-600">
+              {isDragActive
+                ? "Drop the images here"
+                : "Drag & drop images here, or click to select"}
+            </p>
+          </div>
         </div>
+        
+        <Button
+          variant="outline"
+          className="flex-none flex gap-2 items-center"
+          onClick={() => cameraInputRef.current?.click()}
+        >
+          <Camera className="w-4 h-4" />
+          Take Photo
+        </Button>
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleCameraCapture}
+        />
       </div>
 
       {images.length > 0 && (
