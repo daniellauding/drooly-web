@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Globe, Bot, Instagram, Youtube, ChevronDown } from "lucide-react";
+import { Globe, Bot, Instagram, Youtube, ChevronDown, Camera } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { RecipeUrlDialog } from "./RecipeUrlDialog";
+import { ImageRecognitionDialog } from "./ImageRecognitionDialog";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeCreationOptionsProps {
@@ -16,6 +17,7 @@ interface RecipeCreationOptionsProps {
 
 export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOptionsProps) {
   const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const [showImageRecognitionDialog, setShowImageRecognitionDialog] = useState(false);
 
   return (
     <>
@@ -30,6 +32,10 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
             <DropdownMenuItem onClick={() => setShowUrlDialog(true)}>
               <Globe className="mr-2 h-4 w-4" />
               Web Scrape URL
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
+              <Camera className="mr-2 h-4 w-4" />
+              Take Photo & Scan
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Bot className="mr-2 h-4 w-4" />
@@ -51,6 +57,12 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
         open={showUrlDialog}
         onOpenChange={setShowUrlDialog}
         onRecipeScraped={onRecipeImported}
+      />
+
+      <ImageRecognitionDialog
+        open={showImageRecognitionDialog}
+        onOpenChange={setShowImageRecognitionDialog}
+        onRecipeScanned={onRecipeImported}
       />
     </>
   );
