@@ -10,13 +10,20 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/components/ui/use-toast";
 
 interface User {
   id: string;
-  name: string;
   email: string;
+  avatarUrl: string | null;
+  devicePlatform: string;
+  role: string;
+  followers: string[];
+  following: string[];
+  savedRecipes: string[];
+  pushToken: string;
+  createdAt: any; // Firebase Timestamp
 }
 
 interface UserSearchDialogProps {
@@ -37,8 +44,8 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
       const usersRef = collection(db, "users");
       const q = query(
         usersRef,
-        where("name", ">=", searchQuery),
-        where("name", "<=", searchQuery + "\uf8ff")
+        where("email", ">=", searchQuery),
+        where("email", "<=", searchQuery + "\uf8ff")
       );
       
       const snapshot = await getDocs(q);
@@ -55,7 +62,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
     console.log("Selected user:", user);
     toast({
       title: "Coming Soon",
-      description: `Starting a conversation with ${user.name} will be available soon!`,
+      description: `Starting a conversation with ${user.email} will be available soon!`,
     });
     onOpenChange(false);
   };
@@ -63,7 +70,7 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput
-        placeholder="Search users..."
+        placeholder="Search users by email..."
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
@@ -77,13 +84,19 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
               className="flex items-center gap-2 cursor-pointer"
             >
               <Avatar className="h-8 w-8">
-                <div className="bg-primary text-primary-foreground w-full h-full flex items-center justify-center text-sm font-medium">
-                  {user.name[0]}
-                </div>
+                {user.avatarUrl ? (
+                  <AvatarImage src={user.avatarUrl} alt={user.email} />
+                ) : (
+                  <AvatarFallback>
+                    {user.email[0].toUpperCase()}
+                  </AvatarFallback>
+                )}
               </Avatar>
               <div>
-                <p className="font-medium">{user.name}</p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
+                <p className="font-medium">{user.email}</p>
+                <p className="text-sm text-muted-foreground">
+                  {user.role} • {user.followers?.length || 0} followers
+                </p>
               </div>
             </CommandItem>
           ))}
