@@ -27,7 +27,7 @@ export default function RecipeDetail() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !recipe) {
     return (
       <div className="min-h-screen bg-[#F7F9FC]">
         <div className="h-[50vh]">
@@ -46,13 +46,9 @@ export default function RecipeDetail() {
     );
   }
 
-  if (!recipe) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-lg text-muted-foreground">Recipe not found</p>
-      </div>
-    );
-  }
+  // Ensure ingredients and instructions exist with default values
+  const ingredients = recipe.ingredientSections?.[0]?.ingredients || [];
+  const instructions = recipe.steps?.map(step => step.instructions).filter(Boolean) || [];
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
@@ -67,17 +63,17 @@ export default function RecipeDetail() {
 
       <div className="relative h-[50vh] w-full">
         <img
-          src={recipe.image}
-          alt={recipe.title}
+          src={recipe.imageUrls?.[recipe.featuredImageIndex || 0] || '/placeholder.svg'}
+          alt={recipe.name}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-          <h1 className="text-4xl font-bold mb-2">{recipe.title}</h1>
+          <h1 className="text-4xl font-bold mb-2">{recipe.name}</h1>
           <div className="flex items-center gap-2 text-sm">
-            <span>{recipe.chef}</span>
+            <span>{recipe.creatorName || 'Anonymous'}</span>
             <span>•</span>
-            <span>{recipe.date}</span>
+            <span>{new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}</span>
           </div>
         </div>
       </div>
@@ -108,7 +104,7 @@ export default function RecipeDetail() {
           <div className="bg-white p-4 rounded-xl shadow-sm">
             <Clock className="w-5 h-5 text-primary mb-2" />
             <p className="text-sm text-muted-foreground">Cook Time</p>
-            <p className="font-medium">{recipe.cookTime}</p>
+            <p className="font-medium">{recipe.totalTime} min</p>
           </div>
           <div className="bg-white p-4 rounded-xl shadow-sm">
             <ChefHat className="w-5 h-5 text-primary mb-2" />
@@ -118,7 +114,7 @@ export default function RecipeDetail() {
           <div className="bg-white p-4 rounded-xl shadow-sm">
             <div className="w-5 h-5 text-primary mb-2">👥</div>
             <p className="text-sm text-muted-foreground">Servings</p>
-            <p className="font-medium">2 servings</p>
+            <p className="font-medium">{recipe.servings?.amount || 2} {recipe.servings?.unit || 'servings'}</p>
           </div>
         </div>
 
@@ -132,7 +128,7 @@ export default function RecipeDetail() {
             <h2 className="text-xl font-semibold mb-4">Ingredients</h2>
             <ScrollArea className="h-[300px] pr-4">
               <ul className="space-y-3">
-                {recipe.ingredients.map((ingredient, index) => (
+                {ingredients.map((ingredient, index) => (
                   <li key={index} className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary" />
                     <span>{ingredient}</span>
@@ -146,7 +142,7 @@ export default function RecipeDetail() {
             <h2 className="text-xl font-semibold mb-4">Instructions</h2>
             <ScrollArea className="h-[300px] pr-4">
               <ol className="space-y-4">
-                {recipe.instructions.map((instruction, index) => (
+                {instructions.map((instruction, index) => (
                   <li key={index} className="flex gap-4">
                     <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm">
                       {index + 1}

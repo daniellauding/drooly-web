@@ -6,7 +6,7 @@ interface RecipeCardProps {
   id: string;
   title: string;
   image: string;
-  time: string;
+  cookTime: string; // Changed from time to cookTime
   difficulty: string;
   isFavorite?: boolean;
   chef?: string;
@@ -17,7 +17,7 @@ export function RecipeCard({
   id,
   title, 
   image, 
-  time, 
+  cookTime, // Changed from time to cookTime
   difficulty, 
   isFavorite = false,
   chef,
@@ -61,7 +61,7 @@ export function RecipeCard({
         <div className="flex items-center gap-3 text-sm text-gray-600">
           <div className="flex items-center gap-1.5">
             <Clock className="h-4 w-4" />
-            <span>{time}</span>
+            <span>{cookTime}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <ChefHat className="h-4 w-4" />
