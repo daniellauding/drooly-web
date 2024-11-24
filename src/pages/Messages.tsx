@@ -11,29 +11,41 @@ import { ConversationList } from "@/components/chat/ConversationList";
 import { UserSearchDialog } from "@/components/chat/UserSearchDialog";
 import { TopBar } from "@/components/TopBar";
 import { BottomBar } from "@/components/BottomBar";
+import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function Messages() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const { data: conversations, isLoading } = useQuery({
-    queryKey: ["conversations", user?.uid],
-    queryFn: () => fetchConversations(user?.uid || ""),
-    enabled: !!user,
-  });
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log("Messages page mounted");
-  }, []);
+    if (!user) return;
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Please login to view messages</p>
-      </div>
+    console.log("Setting up conversations listener for user:", user.uid);
+    const conversationsRef = collection(db, "conversations");
+    const q = query(
+      conversationsRef,
+      where("participants", "array-contains", user.uid),
+      orderBy("lastMessageTimestamp", "desc")
     );
-  }
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const conversationsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        name: doc.data().participantEmails.find((email: string) => email !== user.email),
+        lastMessage: doc.data().lastMessage || "No messages yet",
+        unreadCount: doc.data().unreadCount || 0,
+      }));
+      console.log("Received conversations update:", conversationsData);
+      setConversations(conversationsData);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleNewMessage = () => {
     setIsSearchOpen(true);
@@ -75,17 +87,17 @@ export default function Messages() {
                     <PlusSquare className="h-5 w-5" />
                   </Button>
                 </div>
-                {conversations?.length === 0 ? (
+                {conversations.length === 0 ? (
                   <NoMessagesPlaceholder />
                 ) : (
-                  <ConversationList conversations={conversations || []} />
+                  <ConversationList conversations={conversations} />
                 )}
               </div>
             </div>
             
             {/* Chat View */}
             <div className="flex-1">
-              {conversations?.length === 0 ? (
+              {conversations.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   Select a conversation or start a new one
                 </div>
