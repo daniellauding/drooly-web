@@ -1,5 +1,6 @@
-import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, getDoc, where, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Recipe } from '@/types/recipe';
 
 export interface Recipe {
   id: string;
@@ -39,12 +40,15 @@ export const fetchRecipes = async (): Promise<Recipe[]> => {
   console.log('Fetching recipes from Firestore');
   try {
     const recipesRef = collection(db, 'recipes');
-    const q = query(recipesRef, orderBy('createdAt', 'desc'));
+    const q = query(
+      recipesRef, 
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc')
+    );
     const querySnapshot = await getDocs(q);
     
     return querySnapshot.docs.map((doc, index) => {
       const data = doc.data();
-      // Ensure we have an image URL, fallback to placeholder if none exists
       const image = data.imageUrls?.[data.featuredImageIndex || 0] || 
                    data.image || 
                    PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
@@ -52,8 +56,8 @@ export const fetchRecipes = async (): Promise<Recipe[]> => {
       return {
         id: doc.id,
         ...data,
-        image, // Ensure image is always present
-        title: data.name || data.title, // Handle both name and title fields
+        image,
+        title: data.name || data.title,
         chef: data.creatorName || 'Anonymous',
         date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
         cookTime: `${data.totalTime || 30} min`,
@@ -61,6 +65,27 @@ export const fetchRecipes = async (): Promise<Recipe[]> => {
     });
   } catch (error) {
     console.error('Error fetching recipes:', error);
+    throw error;
+  }
+};
+
+export const fetchMyRecipes = async (userId: string): Promise<Recipe[]> => {
+  console.log('Fetching user recipes from Firestore');
+  try {
+    const recipesRef = collection(db, 'recipes');
+    const q = query(
+      recipesRef,
+      where('creatorId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnapshot = await getDocs(q);
+    
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data()
+    } as Recipe));
+  } catch (error) {
+    console.error('Error fetching user recipes:', error);
     throw error;
   }
 };
@@ -91,6 +116,40 @@ export const fetchRecipeById = async (id: string): Promise<Recipe | null> => {
     } as Recipe;
   } catch (error) {
     console.error('Error fetching recipe:', error);
+    throw error;
+  }
+};
+
+export const saveRecipe = async (recipe: Partial<Recipe>, userId: string, isDraft: boolean = false) => {
+  console.log('Saving recipe to Firestore:', recipe);
+  try {
+    const recipeData = {
+      ...recipe,
+      creatorId: userId,
+      createdAt: new Date(),
+      status: isDraft ? 'draft' : 'published',
+      // Ensure all required fields are present
+      title: recipe.title || '',
+      description: recipe.description || '',
+      difficulty: recipe.difficulty || 'medium',
+      cookingMethods: recipe.cookingMethods || [],
+      cuisine: recipe.cuisine || '',
+      dishTypes: recipe.dishTypes || [],
+      images: recipe.images || [],
+      ingredients: recipe.ingredients || [],
+      steps: recipe.steps || [],
+      totalTime: recipe.totalTime || '0',
+      servings: recipe.servings || { amount: 1, unit: 'serving' },
+      tags: recipe.tags || [],
+      worksWith: recipe.worksWith || [],
+      serveWith: recipe.serveWith || []
+    };
+
+    const docRef = await addDoc(collection(db, 'recipes'), recipeData);
+    console.log('Recipe saved with ID:', docRef.id);
+    return docRef.id;
+  } catch (error) {
+    console.error('Error saving recipe:', error);
     throw error;
   }
 };
