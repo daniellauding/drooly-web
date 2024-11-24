@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2, Reply } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Check, CheckCheck, Pencil, Trash2, Reply, MailPlus } from "lucide-react";
 import { Message as MessageType } from "@/types/chat";
 
 interface MessageProps {
@@ -10,7 +11,10 @@ interface MessageProps {
   onEdit: (id: string, newText: string) => void;
   onDelete: (id: string) => void;
   onReply: (message: MessageType) => void;
+  onMarkUnread: (id: string) => void;
   replyToMessage?: MessageType | null;
+  recipientAvatar?: string;
+  recipientInitials?: string;
 }
 
 export function MessageComponent({ 
@@ -19,7 +23,10 @@ export function MessageComponent({
   onEdit, 
   onDelete, 
   onReply,
-  replyToMessage 
+  onMarkUnread,
+  replyToMessage,
+  recipientAvatar,
+  recipientInitials = "U"
 }: MessageProps) {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
@@ -79,8 +86,20 @@ export function MessageComponent({
           )}
         </div>
         <div className="flex items-center gap-2 mt-1">
-          {message.seen && isOwnMessage && (
-            <span className="text-xs text-muted-foreground">Seen</span>
+          {isOwnMessage && (
+            <div className="flex items-center gap-1">
+              {message.seen ? (
+                <>
+                  <CheckCheck className="h-4 w-4 text-blue-500" />
+                  <Avatar className="h-4 w-4">
+                    <AvatarImage src={recipientAvatar} />
+                    <AvatarFallback>{recipientInitials}</AvatarFallback>
+                  </Avatar>
+                </>
+              ) : (
+                <Check className="h-4 w-4 text-muted-foreground" />
+              )}
+            </div>
           )}
           <div className="flex gap-1">
             <Button
@@ -91,7 +110,7 @@ export function MessageComponent({
             >
               <Reply className="h-4 w-4" />
             </Button>
-            {isOwnMessage && (
+            {isOwnMessage ? (
               <>
                 <Button
                   size="icon"
@@ -113,6 +132,15 @@ export function MessageComponent({
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </>
+            ) : (
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6"
+                onClick={() => onMarkUnread(message.id)}
+              >
+                <MailPlus className="h-4 w-4" />
+              </Button>
             )}
           </div>
         </div>

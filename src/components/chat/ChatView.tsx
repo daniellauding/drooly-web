@@ -23,9 +23,16 @@ import { MessageInput } from "./MessageInput";
 interface ChatViewProps {
   conversationId: string;
   onDeleteConversation: (id: string) => void;
+  recipientAvatar?: string;
+  recipientInitials?: string;
 }
 
-export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps) {
+export function ChatView({ 
+  conversationId, 
+  onDeleteConversation,
+  recipientAvatar,
+  recipientInitials 
+}: ChatViewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const { user } = useAuth();
@@ -141,6 +148,34 @@ export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps
     return messages.find(m => m.id === replyToId);
   };
 
+  const handleMarkUnread = async (messageId: string) => {
+    try {
+      const messageRef = doc(db, `conversations/${conversationId}/messages/${messageId}`);
+      await updateDoc(messageRef, { seen: false });
+      
+      // Update conversation unread count
+      const conversationRef = doc(db, "conversations", conversationId);
+      const conversationDoc = await getDoc(conversationRef);
+      if (conversationDoc.exists()) {
+        await updateDoc(conversationRef, {
+          unreadCount: (conversationDoc.data().unreadCount || 0) + 1
+        });
+      }
+
+      toast({
+        title: "Message marked as unread",
+        description: "The message has been marked as unread."
+      });
+    } catch (error) {
+      console.error("Error marking message as unread:", error);
+      toast({
+        variant: "destructive",
+        title: "Error marking message as unread",
+        description: "Please try again later."
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex justify-between items-center">
@@ -164,7 +199,10 @@ export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps
               onEdit={handleEditMessage}
               onDelete={handleDeleteMessage}
               onReply={(message) => setReplyTo(message)}
+              onMarkUnread={handleMarkUnread}
               replyToMessage={msg.replyTo ? findReplyToMessage(msg.replyTo) : null}
+              recipientAvatar={recipientAvatar}
+              recipientInitials={recipientInitials}
             />
           ))}
         </div>
