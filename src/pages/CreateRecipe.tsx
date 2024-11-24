@@ -41,6 +41,14 @@ const initialRecipe: Recipe = {
   serveWith: [],
 };
 
+export interface RecipeStep {
+  title: string;
+  instructions: string;
+  duration: string;
+  ingredientGroup?: string;
+  media?: string[];
+}
+
 export default function CreateRecipe() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -49,6 +57,13 @@ export default function CreateRecipe() {
   const [recipe, setRecipe] = useState<Recipe>(initialRecipe);
 
   console.log("Recipe state updated:", recipe);
+
+  const handleRecipeImport = (importedRecipe: Partial<Recipe>) => {
+    setRecipe(prev => ({
+      ...prev,
+      ...importedRecipe
+    }));
+  };
 
   const handleSave = async (isDraft = false) => {
     if (!user) {
@@ -109,7 +124,6 @@ export default function CreateRecipe() {
     }
   };
 
-  // Get unique ingredient groups
   const ingredientGroups = Array.from(new Set(recipe.ingredients.map(ing => ing.group)));
 
   return (
@@ -119,7 +133,7 @@ export default function CreateRecipe() {
         <div className="container max-w-4xl mx-auto p-4 space-y-8">
           <h1 className="text-3xl font-bold">Create New Recipe</h1>
 
-          <RecipeCreationOptions />
+          <RecipeCreationOptions onRecipeImported={handleRecipeImport} />
 
           <RecipeBasicInfo 
             recipe={recipe}
