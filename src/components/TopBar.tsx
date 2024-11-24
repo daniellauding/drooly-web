@@ -3,9 +3,57 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "./ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "./ui/use-toast";
 
 export function TopBar() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Fetch unread messages count
+  const { data: unreadMessagesCount = 0 } = useQuery({
+    queryKey: ['unreadMessages', user?.uid],
+    queryFn: async () => {
+      if (!user) return 0;
+      const messagesRef = collection(db, "messages");
+      const q = query(
+        messagesRef,
+        where("recipientId", "==", user.uid),
+        where("read", "==", false)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.size;
+    },
+    enabled: !!user,
+  });
+
+  // Fetch notifications count
+  const { data: unreadNotificationsCount = 0 } = useQuery({
+    queryKey: ['unreadNotifications', user?.uid],
+    queryFn: async () => {
+      if (!user) return 0;
+      const notificationsRef = collection(db, "notifications");
+      const q = query(
+        notificationsRef,
+        where("userId", "==", user.uid),
+        where("read", "==", false)
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.size;
+    },
+    enabled: !!user,
+  });
+
+  const handleNotificationsClick = () => {
+    toast({
+      title: "Coming Soon",
+      description: "Notifications feature will be available soon!",
+    });
+  };
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
@@ -26,10 +74,14 @@ export function TopBar() {
             variant="ghost"
             size="icon"
             className="relative"
-            onClick={() => navigate('/notifications')}
+            onClick={handleNotificationsClick}
           >
             <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
+            {unreadNotificationsCount > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
+                {unreadNotificationsCount}
+              </Badge>
+            )}
           </Button>
           <Button
             variant="ghost"
@@ -38,7 +90,11 @@ export function TopBar() {
             onClick={() => navigate('/messages')}
           >
             <MessageSquare className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">2</Badge>
+            {unreadMessagesCount > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
+                {unreadMessagesCount}
+              </Badge>
+            )}
           </Button>
           <Button
             variant="default"
