@@ -9,6 +9,8 @@ import { fetchConversations } from "@/services/messageService";
 import { ChatView } from "@/components/chat/ChatView";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { UserSearchDialog } from "@/components/chat/UserSearchDialog";
+import { TopBar } from "@/components/TopBar";
+import { BottomBar } from "@/components/BottomBar";
 
 export default function Messages() {
   const { user } = useAuth();
@@ -59,39 +61,42 @@ export default function Messages() {
   );
 
   return (
-    <div className="flex h-screen bg-background">
-      <div className="flex flex-col w-full max-w-screen-xl mx-auto">
-        <div className="flex h-[calc(100vh-4rem)] mt-16">
-          {/* Conversations List */}
-          <div className="w-80 border-r">
-            <div className="h-full flex flex-col">
-              <div className="p-4 border-b flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Messages</h2>
-                <Button onClick={handleNewMessage} size="icon" variant="ghost">
-                  <PlusSquare className="h-5 w-5" />
-                </Button>
+    <div className="flex flex-col h-screen bg-background">
+      <TopBar />
+      <div className="flex-1 flex mt-16 mb-16">
+        <div className="flex flex-col w-full max-w-screen-xl mx-auto">
+          <div className="flex h-full">
+            {/* Conversations List */}
+            <div className="w-80 border-r">
+              <div className="h-full flex flex-col">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <h2 className="text-lg font-semibold">Messages</h2>
+                  <Button onClick={handleNewMessage} size="icon" variant="ghost">
+                    <PlusSquare className="h-5 w-5" />
+                  </Button>
+                </div>
+                {conversations?.length === 0 ? (
+                  <NoMessagesPlaceholder />
+                ) : (
+                  <ConversationList conversations={conversations || []} />
+                )}
               </div>
+            </div>
+            
+            {/* Chat View */}
+            <div className="flex-1">
               {conversations?.length === 0 ? (
-                <NoMessagesPlaceholder />
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Select a conversation or start a new one
+                </div>
               ) : (
-                <ConversationList conversations={conversations || []} />
+                <ChatView />
               )}
             </div>
           </div>
-          
-          {/* Chat View */}
-          <div className="flex-1">
-            {conversations?.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Select a conversation or start a new one
-              </div>
-            ) : (
-              <ChatView />
-            )}
-          </div>
         </div>
       </div>
-
+      <BottomBar />
       <UserSearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </div>
   );
