@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { collection, getDocs, query, where, orderBy, startAt, endAt } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   CommandDialog,
@@ -32,13 +32,13 @@ export function UserSearchDialog({ open, onOpenChange }: UserSearchDialogProps) 
     queryKey: ["users", searchQuery],
     queryFn: async () => {
       console.log("Fetching users with query:", searchQuery);
+      if (!searchQuery) return [];
+      
       const usersRef = collection(db, "users");
-      const searchLower = searchQuery.toLowerCase();
       const q = query(
         usersRef,
-        orderBy("nameLower"),
-        startAt(searchLower),
-        endAt(searchLower + "\uf8ff")
+        where("name", ">=", searchQuery),
+        where("name", "<=", searchQuery + "\uf8ff")
       );
       
       const snapshot = await getDocs(q);
