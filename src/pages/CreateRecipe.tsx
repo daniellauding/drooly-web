@@ -10,9 +10,9 @@ import { RecipeBasicInfo } from "@/components/recipe/RecipeBasicInfo";
 import { RecipeDetails } from "@/components/recipe/RecipeDetails";
 import { IngredientInput } from "@/components/IngredientInput";
 import { RecipeStepInput } from "@/components/RecipeStepInput";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
-import { Recipe } from "@/types/recipe";
+import { Recipe, validateRecipe } from "@/types/recipe";
 
 const initialRecipe: Recipe = {
   title: "",
@@ -41,18 +41,39 @@ const initialRecipe: Recipe = {
   serveWith: [],
 };
 
-const CreateRecipe = () => {
+export default function CreateRecipe() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [recipe, setRecipe] = useState<Recipe>(initialRecipe);
 
+  console.log("Recipe state updated:", recipe);
+
   const handleSave = async (isDraft = false) => {
     if (!user) {
       toast({
         title: "Error",
         description: "You must be logged in to create recipes",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const validation = validateRecipe(recipe);
+    if (!validation.isValid && !isDraft) {
+      toast({
+        title: "Validation Error",
+        description: (
+          <div className="space-y-2">
+            <p>Please fix the following errors:</p>
+            <ul className="list-disc pl-4">
+              {validation.errors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        ),
         variant: "destructive"
       });
       return;
@@ -168,6 +189,4 @@ const CreateRecipe = () => {
       <BottomBar />
     </div>
   );
-};
-
-export default CreateRecipe;
+}
