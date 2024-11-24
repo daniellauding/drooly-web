@@ -46,6 +46,11 @@ export function IngredientSuggestions({ onSelect, onClose, initialValue = "" }: 
   const hasExactMatch = allIngredients.some(
     ing => ing.toLowerCase() === searchValue.toLowerCase()
   );
+  const hasSearchResults = Object.values(COMMON_INGREDIENTS).some(ingredients =>
+    ingredients.some(ingredient => 
+      ingredient.toLowerCase().includes(searchValue.toLowerCase())
+    )
+  );
 
   return (
     <div ref={ref}>
@@ -62,17 +67,6 @@ export function IngredientSuggestions({ onSelect, onClose, initialValue = "" }: 
           <CommandEmpty className="p-4">
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">No ingredients found.</p>
-              {searchValue.trim() && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="w-full h-9"
-                  onClick={handleAddCustom}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add "{searchValue}" as custom ingredient
-                </Button>
-              )}
             </div>
           </CommandEmpty>
           {Object.entries(COMMON_INGREDIENTS).map(([category, ingredients]) => (
@@ -97,24 +91,22 @@ export function IngredientSuggestions({ onSelect, onClose, initialValue = "" }: 
                 ))}
             </CommandGroup>
           ))}
-          {!hasExactMatch && (
-            <div className="p-2 border-t">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full h-9"
-                onClick={handleAddCustom}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {searchValue.trim() 
-                  ? `+ Add "${searchValue}" as custom ingredient`
-                  : "+ Add custom ingredient"
-                }
-              </Button>
-            </div>
-          )}
         </CommandList>
       </Command>
+      {(!hasSearchResults || !hasExactMatch) && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full h-9 mt-2"
+          onClick={handleAddCustom}
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          {searchValue.trim() 
+            ? `Add "${searchValue}" as custom ingredient`
+            : "Add custom ingredient"
+          }
+        </Button>
+      )}
     </div>
   );
 }
