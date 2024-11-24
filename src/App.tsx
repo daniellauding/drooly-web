@@ -11,6 +11,8 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Messages from "./pages/Messages";
+import Create from "./pages/Create";
+import CreateRecipe from "./pages/CreateRecipe";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,8 @@ const App = () => (
             <Route path="/messages" element={<Messages />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/create" element={<Create />} />
+            <Route path="/create/recipe" element={<CreateRecipe />} />
             <Route path="/favorites" element={<Navigate to="/" />} />
             <Route path="/search" element={<Navigate to="/" />} />
           </Routes>
