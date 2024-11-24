@@ -3,12 +3,12 @@ import { Worker, createWorker } from "tesseract.js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera, Check, X } from "lucide-react";
+import { Loader2, Camera, Check, X, Edit2 } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { analyzeRecipeText } from "@/utils/recipeTextAnalysis";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 
 interface ImageRecognitionDialogProps {
   open: boolean;
@@ -16,20 +16,17 @@ interface ImageRecognitionDialogProps {
   onRecipeScanned: (recipe: Partial<Recipe>) => void;
 }
 
-interface ExtractedData {
-  title: string;
-  cuisine: string;
-  servings?: { amount: number; unit: string };
-  cookingMethods: string[];
-  equipment: string[];
-  ingredients: { name: string; amount: string; unit: string; }[];
-  steps: { title: string; instructions: string; duration: string; media: string[]; }[];
+interface ExtractedField {
+  label: string;
+  key: string;
+  value: string;
+  editable: boolean;
 }
 
 export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [extractedData, setExtractedData] = useState<ExtractedData | null>(null);
-  const [selectedFields, setSelectedFields] = useState<Record<string, boolean>>({});
+  const [extractedData, setExtractedData] = useState<any>(null);
+  const [editableFields, setEditableFields] = useState<ExtractedField[]>([]);
   const { toast } = useToast();
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,25 +45,27 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       const analyzed = analyzeRecipeText(text);
       setExtractedData(analyzed);
       
-      // Initialize all fields as selected
-      setSelectedFields(
-        Object.keys(analyzed).reduce((acc, key) => ({
-          ...acc,
-          [key]: true
-        }), {})
-      );
+      // Convert analyzed data to editable fields
+      const fields: ExtractedField[] = [
+        { label: "Recipe Title", key: "title", value: analyzed.title || "", editable: true },
+        { label: "Cuisine Type", key: "cuisine", value: analyzed.cuisine || "", editable: true },
+        { label: "Number of Servings", key: "servings", value: analyzed.servings?.amount?.toString() || "", editable: true },
+        { label: "Cooking Methods", key: "cookingMethods", value: analyzed.cookingMethods?.join(", ") || "", editable: true },
+        { label: "Required Equipment", key: "equipment", value: analyzed.equipment?.join(", ") || "", editable: true }
+      ];
+      setEditableFields(fields);
 
       await worker.terminate();
       
       toast({
-        title: "Text extracted successfully",
-        description: "Please review and confirm the extracted information.",
+        title: "Text extracted from image",
+        description: "Please review and edit the information below if needed.",
       });
     } catch (error) {
       console.error("Error scanning recipe:", error);
       toast({
-        title: "Failed to scan recipe",
-        description: "Could not extract recipe details from the image. Please try again or enter them manually.",
+        title: "Couldn't read the image",
+        description: "Please try taking another photo with better lighting and focus.",
         variant: "destructive",
       });
     } finally {
@@ -74,23 +73,29 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
     }
   };
 
+  const handleFieldChange = (index: number, newValue: string) => {
+    const updatedFields = [...editableFields];
+    updatedFields[index] = { ...updatedFields[index], value: newValue };
+    setEditableFields(updatedFields);
+  };
+
   const handleConfirm = () => {
     if (!extractedData) return;
 
-    const selectedData = Object.entries(selectedFields).reduce((acc, [key, selected]) => {
-      if (selected && extractedData[key as keyof ExtractedData]) {
-        acc[key as keyof ExtractedData] = extractedData[key as keyof ExtractedData];
+    // Convert editable fields back to recipe format
+    const updatedRecipe: Partial<Recipe> = {
+      ...extractedData,
+      title: editableFields.find(f => f.key === "title")?.value || "",
+      cuisine: editableFields.find(f => f.key === "cuisine")?.value || "",
+      cookingMethods: editableFields.find(f => f.key === "cookingMethods")?.value.split(",").map(s => s.trim()) || [],
+      equipment: editableFields.find(f => f.key === "equipment")?.value.split(",").map(s => s.trim()) || [],
+      servings: {
+        amount: parseInt(editableFields.find(f => f.key === "servings")?.value || "0"),
+        unit: "serving"
       }
-      return acc;
-    }, {} as Partial<ExtractedData>);
+    };
 
-    onRecipeScanned({
-      ...selectedData,
-      ingredients: selectedData.ingredients?.map(ing => ({
-        ...ing,
-        group: "Main Ingredients"
-      }))
-    });
+    onRecipeScanned(updatedRecipe);
     onOpenChange(false);
   };
 
@@ -98,9 +103,9 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Take Photo of Recipe</DialogTitle>
+          <DialogTitle>Take a Photo of Your Recipe</DialogTitle>
           <DialogDescription>
-            Take a photo of your recipe to automatically import all details
+            Take a clear photo of your recipe, and we'll help you extract the information
           </DialogDescription>
         </DialogHeader>
         
@@ -116,25 +121,28 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
               ) : (
                 <Camera className="mr-2 h-4 w-4" />
               )}
-              {loading ? "Processing..." : "Take Photo"}
+              {loading ? "Reading your recipe..." : "Take Photo"}
             </Button>
           ) : (
             <ScrollArea className="h-[400px] rounded-md border p-4">
               <div className="space-y-4">
-                {Object.entries(extractedData).map(([key, value]) => (
-                  <div key={key} className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <Label className="text-sm font-medium capitalize">{key}</Label>
-                      <pre className="mt-1 whitespace-pre-wrap text-sm">
-                        {JSON.stringify(value, null, 2)}
-                      </pre>
+                {editableFields.map((field, index) => (
+                  <div key={field.key} className="space-y-2">
+                    <Label className="text-sm font-medium">{field.label}</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={field.value}
+                        onChange={(e) => handleFieldChange(index, e.target.value)}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleFieldChange(index, "")}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <Switch
-                      checked={selectedFields[key]}
-                      onCheckedChange={(checked) => 
-                        setSelectedFields(prev => ({...prev, [key]: checked}))
-                      }
-                    />
                   </div>
                 ))}
               </div>
@@ -152,13 +160,16 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
 
           {extractedData && (
             <div className="flex justify-end gap-4">
-              <Button variant="outline" onClick={() => setExtractedData(null)}>
-                <X className="mr-2 h-4 w-4" />
-                Retake Photo
+              <Button variant="outline" onClick={() => {
+                setExtractedData(null);
+                setEditableFields([]);
+              }}>
+                <Camera className="mr-2 h-4 w-4" />
+                Take Another Photo
               </Button>
               <Button onClick={handleConfirm}>
                 <Check className="mr-2 h-4 w-4" />
-                Confirm Selection
+                Use This Recipe
               </Button>
             </div>
           )}
