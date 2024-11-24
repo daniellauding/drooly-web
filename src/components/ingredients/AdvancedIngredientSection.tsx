@@ -19,18 +19,20 @@ export function AdvancedIngredientSection({ onAddIngredient, groups }: AdvancedI
 
   return (
     <div className="space-y-4 mt-4 p-4 border rounded-lg bg-muted/50">
-      <h3 className="font-medium">Custom Ingredient Groups</h3>
+      <h3 className="font-medium text-sm">Custom Ingredient Groups</h3>
       
       <div className="relative">
         <div
-          className={`w-full border rounded-md p-2 flex items-center justify-between cursor-pointer ${!showSuggestions ? 'hover:bg-accent hover:text-accent-foreground' : ''}`}
+          className={`w-full h-10 border rounded-md px-3 flex items-center justify-between cursor-pointer text-sm ${
+            !showSuggestions ? 'hover:bg-accent hover:text-accent-foreground' : ''
+          }`}
           onClick={() => !showSuggestions && setShowSuggestions(true)}
         >
           <span className="text-muted-foreground">Search or add ingredients...</span>
         </div>
 
         {showSuggestions && (
-          <div className="absolute w-full z-50">
+          <div className="absolute w-full z-50 mt-1">
             <IngredientSuggestions 
               onSelect={(ingredientName) => {
                 setShowSuggestions(false);
@@ -48,7 +50,7 @@ export function AdvancedIngredientSection({ onAddIngredient, groups }: AdvancedI
         value=""
         onValueChange={(group) => onAddIngredient("", group)}
       >
-        <SelectTrigger>
+        <SelectTrigger className="h-10">
           <SelectValue placeholder="Select ingredient group" />
         </SelectTrigger>
         <SelectContent>
