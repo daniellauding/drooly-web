@@ -55,6 +55,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
+  const [customIngredientInput, setCustomIngredientInput] = useState("");
 
   const addIngredient = (name = "", group = "Main Ingredients") => {
     onChange([
@@ -62,6 +63,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
       { name, amount: "", unit: "", group }
     ]);
     setShowSuggestions(false);
+    setCustomIngredientInput("");
   };
 
   const updateIngredient = (index: number, updates: Partial<Ingredient>) => {
@@ -73,6 +75,13 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
 
   const removeIngredient = (index: number) => {
     onChange(ingredients.filter((_, i) => i !== index));
+  };
+
+  const handleCustomIngredientKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && customIngredientInput.trim()) {
+      e.preventDefault();
+      addIngredient(customIngredientInput.trim());
+    }
   };
 
   const groupedIngredients = ingredients.reduce((acc, ing) => {
@@ -98,21 +107,21 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
       </div>
 
       <div className="relative">
-        <div
-          className={`w-full h-10 border rounded-md px-3 flex items-center justify-between cursor-pointer text-sm ${
-            !showSuggestions ? 'hover:bg-accent hover:text-accent-foreground' : ''
-          }`}
+        <Input
+          value={customIngredientInput}
+          onChange={(e) => setCustomIngredientInput(e.target.value)}
+          onKeyDown={handleCustomIngredientKeyDown}
           onClick={() => !showSuggestions && setShowSuggestions(true)}
-        >
-          <span className="text-muted-foreground">Search or add ingredients...</span>
-          <ChevronDown className={`h-4 w-4 transition-transform ${showSuggestions ? 'rotate-180' : ''}`} />
-        </div>
+          placeholder="Search or add ingredients..."
+          className="cursor-pointer"
+        />
 
         {showSuggestions && (
           <div className="absolute w-full z-50 mt-1">
             <IngredientSuggestions 
               onSelect={(ingredientName) => addIngredient(ingredientName)}
               onClose={() => setShowSuggestions(false)}
+              initialValue={customIngredientInput}
             />
           </div>
         )}

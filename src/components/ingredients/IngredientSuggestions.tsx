@@ -7,10 +7,11 @@ import { useState, useEffect, useRef } from "react";
 interface IngredientSuggestionsProps {
   onSelect: (ingredient: string) => void;
   onClose: () => void;
+  initialValue?: string;
 }
 
-export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestionsProps) {
-  const [searchValue, setSearchValue] = useState("");
+export function IngredientSuggestions({ onSelect, onClose, initialValue = "" }: IngredientSuggestionsProps) {
+  const [searchValue, setSearchValue] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
   const ref = useRef<HTMLDivElement>(null);
 
