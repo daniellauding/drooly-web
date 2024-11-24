@@ -8,6 +8,7 @@ import {
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -72,23 +73,26 @@ export function MultiSelect({
       <PopoverContent className="w-full p-0">
         <Command>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
-          <CommandEmpty>No item found.</CommandEmpty>
-          <CommandGroup className="max-h-64 overflow-auto">
-            {safeOptions.map((option) => (
-              <CommandItem
-                key={option}
-                onSelect={() => handleSelect(option)}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    safeSelected.includes(option) ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {option}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          <CommandList>
+            <CommandEmpty>No item found.</CommandEmpty>
+            <CommandGroup className="max-h-64 overflow-auto">
+              {safeOptions.map((option) => (
+                <CommandItem
+                  key={option}
+                  onSelect={() => handleSelect(option)}
+                  value={option}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      safeSelected.includes(option) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {option}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
