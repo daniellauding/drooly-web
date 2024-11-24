@@ -52,12 +52,14 @@ const COMMON_UNITS = [
 
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const addIngredient = (name = "", group = "Main Ingredients") => {
     onChange([
       ...ingredients,
       { name, amount: "", unit: "", group }
     ]);
+    setShowSuggestions(false);
   };
 
   const updateIngredient = (index: number, updates: Partial<Ingredient>) => {
@@ -92,9 +94,22 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         </Button>
       </div>
 
-      <IngredientSuggestions 
-        onSelect={(ingredientName) => addIngredient(ingredientName)}
-      />
+      {!showSuggestions && (
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setShowSuggestions(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Ingredient
+        </Button>
+      )}
+
+      {showSuggestions && (
+        <IngredientSuggestions 
+          onSelect={(ingredientName) => addIngredient(ingredientName)}
+        />
+      )}
       
       {Object.entries(groupedIngredients).map(([group, groupIngredients]) => (
         <div key={group} className="space-y-2">
