@@ -19,6 +19,7 @@ import { RecipeStepInput } from "@/components/RecipeStepInput";
 import { MultiSelect } from "@/components/MultiSelect";
 import { IngredientInput } from "@/components/IngredientInput";
 import { useToast } from "@/components/ui/use-toast";
+import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
 
 // Move constants to a separate file later for better organization
 const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard"];
@@ -31,6 +32,8 @@ export interface RecipeStep {
   title: string;
   instructions: string;
   duration: string;
+  ingredientGroup?: string;
+  media?: string[];
 }
 
 interface Recipe {
@@ -71,7 +74,9 @@ const initialRecipe: Recipe = {
   steps: [{
     title: "Preparation",
     instructions: "",
-    duration: ""
+    duration: "",
+    ingredientGroup: "",
+    media: []
   }],
   tags: [],
   totalTime: "",
@@ -126,9 +131,14 @@ const CreateRecipe = () => {
     }
   };
 
+  // Get unique ingredient groups
+  const ingredientGroups = Array.from(new Set(recipe.ingredients.map(ing => ing.group)));
+
   return (
     <div className="container max-w-4xl mx-auto p-4 space-y-8">
       <h1 className="text-3xl font-bold">Create New Recipe</h1>
+
+      <RecipeCreationOptions />
 
       <div className="space-y-6">
         <ImageUpload
@@ -280,6 +290,7 @@ const CreateRecipe = () => {
               <RecipeStepInput
                 key={index}
                 step={step}
+                ingredientGroups={ingredientGroups}
                 onChange={(updatedStep) => {
                   const newSteps = [...recipe.steps];
                   newSteps[index] = updatedStep;
@@ -298,7 +309,7 @@ const CreateRecipe = () => {
               variant="outline"
               onClick={() => setRecipe(prev => ({
                 ...prev,
-                steps: [...prev.steps, { title: "", instructions: "", duration: "" }]
+                steps: [...prev.steps, { title: "", instructions: "", duration: "", media: [] }]
               }))}
             >
               Add Step
