@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Recipe } from "@/types/recipe";
+import { CookingTimeInput } from "./CookingTimeInput";
 
 const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard"];
 const COOKING_METHODS = ["Baking", "Frying", "Grilling", "Boiling", "Steaming", "Roasting", "Sautéing"];
@@ -118,14 +119,10 @@ export function RecipeDetails({ recipe, onChange }: RecipeDetailsProps) {
         </div>
       </div>
 
-      <div>
-        <Label>Total Cooking Time</Label>
-        <Input
-          value={recipe.totalTime}
-          onChange={(e) => onChange({ totalTime: e.target.value })}
-          placeholder="e.g., 45 minutes"
-        />
-      </div>
+      <CookingTimeInput
+        value={recipe.totalTime}
+        onChange={(time) => onChange({ totalTime: time })}
+      />
     </div>
   );
 }
