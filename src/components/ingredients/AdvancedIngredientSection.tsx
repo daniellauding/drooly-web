@@ -6,6 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { IngredientSuggestions } from "./IngredientSuggestions";
+import { useState } from "react";
 
 interface AdvancedIngredientSectionProps {
   onAddIngredient: (name: string, group: string) => void;
@@ -13,10 +15,37 @@ interface AdvancedIngredientSectionProps {
 }
 
 export function AdvancedIngredientSection({ onAddIngredient, groups }: AdvancedIngredientSectionProps) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   return (
     <div className="space-y-4 mt-4 p-4 border rounded-lg bg-muted/50">
       <h3 className="font-medium text-sm">Custom Ingredient Groups</h3>
       
+      <div className="relative">
+        <div
+          className={`w-full h-10 border rounded-md px-3 flex items-center justify-between cursor-pointer text-sm ${
+            !showSuggestions ? 'hover:bg-accent hover:text-accent-foreground' : ''
+          }`}
+          onClick={() => !showSuggestions && setShowSuggestions(true)}
+        >
+          <span className="text-muted-foreground">Search or add ingredients...</span>
+        </div>
+
+        {showSuggestions && (
+          <div className="absolute w-full z-50 mt-1">
+            <IngredientSuggestions 
+              onSelect={(ingredientName) => {
+                setShowSuggestions(false);
+                // Show group selection after ingredient is selected
+                const defaultGroup = groups[0] || "Main Ingredients";
+                onAddIngredient(ingredientName, defaultGroup);
+              }}
+              onClose={() => setShowSuggestions(false)}
+            />
+          </div>
+        )}
+      </div>
+
       <Select
         value=""
         onValueChange={(group) => onAddIngredient("", group)}
