@@ -1,31 +1,15 @@
 import { collection, getDocs, query, orderBy, doc, getDoc, where, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Recipe } from '@/types/recipe';
+import { Recipe as RecipeType } from '@/types/recipe';
 
-export interface Recipe {
-  id: string;
-  title: string;
-  name: string;
-  image: string;
+export interface Recipe extends RecipeType {
+  name?: string;
+  image?: string;
   imageUrls?: string[];
-  featuredImageIndex?: number;
-  cookTime: string;
-  totalTime: number;
-  difficulty: string;
-  chef: string;
+  cookTime?: string;
+  chef?: string;
   creatorName?: string;
-  creatorId: string;
-  date: string;
-  createdAt: { seconds: number };
-  description: string;
-  ingredients: string[];
-  instructions: string[];
-  ingredientSections?: { ingredients: string[] }[];
-  steps?: { instructions: string }[];
-  servings?: {
-    amount: number;
-    unit: string;
-  };
+  date?: string;
 }
 
 const PLACEHOLDER_IMAGES = [
@@ -49,15 +33,14 @@ export const fetchRecipes = async (): Promise<Recipe[]> => {
     
     return querySnapshot.docs.map((doc, index) => {
       const data = doc.data();
-      const image = data.imageUrls?.[data.featuredImageIndex || 0] || 
-                   data.image || 
+      const image = data.images?.[data.featuredImageIndex || 0] || 
                    PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
       
       return {
-        id: doc.id,
         ...data,
+        id: doc.id,
         image,
-        title: data.name || data.title,
+        name: data.title,
         chef: data.creatorName || 'Anonymous',
         date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
         cookTime: `${data.totalTime || 30} min`,
@@ -101,15 +84,14 @@ export const fetchRecipeById = async (id: string): Promise<Recipe | null> => {
     }
 
     const data = recipeDoc.data();
-    const image = data.imageUrls?.[data.featuredImageIndex || 0] || 
-                 data.image || 
+    const image = data.images?.[data.featuredImageIndex || 0] || 
                  PLACEHOLDER_IMAGES[0];
 
     return {
-      id: recipeDoc.id,
       ...data,
+      id: recipeDoc.id,
       image,
-      title: data.name || data.title,
+      name: data.title,
       chef: data.creatorName || 'Anonymous',
       date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
       cookTime: `${data.totalTime || 30} min`,

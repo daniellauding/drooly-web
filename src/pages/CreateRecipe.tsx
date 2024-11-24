@@ -39,6 +39,18 @@ const initialRecipe: Recipe = {
   totalTime: "",
   worksWith: [],
   serveWith: [],
+  dietaryInfo: {
+    isVegetarian: false,
+    isVegan: false,
+    isGlutenFree: false,
+    isDairyFree: false,
+    containsNuts: false
+  },
+  categories: [],
+  estimatedCost: "Under $5",
+  equipment: [],
+  season: "Year Round",
+  occasion: "",
 };
 
 export interface RecipeStep {

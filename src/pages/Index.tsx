@@ -81,6 +81,16 @@ const Index = () => {
   const friendsRecipes = recipes?.slice(3, 5) || [];
   const discoverRecipes = recipes?.slice(0, 3) || [];
 
+  const mapRecipeToProps = (recipe: Recipe): RecipeCardProps => ({
+    id: recipe.id || '',
+    title: recipe.title,
+    image: recipe.image,
+    cookTime: recipe.cookTime || `${recipe.totalTime} min`,
+    difficulty: recipe.difficulty,
+    chef: recipe.chef || recipe.creatorName,
+    date: recipe.date
+  });
+
   return (
     <div className="min-h-screen pb-16 pt-16">
       <TopBar />
@@ -112,7 +122,7 @@ const Index = () => {
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               {popularRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} {...recipe} />
+                <RecipeCard key={recipe.id} {...mapRecipeToProps(recipe)} />
               ))}
             </div>
           )}
@@ -129,7 +139,7 @@ const Index = () => {
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
               {friendsRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} {...recipe} />
+                <RecipeCard key={recipe.id} {...mapRecipeToProps(recipe)} />
               ))}
             </div>
           )}

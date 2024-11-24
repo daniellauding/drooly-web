@@ -1,12 +1,13 @@
 import { Heart, Clock, ChefHat } from "lucide-react";
 import { Card } from "./ui/card";
 import { useNavigate } from "react-router-dom";
+import { Recipe } from "@/types/recipe";
 
 interface RecipeCardProps {
   id: string;
   title: string;
-  image: string;
-  cookTime: string; // Changed from time to cookTime
+  image?: string;
+  cookTime?: string;
   difficulty: string;
   isFavorite?: boolean;
   chef?: string;
@@ -17,7 +18,7 @@ export function RecipeCard({
   id,
   title, 
   image, 
-  cookTime, // Changed from time to cookTime
+  cookTime, 
   difficulty, 
   isFavorite = false,
   chef,
@@ -41,7 +42,11 @@ export function RecipeCard({
       onClick={handleClick}
     >
       <div className="relative">
-        <img src={image} alt={title} className="h-48 w-full object-cover" />
+        <img 
+          src={image || '/placeholder.svg'} 
+          alt={title} 
+          className="h-48 w-full object-cover" 
+        />
         <button 
           className="absolute top-3 right-3 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
           onClick={handleFavorite}
@@ -59,10 +64,12 @@ export function RecipeCard({
           </div>
         )}
         <div className="flex items-center gap-3 text-sm text-gray-600">
-          <div className="flex items-center gap-1.5">
-            <Clock className="h-4 w-4" />
-            <span>{cookTime}</span>
-          </div>
+          {cookTime && (
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4" />
+              <span>{cookTime}</span>
+            </div>
+          )}
           <div className="flex items-center gap-1.5">
             <ChefHat className="h-4 w-4" />
             <span>{difficulty}</span>
