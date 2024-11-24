@@ -7,6 +7,7 @@ export interface RecipeStep {
 }
 
 export interface Recipe {
+  id?: string;
   title: string;
   description: string;
   difficulty: string;
@@ -25,16 +26,102 @@ export interface Recipe {
   totalTime: string;
   worksWith: string[];
   serveWith: string[];
+  // New fields
+  dietaryInfo: {
+    isVegetarian: boolean;
+    isVegan: boolean;
+    isGlutenFree: boolean;
+    isDairyFree: boolean;
+    containsNuts: boolean;
+  };
+  categories: string[];
+  estimatedCost: string;
+  season?: string;
+  occasion?: string;
+  equipment: string[];
+  createdAt?: { seconds: number };
+  creatorId?: string;
+  creatorName?: string;
+  status?: string;
 }
+
+export const CUISINES = [
+  "American", "Italian", "Japanese", "Mexican", "Indian", "French", "Thai", 
+  "Mediterranean", "Chinese", "Korean", "Vietnamese", "Greek", "Spanish", 
+  "Middle Eastern", "Brazilian", "Caribbean", "Ethiopian", "German", "Turkish"
+];
+
+export const RECIPE_CATEGORIES = [
+  "Family Friendly",
+  "Fast & Easy",
+  "Budget Friendly",
+  "Meal Prep",
+  "Healthy",
+  "Comfort Food",
+  "Party Food",
+  "Gourmet",
+  "One Pot Meal",
+  "Low Carb",
+  "High Protein",
+  "Student Friendly",
+  "Office Lunch",
+  "Kids Favorite"
+];
+
+export const OCCASIONS = [
+  "Christmas",
+  "Thanksgiving",
+  "Easter",
+  "Halloween",
+  "New Year",
+  "Valentine's Day",
+  "Birthday",
+  "Game Day",
+  "Summer BBQ",
+  "Picnic",
+  "Potluck",
+  "Wedding"
+];
+
+export const SEASONS = [
+  "Spring",
+  "Summer",
+  "Fall",
+  "Winter",
+  "Year Round"
+];
+
+export const COOKING_EQUIPMENT = [
+  "Oven",
+  "Stovetop",
+  "Grill",
+  "Slow Cooker",
+  "Pressure Cooker",
+  "Air Fryer",
+  "BBQ",
+  "Smoker",
+  "Dutch Oven",
+  "Wok",
+  "Outdoor Fire",
+  "No Cooking Required"
+];
+
+export const COST_CATEGORIES = [
+  "Under $5",
+  "$5-$10",
+  "$10-$20",
+  "$20-$30",
+  "$30+"
+];
 
 export const validateRecipe = (recipe: Recipe): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
 
-  if (!recipe.title.trim()) {
+  if (!recipe.title?.trim()) {
     errors.push("Title is required");
   }
 
-  if (!recipe.description.trim()) {
+  if (!recipe.description?.trim()) {
     errors.push("Description is required");
   }
 
@@ -51,10 +138,10 @@ export const validateRecipe = (recipe: Recipe): { isValid: boolean; errors: stri
   }
 
   recipe.steps.forEach((step, index) => {
-    if (!step.title.trim()) {
+    if (!step.title?.trim()) {
       errors.push(`Step ${index + 1} requires a title`);
     }
-    if (!step.instructions.trim()) {
+    if (!step.instructions?.trim()) {
       errors.push(`Step ${index + 1} requires instructions`);
     }
   });

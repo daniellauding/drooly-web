@@ -11,7 +11,8 @@ service cloud.firestore {
           'title', 'description', 'difficulty', 'cookingMethods', 
           'cuisine', 'dishTypes', 'images', 'ingredients', 
           'steps', 'totalTime', 'servings', 'creatorId', 
-          'createdAt', 'status'
+          'createdAt', 'status', 'dietaryInfo', 'categories',
+          'equipment'
         ]);
     }
     

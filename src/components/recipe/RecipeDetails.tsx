@@ -1,6 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { MultiSelect } from "@/components/MultiSelect";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -8,12 +9,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Recipe } from "@/types/recipe";
+import { Recipe, CUISINES, RECIPE_CATEGORIES, OCCASIONS, SEASONS, COOKING_EQUIPMENT, COST_CATEGORIES } from "@/types/recipe";
 import { CookingTimeInput } from "./CookingTimeInput";
+import { DietaryInfo } from "./DietaryInfo";
+import { RecipeCategories } from "./RecipeCategories";
 
 const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard"];
 const COOKING_METHODS = ["Baking", "Frying", "Grilling", "Boiling", "Steaming", "Roasting", "Sautéing"];
-const CUISINES = ["Italian", "Japanese", "Mexican", "Indian", "French", "Thai", "Mediterranean"];
 const DISH_TYPES = ["Main Course", "Appetizer", "Dessert", "Soup", "Salad", "Breakfast", "Snack"];
 const SERVING_UNITS = ["serving", "piece", "portion"];
 
@@ -63,6 +65,85 @@ export function RecipeDetails({ recipe, onChange }: RecipeDetailsProps) {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      <DietaryInfo 
+        value={recipe.dietaryInfo}
+        onChange={(dietaryInfo) => onChange({ dietaryInfo })}
+      />
+
+      <RecipeCategories
+        categories={recipe.categories || []}
+        onChange={(categories) => onChange({ categories })}
+      />
+
+      <div>
+        <Label>Estimated Cost</Label>
+        <Select
+          value={recipe.estimatedCost}
+          onValueChange={(value) => onChange({ estimatedCost: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select cost range" />
+          </SelectTrigger>
+          <SelectContent>
+            {COST_CATEGORIES.map(cost => (
+              <SelectItem key={cost} value={cost}>
+                {cost}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <Label>Season</Label>
+          <Select
+            value={recipe.season}
+            onValueChange={(value) => onChange({ season: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select season" />
+            </SelectTrigger>
+            <SelectContent>
+              {SEASONS.map(season => (
+                <SelectItem key={season} value={season}>
+                  {season}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label>Occasion</Label>
+          <Select
+            value={recipe.occasion}
+            onValueChange={(value) => onChange({ occasion: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select occasion" />
+            </SelectTrigger>
+            <SelectContent>
+              {OCCASIONS.map(occasion => (
+                <SelectItem key={occasion} value={occasion}>
+                  {occasion}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label>Required Equipment</Label>
+        <MultiSelect
+          options={COOKING_EQUIPMENT}
+          selected={recipe.equipment || []}
+          onChange={(equipment) => onChange({ equipment })}
+          placeholder="Select required equipment"
+        />
       </div>
 
       <div>
