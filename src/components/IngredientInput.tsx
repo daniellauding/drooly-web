@@ -94,22 +94,24 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         </Button>
       </div>
 
-      {!showSuggestions && (
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => setShowSuggestions(true)}
+      <div className="relative">
+        <div
+          className={`w-full border rounded-md p-2 flex items-center justify-between cursor-pointer ${!showSuggestions ? 'hover:bg-accent hover:text-accent-foreground' : ''}`}
+          onClick={() => !showSuggestions && setShowSuggestions(true)}
         >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Ingredient
-        </Button>
-      )}
+          <span className="text-muted-foreground">Search or add ingredients...</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${showSuggestions ? 'rotate-180' : ''}`} />
+        </div>
 
-      {showSuggestions && (
-        <IngredientSuggestions 
-          onSelect={(ingredientName) => addIngredient(ingredientName)}
-        />
-      )}
+        {showSuggestions && (
+          <div className="absolute w-full z-50">
+            <IngredientSuggestions 
+              onSelect={(ingredientName) => addIngredient(ingredientName)}
+              onClose={() => setShowSuggestions(false)}
+            />
+          </div>
+        )}
+      </div>
       
       {Object.entries(groupedIngredients).map(([group, groupIngredients]) => (
         <div key={group} className="space-y-2">
