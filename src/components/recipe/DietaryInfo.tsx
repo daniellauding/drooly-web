@@ -1,5 +1,13 @@
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { MultiSelect } from "@/components/MultiSelect";
+
+const DIETARY_OPTIONS = [
+  "Vegetarian",
+  "Vegan",
+  "Gluten Free",
+  "Dairy Free",
+  "Contains Nuts"
+];
 
 interface DietaryInfoProps {
   value: {
@@ -13,83 +21,40 @@ interface DietaryInfoProps {
 }
 
 export function DietaryInfo({ value, onChange }: DietaryInfoProps) {
-  const handleChange = (key: keyof DietaryInfoProps['value']) => {
+  // Convert boolean object to array of selected options
+  const selectedOptions = Object.entries(value || {})
+    .filter(([_, isSelected]) => isSelected)
+    .map(([key, _]) => {
+      switch(key) {
+        case 'isVegetarian': return 'Vegetarian';
+        case 'isVegan': return 'Vegan';
+        case 'isGlutenFree': return 'Gluten Free';
+        case 'isDairyFree': return 'Dairy Free';
+        case 'containsNuts': return 'Contains Nuts';
+        default: return '';
+      }
+    })
+    .filter(Boolean);
+
+  const handleChange = (selected: string[]) => {
     onChange({
-      ...value,
-      [key]: !value[key]
+      isVegetarian: selected.includes('Vegetarian'),
+      isVegan: selected.includes('Vegan'),
+      isGlutenFree: selected.includes('Gluten Free'),
+      isDairyFree: selected.includes('Dairy Free'),
+      containsNuts: selected.includes('Contains Nuts')
     });
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <Label>Dietary Information</Label>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="isVegetarian"
-            checked={value.isVegetarian}
-            onCheckedChange={() => handleChange('isVegetarian')}
-          />
-          <label
-            htmlFor="isVegetarian"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Vegetarian
-          </label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="isVegan"
-            checked={value.isVegan}
-            onCheckedChange={() => handleChange('isVegan')}
-          />
-          <label
-            htmlFor="isVegan"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Vegan
-          </label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="isGlutenFree"
-            checked={value.isGlutenFree}
-            onCheckedChange={() => handleChange('isGlutenFree')}
-          />
-          <label
-            htmlFor="isGlutenFree"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Gluten Free
-          </label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="isDairyFree"
-            checked={value.isDairyFree}
-            onCheckedChange={() => handleChange('isDairyFree')}
-          />
-          <label
-            htmlFor="isDairyFree"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Dairy Free
-          </label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="containsNuts"
-            checked={value.containsNuts}
-            onCheckedChange={() => handleChange('containsNuts')}
-          />
-          <label
-            htmlFor="containsNuts"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-          >
-            Contains Nuts
-          </label>
-        </div>
-      </div>
+      <MultiSelect
+        options={DIETARY_OPTIONS}
+        selected={selectedOptions}
+        onChange={handleChange}
+        placeholder="Select dietary information"
+      />
     </div>
   );
 }
