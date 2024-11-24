@@ -16,4 +16,6 @@ export interface Conversation {
   lastMessageTimestamp: number;
   unreadCount: number;
   isGroup: boolean;
+  participantAvatar?: string;
+  participantEmails: string[];
 }
