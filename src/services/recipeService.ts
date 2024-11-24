@@ -38,7 +38,14 @@ const SAMPLE_RECIPES: Recipe[] = [
       containsNuts: false
     },
     categories: ['comfort food'],
-    equipment: ['oven']
+    equipment: ['oven'],
+    featuredImageIndex: 0,
+    tags: [],
+    worksWith: [],
+    serveWith: [],
+    estimatedCost: 'Under $5',
+    season: 'Year Round',
+    occasion: ''
   },
   {
     id: '2',
@@ -65,7 +72,14 @@ const SAMPLE_RECIPES: Recipe[] = [
       containsNuts: false
     },
     categories: ['seafood'],
-    equipment: ['rice cooker']
+    equipment: ['rice cooker'],
+    featuredImageIndex: 0,
+    tags: [],
+    worksWith: [],
+    serveWith: [],
+    estimatedCost: 'Under $5',
+    season: 'Year Round',
+    occasion: ''
   },
   {
     id: '3',
@@ -92,7 +106,14 @@ const SAMPLE_RECIPES: Recipe[] = [
       containsNuts: true
     },
     categories: ['healthy'],
-    equipment: ['bowl']
+    equipment: ['bowl'],
+    featuredImageIndex: 0,
+    tags: [],
+    worksWith: [],
+    serveWith: [],
+    estimatedCost: 'Under $5',
+    season: 'Year Round',
+    occasion: ''
   }
 ];
 
