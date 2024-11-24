@@ -110,6 +110,9 @@ export default function Messages() {
                 <ChatView
                   conversationId={selectedConversationId}
                   onDeleteConversation={handleDeleteConversation}
+                  recipientName={conversations.find(c => c.id === selectedConversationId)?.name || "Unknown"}
+                  recipientAvatar={conversations.find(c => c.id === selectedConversationId)?.participantAvatar}
+                  recipientInitials={conversations.find(c => c.id === selectedConversationId)?.name?.[0]?.toUpperCase()}
                 />
               )}
             </div>

@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   collection, 
@@ -17,12 +15,14 @@ import {
 import { db } from "@/lib/firebase";
 import { Message } from "@/types/chat";
 import { useToast } from "@/components/ui/use-toast";
-import { MessageComponent } from "./Message";
 import { MessageInput } from "./MessageInput";
+import { ChatHeader } from "./ChatHeader";
+import { MessageList } from "./MessageList";
 
 interface ChatViewProps {
   conversationId: string;
   onDeleteConversation: (id: string) => void;
+  recipientName: string;
   recipientAvatar?: string;
   recipientInitials?: string;
 }
@@ -30,6 +30,7 @@ interface ChatViewProps {
 export function ChatView({ 
   conversationId, 
   onDeleteConversation,
+  recipientName,
   recipientAvatar,
   recipientInitials 
 }: ChatViewProps) {
@@ -178,35 +179,24 @@ export function ChatView({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="font-semibold">Chat</h3>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleDeleteConversation}
-        >
-          Delete Conversation
-        </Button>
-      </div>
+      <ChatHeader
+        recipientName={recipientName}
+        recipientAvatar={recipientAvatar}
+        recipientInitials={recipientInitials}
+        onDeleteConversation={() => onDeleteConversation(conversationId)}
+      />
       
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
-          {messages.map((msg) => (
-            <MessageComponent
-              key={msg.id}
-              message={msg}
-              isOwnMessage={msg.senderId === user?.uid}
-              onEdit={handleEditMessage}
-              onDelete={handleDeleteMessage}
-              onReply={(message) => setReplyTo(message)}
-              onMarkUnread={handleMarkUnread}
-              replyToMessage={msg.replyTo ? findReplyToMessage(msg.replyTo) : null}
-              recipientAvatar={recipientAvatar}
-              recipientInitials={recipientInitials}
-            />
-          ))}
-        </div>
-      </ScrollArea>
+      <MessageList
+        messages={messages}
+        currentUserId={user?.uid}
+        onEdit={handleEditMessage}
+        onDelete={handleDeleteMessage}
+        onReply={(message) => setReplyTo(message)}
+        onMarkUnread={handleMarkUnread}
+        findReplyToMessage={findReplyToMessage}
+        recipientAvatar={recipientAvatar}
+        recipientInitials={recipientInitials}
+      />
 
       <MessageInput
         onSend={handleSendMessage}
