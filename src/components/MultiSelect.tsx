@@ -30,12 +30,15 @@ export function MultiSelect({
   placeholder = "Select items..." 
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
+  
+  // Ensure we always have arrays, even if undefined is passed
+  const safeOptions = options || [];
+  const safeSelected = selected || [];
 
   const handleSelect = (option: string) => {
-    const currentSelected = Array.isArray(selected) ? selected : [];
-    const newSelected = currentSelected.includes(option)
-      ? currentSelected.filter((item) => item !== option)
-      : [...currentSelected, option];
+    const newSelected = safeSelected.includes(option)
+      ? safeSelected.filter((item) => item !== option)
+      : [...safeSelected, option];
     onChange(newSelected);
   };
 
@@ -49,8 +52,8 @@ export function MultiSelect({
           className="w-full justify-between"
         >
           <div className="flex gap-1 flex-wrap">
-            {selected && selected.length > 0 ? (
-              selected.map((item) => (
+            {safeSelected.length > 0 ? (
+              safeSelected.map((item) => (
                 <Badge 
                   variant="secondary" 
                   key={item}
@@ -71,7 +74,7 @@ export function MultiSelect({
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandEmpty>No item found.</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
-            {options.map((option) => (
+            {safeOptions.map((option) => (
               <CommandItem
                 key={option}
                 onSelect={() => handleSelect(option)}
@@ -79,7 +82,7 @@ export function MultiSelect({
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    (selected || []).includes(option) ? "opacity-100" : "opacity-0"
+                    safeSelected.includes(option) ? "opacity-100" : "opacity-0"
                   )}
                 />
                 {option}

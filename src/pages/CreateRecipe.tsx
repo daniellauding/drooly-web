@@ -20,6 +20,7 @@ import { MultiSelect } from "@/components/MultiSelect";
 import { IngredientInput } from "@/components/IngredientInput";
 import { useToast } from "@/components/ui/use-toast";
 
+// Move constants to a separate file later for better organization
 const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard"];
 const COOKING_METHODS = ["Baking", "Frying", "Grilling", "Boiling", "Steaming", "Roasting", "Sautéing"];
 const CUISINES = ["Italian", "Japanese", "Mexican", "Indian", "French", "Thai", "Mediterranean"];
@@ -32,35 +33,58 @@ export interface RecipeStep {
   duration: string;
 }
 
+interface Recipe {
+  title: string;
+  description: string;
+  difficulty: string;
+  cookingMethods: string[];
+  cuisine: string;
+  dishTypes: string[];
+  images: string[];
+  featuredImageIndex: number;
+  ingredients: any[];
+  servings: {
+    amount: number;
+    unit: string;
+  };
+  steps: RecipeStep[];
+  tags: string[];
+  totalTime: string;
+  worksWith: string[];
+  serveWith: string[];
+}
+
+const initialRecipe: Recipe = {
+  title: "",
+  description: "",
+  difficulty: "",
+  cookingMethods: [],
+  cuisine: "",
+  dishTypes: [],
+  images: [],
+  featuredImageIndex: 0,
+  ingredients: [],
+  servings: {
+    amount: 1,
+    unit: "serving"
+  },
+  steps: [{
+    title: "Preparation",
+    instructions: "",
+    duration: ""
+  }],
+  tags: [],
+  totalTime: "",
+  worksWith: [],
+  serveWith: [],
+};
+
 const CreateRecipe = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [recipe, setRecipe] = useState({
-    title: "",
-    description: "",
-    difficulty: "",
-    cookingMethods: [] as string[],
-    cuisine: "",
-    dishTypes: [] as string[],
-    images: [] as string[],
-    featuredImageIndex: 0,
-    ingredients: [] as any[],
-    servings: {
-      amount: 1,
-      unit: "serving"
-    },
-    steps: [{
-      title: "Preparation",
-      instructions: "",
-      duration: ""
-    }] as RecipeStep[],
-    tags: [] as string[],
-    totalTime: "",
-    worksWith: [] as string[],
-    serveWith: [] as string[],
-  });
+  const [recipe, setRecipe] = useState<Recipe>(initialRecipe);
 
   const handleSave = async (isDraft = false) => {
     if (!user) {
