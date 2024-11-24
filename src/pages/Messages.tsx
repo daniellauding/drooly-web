@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MessageSquare, PlusSquare } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { ChatView } from "@/components/chat/ChatView";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { UserSearchDialog } from "@/components/chat/UserSearchDialog";
@@ -14,7 +12,6 @@ import { db } from "@/lib/firebase";
 
 export default function Messages() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [conversations, setConversations] = useState<any[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -54,6 +51,10 @@ export default function Messages() {
     setSelectedConversationId(conversationId);
   };
 
+  const handleDeleteConversation = (conversationId: string) => {
+    setSelectedConversationId(null);
+  };
+
   const NoMessagesPlaceholder = () => (
     <div className="flex flex-col items-center justify-center h-full space-y-4">
       <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden mb-4">
@@ -81,7 +82,6 @@ export default function Messages() {
       <div className="flex-1 flex mt-16 mb-16">
         <div className="flex flex-col w-full max-w-screen-xl mx-auto">
           <div className="flex h-full">
-            {/* Conversations List */}
             <div className="w-80 border-r">
               <div className="h-full flex flex-col">
                 <div className="p-4 border-b flex justify-between items-center">
@@ -93,32 +93,24 @@ export default function Messages() {
                 {conversations.length === 0 ? (
                   <NoMessagesPlaceholder />
                 ) : (
-                  <div className="flex-1">
-                    {conversations.map((conversation) => (
-                      <div
-                        key={conversation.id}
-                        className={`p-4 cursor-pointer hover:bg-accent ${
-                          selectedConversationId === conversation.id ? 'bg-accent' : ''
-                        }`}
-                        onClick={() => handleSelectConversation(conversation.id)}
-                      >
-                        <p className="font-medium">{conversation.name}</p>
-                        <p className="text-sm text-muted-foreground">{conversation.lastMessage}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <ConversationList
+                    conversations={conversations}
+                    onSelectConversation={handleSelectConversation}
+                  />
                 )}
               </div>
             </div>
             
-            {/* Chat View */}
             <div className="flex-1">
               {!selectedConversationId ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   Select a conversation or start a new one
                 </div>
               ) : (
-                <ChatView conversationId={selectedConversationId} />
+                <ChatView
+                  conversationId={selectedConversationId}
+                  onDeleteConversation={handleDeleteConversation}
+                />
               )}
             </div>
           </div>
