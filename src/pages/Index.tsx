@@ -75,34 +75,41 @@ const Index = () => {
     queryKey: ['recipes'],
     queryFn: async () => {
       console.log('Fetching recipes for home page');
-      const recipesRef = collection(db, 'recipes');
-      const q = query(
-        recipesRef,
-        where('status', '==', 'published'),
-        orderBy('createdAt', 'desc'),
-        limit(10)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const fetchedRecipes = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        image: doc.data().images?.[doc.data().featuredImageIndex || 0],
-        chef: doc.data().creatorName || 'Anonymous',
-        date: new Date(doc.data().createdAt?.seconds * 1000).toLocaleDateString(),
-        cookTime: doc.data().totalTime || '30 min'
-      })) as Recipe[];
+      try {
+        const recipesRef = collection(db, 'recipes');
+        const q = query(
+          recipesRef,
+          where('status', '==', 'published'),
+          orderBy('createdAt', 'desc'),
+          limit(10)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        console.log('Query snapshot:', querySnapshot.size, 'documents');
+        
+        if (querySnapshot.empty) {
+          console.log('No recipes found');
+          return [];
+        }
 
-      console.log('Fetched recipes:', fetchedRecipes);
-      return fetchedRecipes;
-    },
-    meta: {
-      onError: () => {
-        toast({
-          variant: "destructive",
-          title: "Error loading recipes",
-          description: "Please try again later.",
-        });
+        const fetchedRecipes = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('Recipe data:', data);
+          return {
+            id: doc.id,
+            ...data,
+            image: data.images?.[data.featuredImageIndex || 0],
+            chef: data.creatorName || 'Anonymous',
+            date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
+            cookTime: data.totalTime || '30 min'
+          };
+        }) as Recipe[];
+
+        console.log('Processed recipes:', fetchedRecipes);
+        return fetchedRecipes;
+      } catch (error) {
+        console.error('Error in queryFn:', error);
+        throw error;
       }
     }
   });
