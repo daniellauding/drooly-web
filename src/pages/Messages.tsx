@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MessageSquare, PlusSquare } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,10 +8,12 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchConversations } from "@/services/messageService";
 import { ChatView } from "@/components/chat/ChatView";
 import { ConversationList } from "@/components/chat/ConversationList";
+import { UserSearchDialog } from "@/components/chat/UserSearchDialog";
 
 export default function Messages() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const { data: conversations, isLoading } = useQuery({
     queryKey: ["conversations", user?.uid],
@@ -32,10 +34,7 @@ export default function Messages() {
   }
 
   const handleNewMessage = () => {
-    toast({
-      title: "Coming Soon",
-      description: "The ability to start new conversations will be available soon!",
-    });
+    setIsSearchOpen(true);
   };
 
   const NoMessagesPlaceholder = () => (
@@ -92,6 +91,8 @@ export default function Messages() {
           </div>
         </div>
       </div>
+
+      <UserSearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </div>
   );
 }
