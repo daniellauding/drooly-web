@@ -4,8 +4,6 @@ import { MessageSquare, PlusSquare } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { useQuery } from "@tanstack/react-query";
-import { fetchConversations } from "@/services/messageService";
 import { ChatView } from "@/components/chat/ChatView";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { UserSearchDialog } from "@/components/chat/UserSearchDialog";
@@ -19,7 +17,7 @@ export default function Messages() {
   const { toast } = useToast();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [conversations, setConversations] = useState<any[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -49,6 +47,11 @@ export default function Messages() {
 
   const handleNewMessage = () => {
     setIsSearchOpen(true);
+  };
+
+  const handleSelectConversation = (conversationId: string) => {
+    console.log("Selected conversation:", conversationId);
+    setSelectedConversationId(conversationId);
   };
 
   const NoMessagesPlaceholder = () => (
@@ -90,19 +93,32 @@ export default function Messages() {
                 {conversations.length === 0 ? (
                   <NoMessagesPlaceholder />
                 ) : (
-                  <ConversationList conversations={conversations} />
+                  <div className="flex-1">
+                    {conversations.map((conversation) => (
+                      <div
+                        key={conversation.id}
+                        className={`p-4 cursor-pointer hover:bg-accent ${
+                          selectedConversationId === conversation.id ? 'bg-accent' : ''
+                        }`}
+                        onClick={() => handleSelectConversation(conversation.id)}
+                      >
+                        <p className="font-medium">{conversation.name}</p>
+                        <p className="text-sm text-muted-foreground">{conversation.lastMessage}</p>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
             
             {/* Chat View */}
             <div className="flex-1">
-              {conversations.length === 0 ? (
+              {!selectedConversationId ? (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   Select a conversation or start a new one
                 </div>
               ) : (
-                <ChatView />
+                <ChatView conversationId={selectedConversationId} />
               )}
             </div>
           </div>
