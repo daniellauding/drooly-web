@@ -11,9 +11,13 @@ interface IngredientSuggestionsProps {
 
 export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestionsProps) {
   const [searchValue, setSearchValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Auto focus the search input when component mounts
+    inputRef.current?.focus();
+
     const handleClickOutside = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         onClose();
@@ -35,6 +39,7 @@ export function IngredientSuggestions({ onSelect, onClose }: IngredientSuggestio
     <div ref={ref}>
       <Command className="border rounded-lg bg-popover shadow-md">
         <CommandInput 
+          ref={inputRef}
           placeholder="Search common ingredients..." 
           value={searchValue}
           onValueChange={setSearchValue}
