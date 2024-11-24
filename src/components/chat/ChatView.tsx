@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
-import { Pencil, Trash2, Reply } from "lucide-react";
 import { 
   collection, 
   query, 
@@ -13,11 +11,14 @@ import {
   serverTimestamp,
   updateDoc,
   doc,
-  deleteDoc
+  deleteDoc,
+  getDoc
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Message } from "@/types/chat";
 import { useToast } from "@/components/ui/use-toast";
+import { MessageComponent } from "./Message";
+import { MessageInput } from "./MessageInput";
 
 interface ChatViewProps {
   conversationId: string;
@@ -25,10 +26,8 @@ interface ChatViewProps {
 }
 
 export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps) {
-  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editText, setEditText] = useState("");
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -59,21 +58,22 @@ export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps
     return () => unsubscribe();
   }, [conversationId, user?.uid]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || !user || !conversationId) return;
+  const handleSendMessage = async (text: string, replyToId?: string) => {
+    if (!text.trim() || !user || !conversationId) return;
     
     try {
-      console.log("Sending message:", message);
+      console.log("Sending message:", text);
       const messagesRef = collection(db, `conversations/${conversationId}/messages`);
       await addDoc(messagesRef, {
-        text: message,
+        text,
         senderId: user.uid,
         timestamp: serverTimestamp(),
         seen: false,
-        edited: false
+        edited: false,
+        replyTo: replyToId
       });
 
-      setMessage("");
+      setReplyTo(null);
     } catch (error) {
       console.error("Error sending message:", error);
       toast({
@@ -84,17 +84,13 @@ export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps
     }
   };
 
-  const handleEditMessage = async (messageId: string) => {
-    if (!editText.trim() || !user) return;
-
+  const handleEditMessage = async (messageId: string, newText: string) => {
     try {
       const messageRef = doc(db, `conversations/${conversationId}/messages/${messageId}`);
       await updateDoc(messageRef, {
-        text: editText,
+        text: newText,
         edited: true
       });
-      setEditingMessageId(null);
-      setEditText("");
     } catch (error) {
       console.error("Error editing message:", error);
       toast({
@@ -141,6 +137,10 @@ export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps
     }
   };
 
+  const findReplyToMessage = (replyToId: string) => {
+    return messages.find(m => m.id === replyToId);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex justify-between items-center">
@@ -157,101 +157,24 @@ export function ChatView({ conversationId, onDeleteConversation }: ChatViewProps
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((msg) => (
-            <div
+            <MessageComponent
               key={msg.id}
-              className={`flex ${msg.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className="flex flex-col max-w-[70%]">
-                <div
-                  className={`rounded-lg p-3 ${
-                    msg.senderId === user?.uid
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
-                  }`}
-                >
-                  {editingMessageId === msg.id ? (
-                    <div className="flex flex-col gap-2">
-                      <Textarea
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        className="min-h-[60px]"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleEditMessage(msg.id)}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setEditingMessageId(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <p>{msg.text}</p>
-                      {msg.edited && (
-                        <span className="text-xs opacity-70">(edited)</span>
-                      )}
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  {msg.seen && msg.senderId === user?.uid && (
-                    <span className="text-xs text-muted-foreground">Seen</span>
-                  )}
-                  {msg.senderId === user?.uid && (
-                    <div className="flex gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6"
-                        onClick={() => {
-                          setEditingMessageId(msg.id);
-                          setEditText(msg.text);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6"
-                        onClick={() => handleDeleteMessage(msg.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+              message={msg}
+              isOwnMessage={msg.senderId === user?.uid}
+              onEdit={handleEditMessage}
+              onDelete={handleDeleteMessage}
+              onReply={(message) => setReplyTo(message)}
+              replyToMessage={msg.replyTo ? findReplyToMessage(msg.replyTo) : null}
+            />
           ))}
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t">
-        <div className="flex gap-2">
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="min-h-[80px]"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-              }
-            }}
-          />
-          <Button onClick={handleSendMessage}>Send</Button>
-        </div>
-      </div>
+      <MessageInput
+        onSend={handleSendMessage}
+        replyTo={replyTo ? { id: replyTo.id, text: replyTo.text } : null}
+        onCancelReply={() => setReplyTo(null)}
+      />
     </div>
   );
 }
