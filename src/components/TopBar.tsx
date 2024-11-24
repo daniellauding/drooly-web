@@ -99,10 +99,10 @@ export function TopBar() {
           <Button
             variant="default"
             className="gap-2"
-            onClick={() => navigate('/create-recipe')}
+            onClick={() => navigate('/create')}
           >
             <PlusCircle className="h-4 w-4" />
-            Create Recipe
+            Create
           </Button>
         </div>
       </div>
