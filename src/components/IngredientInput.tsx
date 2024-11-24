@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { IngredientSuggestions } from "./ingredients/IngredientSuggestions";
 
 interface Ingredient {
   name: string;
@@ -45,12 +51,12 @@ const COMMON_UNITS = [
 ];
 
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
-  const [newGroup, setNewGroup] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const addIngredient = (group?: string) => {
+  const addIngredient = (name = "", group = "Main Ingredients") => {
     onChange([
       ...ingredients,
-      { name: "", amount: "", unit: "", group }
+      { name, amount: "", unit: "", group }
     ]);
   };
 
@@ -74,7 +80,21 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
 
   return (
     <div className="space-y-4">
-      <Label>Ingredients</Label>
+      <div className="flex justify-between items-center">
+        <Label>Ingredients</Label>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+        >
+          Advanced
+          <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+        </Button>
+      </div>
+
+      <IngredientSuggestions 
+        onSelect={(ingredientName) => addIngredient(ingredientName)}
+      />
       
       {Object.entries(groupedIngredients).map(([group, groupIngredients]) => (
         <div key={group} className="space-y-2">
@@ -124,7 +144,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
           <Button
             variant="outline"
             size="sm"
-            onClick={() => addIngredient(group)}
+            onClick={() => addIngredient("", group)}
             className="w-full"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -133,50 +153,28 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         </div>
       ))}
 
-      <div className="flex gap-2">
-        <Select
-          value=""
-          onValueChange={(value) => {
-            if (value === "custom") {
-              setNewGroup("");
-              return;
-            }
-            addIngredient(value);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Add new ingredient group" />
-          </SelectTrigger>
-          <SelectContent>
-            {INGREDIENT_GROUPS.map(group => (
-              <SelectItem key={group} value={group}>
-                {group}
-              </SelectItem>
-            ))}
-            <SelectItem value="custom">Custom group...</SelectItem>
-          </SelectContent>
-        </Select>
-        {newGroup !== undefined && (
-          <>
-            <Input
-              placeholder="New group name"
-              value={newGroup}
-              onChange={(e) => setNewGroup(e.target.value)}
-            />
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (newGroup) {
-                  addIngredient(newGroup);
-                  setNewGroup("");
-                }
-              }}
+      <Collapsible open={showAdvanced}>
+        <CollapsibleContent>
+          <div className="space-y-4 mt-4 p-4 border rounded-lg bg-muted/50">
+            <h3 className="font-medium">Custom Ingredient Groups</h3>
+            <Select
+              value=""
+              onValueChange={(value) => addIngredient("", value)}
             >
-              Add Group
-            </Button>
-          </>
-        )}
-      </div>
+              <SelectTrigger>
+                <SelectValue placeholder="Add new ingredient group" />
+              </SelectTrigger>
+              <SelectContent>
+                {INGREDIENT_GROUPS.map(group => (
+                  <SelectItem key={group} value={group}>
+                    {group}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }
