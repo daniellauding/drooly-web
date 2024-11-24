@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
-import { createWorker } from "tesseract.js";
+import { Worker, createWorker } from "tesseract.js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Camera } from "lucide-react";
 import { Recipe } from "@/types/recipe";
+import { COMMON_INGREDIENTS } from "@/components/ingredients/CommonIngredients";
 
 interface ImageRecognitionDialogProps {
   open: boolean;
@@ -17,6 +18,36 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
   const { toast } = useToast();
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const extractIngredients = (text: string): { name: string, amount: string, unit: string }[] => {
+    console.log("Extracting ingredients from text:", text);
+    const lines = text.split('\n');
+    const ingredients: { name: string, amount: string, unit: string }[] = [];
+    
+    // Flatten all ingredients from COMMON_INGREDIENTS into a single array
+    const allIngredients = Object.values(COMMON_INGREDIENTS).flat();
+    
+    lines.forEach(line => {
+      // Try to match known ingredients
+      const matchedIngredient = allIngredients.find(ingredient => 
+        line.toLowerCase().includes(ingredient.toLowerCase())
+      );
+      
+      if (matchedIngredient) {
+        // Basic pattern for amount and unit: number followed by unit
+        const amountMatch = line.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z]+)?/);
+        
+        ingredients.push({
+          name: matchedIngredient,
+          amount: amountMatch?.[1] || "",
+          unit: amountMatch?.[2] || ""
+        });
+      }
+    });
+
+    console.log("Extracted ingredients:", ingredients);
+    return ingredients;
+  };
+
   const handleImageCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -26,19 +57,19 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       const worker = await createWorker();
       const imageUrl = URL.createObjectURL(file);
       
-      // Initialize worker with English language data
       await worker.load();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      
       const { data: { text } } = await worker.recognize(imageUrl);
       console.log("Recognized text:", text);
 
-      // Basic parsing of recognized text
+      // Extract ingredients from the recognized text
+      const ingredients = extractIngredients(text);
+
+      // Update recipe with extracted ingredients
       const recipeData: Partial<Recipe> = {
-        title: text.split("\n")[0], // First line as title
-        description: text.split("\n").slice(1).join("\n"), // Rest as description
-        images: [imageUrl]
+        ingredients: ingredients.map(ing => ({
+          ...ing,
+          group: "Main Ingredients"
+        }))
       };
 
       await worker.terminate();
@@ -46,14 +77,14 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       onOpenChange(false);
       
       toast({
-        title: "Recipe scanned successfully",
-        description: "The recipe details have been extracted from the image.",
+        title: `${ingredients.length} ingredients found`,
+        description: "The ingredients have been extracted and added to your recipe.",
       });
     } catch (error) {
-      console.error("Error scanning recipe:", error);
+      console.error("Error scanning ingredients:", error);
       toast({
-        title: "Failed to scan recipe",
-        description: "Could not extract recipe details from the image. Please try again or enter details manually.",
+        title: "Failed to scan ingredients",
+        description: "Could not extract ingredients from the image. Please try again or enter them manually.",
         variant: "destructive",
       });
     } finally {
@@ -65,9 +96,9 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Take Photo of Recipe</DialogTitle>
+          <DialogTitle>Take Photo of Ingredients</DialogTitle>
           <DialogDescription>
-            Take a photo of a printed recipe to automatically import its details
+            Take a photo of your ingredient list to automatically import them
           </DialogDescription>
         </DialogHeader>
         
