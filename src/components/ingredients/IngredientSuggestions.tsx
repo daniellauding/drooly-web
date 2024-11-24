@@ -91,22 +91,24 @@ export function IngredientSuggestions({ onSelect, onClose, initialValue = "" }: 
                 ))}
             </CommandGroup>
           ))}
+          {(!hasSearchResults || !hasExactMatch) && (
+            <div className="p-2 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full h-9"
+                onClick={handleAddCustom}
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {searchValue.trim() 
+                  ? `Add "${searchValue}" as custom ingredient`
+                  : "Add custom ingredient"
+                }
+              </Button>
+            </div>
+          )}
         </CommandList>
       </Command>
-      {(!hasSearchResults || !hasExactMatch) && (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full h-9 mt-2"
-          onClick={handleAddCustom}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {searchValue.trim() 
-            ? `Add "${searchValue}" as custom ingredient`
-            : "Add custom ingredient"
-          }
-        </Button>
-      )}
     </div>
   );
 }
