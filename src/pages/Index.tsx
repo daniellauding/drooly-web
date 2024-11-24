@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Recipe } from "@/types/recipe";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -96,13 +96,14 @@ const Index = () => {
       console.log('Fetched recipes:', fetchedRecipes);
       return fetchedRecipes;
     },
-    onError: (error) => {
-      console.error('Error fetching recipes:', error);
-      toast({
-        variant: "destructive",
-        title: "Error loading recipes",
-        description: "Please try again later.",
-      });
+    meta: {
+      onError: () => {
+        toast({
+          variant: "destructive",
+          title: "Error loading recipes",
+          description: "Please try again later.",
+        });
+      }
     }
   });
 
