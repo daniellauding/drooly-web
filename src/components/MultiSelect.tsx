@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 
 interface MultiSelectProps {
   options: string[];
@@ -22,14 +23,19 @@ interface MultiSelectProps {
   placeholder?: string;
 }
 
-export function MultiSelect({ options, selected, onChange, placeholder }: MultiSelectProps) {
-  const [open, setOpen] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+export function MultiSelect({ 
+  options = [], 
+  selected = [], 
+  onChange, 
+  placeholder = "Select items..." 
+}: MultiSelectProps) {
+  const [open, setOpen] = React.useState(false);
 
-  const toggleOption = (option: string) => {
-    const newSelected = selected.includes(option)
-      ? selected.filter((item) => item !== option)
-      : [...selected, option];
+  const handleSelect = (option: string) => {
+    const currentSelected = Array.isArray(selected) ? selected : [];
+    const newSelected = currentSelected.includes(option)
+      ? currentSelected.filter((item) => item !== option)
+      : [...currentSelected, option];
     onChange(newSelected);
   };
 
@@ -37,32 +43,43 @@ export function MultiSelect({ options, selected, onChange, placeholder }: MultiS
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          ref={buttonRef}
           variant="outline"
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
         >
-          {selected.length === 0
-            ? placeholder || "Select options..."
-            : `${selected.length} selected`}
+          <div className="flex gap-1 flex-wrap">
+            {selected && selected.length > 0 ? (
+              selected.map((item) => (
+                <Badge 
+                  variant="secondary" 
+                  key={item}
+                  className="mr-1"
+                >
+                  {item}
+                </Badge>
+              ))
+            ) : (
+              <span className="text-muted-foreground">{placeholder}</span>
+            )}
+          </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" style={{ width: buttonRef.current?.offsetWidth }}>
+      <PopoverContent className="w-full p-0">
         <Command>
-          <CommandInput placeholder="Search options..." />
-          <CommandEmpty>No options found.</CommandEmpty>
+          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
+          <CommandEmpty>No item found.</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
             {options.map((option) => (
               <CommandItem
                 key={option}
-                onSelect={() => toggleOption(option)}
+                onSelect={() => handleSelect(option)}
               >
                 <Check
                   className={cn(
                     "mr-2 h-4 w-4",
-                    selected.includes(option) ? "opacity-100" : "opacity-0"
+                    (selected || []).includes(option) ? "opacity-100" : "opacity-0"
                   )}
                 />
                 {option}

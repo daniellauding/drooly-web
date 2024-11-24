@@ -41,12 +41,12 @@ const CreateRecipe = () => {
     title: "",
     description: "",
     difficulty: "",
-    cookingMethods: [],
+    cookingMethods: [] as string[],
     cuisine: "",
-    dishTypes: [],
-    images: [],
+    dishTypes: [] as string[],
+    images: [] as string[],
     featuredImageIndex: 0,
-    ingredients: [],
+    ingredients: [] as any[],
     servings: {
       amount: 1,
       unit: "serving"
@@ -55,11 +55,11 @@ const CreateRecipe = () => {
       title: "Preparation",
       instructions: "",
       duration: ""
-    }],
-    tags: [],
+    }] as RecipeStep[],
+    tags: [] as string[],
     totalTime: "",
-    worksWith: [],
-    serveWith: [],
+    worksWith: [] as string[],
+    serveWith: [] as string[],
   });
 
   const handleSave = async (isDraft = false) => {
@@ -184,7 +184,7 @@ const CreateRecipe = () => {
             <Label>Cooking Methods</Label>
             <MultiSelect
               options={COOKING_METHODS}
-              selected={recipe.cookingMethods}
+              selected={recipe.cookingMethods || []}
               onChange={(methods) => setRecipe(prev => ({ ...prev, cookingMethods: methods }))}
               placeholder="Select cooking methods"
             />
@@ -194,7 +194,7 @@ const CreateRecipe = () => {
             <Label>Dish Types</Label>
             <MultiSelect
               options={DISH_TYPES}
-              selected={recipe.dishTypes}
+              selected={recipe.dishTypes || []}
               onChange={(types) => setRecipe(prev => ({ ...prev, dishTypes: types }))}
               placeholder="Select dish types"
             />
