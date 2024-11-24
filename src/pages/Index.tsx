@@ -6,10 +6,10 @@ import { WeeklyStories } from "@/components/WeeklyStories";
 import { RecipeSwiper } from "@/components/RecipeSwiper";
 import { StoryViewer } from "@/components/StoryViewer";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecipes } from "@/services/recipeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Recipe } from "@/types/recipe";
-import type { RecipeCardProps } from "@/components/RecipeCard";
+import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const WEEKLY_STORIES = [
   {
@@ -69,28 +69,36 @@ const Index = () => {
 
   const { data: recipes, isLoading, error } = useQuery({
     queryKey: ['recipes'],
-    queryFn: fetchRecipes,
+    queryFn: async () => {
+      console.log('Fetching recipes for home page');
+      const recipesRef = collection(db, 'recipes');
+      const q = query(
+        recipesRef,
+        where('status', '==', 'published'),
+        orderBy('createdAt', 'desc'),
+        limit(10)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        image: doc.data().images?.[doc.data().featuredImageIndex || 0],
+        chef: doc.data().creatorName || 'Anonymous',
+        date: new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString(),
+        cookTime: doc.data().totalTime || '30 min'
+      })) as Recipe[];
+    }
   });
 
-  console.log("Rendering Index page with recipes:", recipes);
+  console.log("Rendering Index page with Firebase recipes:", recipes);
 
   if (error) {
     console.error("Error loading recipes:", error);
   }
 
-  // Only show available recipes, don't force specific numbers
   const discoverRecipes = recipes || [];
   const popularRecipes = recipes?.slice(0, 3) || [];
-
-  const mapRecipeToProps = (recipe: Recipe): RecipeCardProps => ({
-    id: recipe.id || '',
-    title: recipe.title,
-    image: recipe.image,
-    cookTime: recipe.cookTime || `${recipe.totalTime} min`,
-    difficulty: recipe.difficulty,
-    chef: recipe.chef || recipe.creatorName,
-    date: recipe.date
-  });
 
   return (
     <div className="min-h-screen pb-16 pt-16">
@@ -126,7 +134,16 @@ const Index = () => {
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {popularRecipes.map((recipe) => (
-                  <RecipeCard key={recipe.id} {...mapRecipeToProps(recipe)} />
+                  <RecipeCard 
+                    key={recipe.id}
+                    id={recipe.id}
+                    title={recipe.title}
+                    image={recipe.images?.[recipe.featuredImageIndex || 0]}
+                    cookTime={recipe.totalTime}
+                    difficulty={recipe.difficulty}
+                    chef={recipe.creatorName}
+                    date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
+                  />
                 ))}
               </div>
             )}
