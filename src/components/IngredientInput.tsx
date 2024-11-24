@@ -16,6 +16,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { IngredientSuggestions } from "./ingredients/IngredientSuggestions";
+import { AdvancedIngredientSection } from "./ingredients/AdvancedIngredientSection";
 
 interface Ingredient {
   name: string;
@@ -172,24 +173,10 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
 
       <Collapsible open={showAdvanced}>
         <CollapsibleContent>
-          <div className="space-y-4 mt-4 p-4 border rounded-lg bg-muted/50">
-            <h3 className="font-medium">Custom Ingredient Groups</h3>
-            <Select
-              value=""
-              onValueChange={(value) => addIngredient("", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Add new ingredient group" />
-              </SelectTrigger>
-              <SelectContent>
-                {INGREDIENT_GROUPS.map(group => (
-                  <SelectItem key={group} value={group}>
-                    {group}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <AdvancedIngredientSection 
+            onAddIngredient={addIngredient}
+            groups={INGREDIENT_GROUPS}
+          />
         </CollapsibleContent>
       </Collapsible>
     </div>
