@@ -1,7 +1,12 @@
-import { Search } from "lucide-react";
+import { Search, Bell, MessageSquare, PlusCircle } from "lucide-react";
 import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { useNavigate } from "react-router-dom";
+import { Badge } from "./ui/badge";
 
 export function TopBar() {
+  const navigate = useNavigate();
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
       <div className="flex items-center gap-4 px-6 py-4 max-w-7xl mx-auto">
@@ -15,6 +20,34 @@ export function TopBar() {
             className="pl-9 bg-[#F7F9FC] border-none rounded-2xl" 
             placeholder="Find recipes..." 
           />
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => navigate('/notifications')}
+          >
+            <Bell className="h-5 w-5" />
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">3</Badge>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => navigate('/messages')}
+          >
+            <MessageSquare className="h-5 w-5" />
+            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">2</Badge>
+          </Button>
+          <Button
+            variant="default"
+            className="gap-2"
+            onClick={() => navigate('/create-recipe')}
+          >
+            <PlusCircle className="h-4 w-4" />
+            Create Recipe
+          </Button>
         </div>
       </div>
     </div>
