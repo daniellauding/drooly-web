@@ -12,17 +12,94 @@ export interface Recipe extends RecipeType {
   date?: string;
 }
 
-const PLACEHOLDER_IMAGES = [
-  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
-  'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38',
-  'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445',
-  'https://images.unsplash.com/photo-1565299585323-38d6b0865b47',
-  'https://images.unsplash.com/photo-1565958011703-44f9829ba187'
+const SAMPLE_RECIPES: Recipe[] = [
+  {
+    id: '1',
+    title: 'Homemade Pizza',
+    description: 'Classic Italian pizza with fresh toppings',
+    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38',
+    chef: 'Mario Chef',
+    date: '2024-02-20',
+    cookTime: '45 min',
+    difficulty: 'medium',
+    cookingMethods: ['baking'],
+    cuisine: 'Italian',
+    dishTypes: ['main'],
+    images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38'],
+    ingredients: [],
+    steps: [],
+    totalTime: '45',
+    servings: { amount: 4, unit: 'servings' },
+    dietaryInfo: {
+      isVegetarian: true,
+      isVegan: false,
+      isGlutenFree: false,
+      isDairyFree: false,
+      containsNuts: false
+    },
+    categories: ['comfort food'],
+    equipment: ['oven']
+  },
+  {
+    id: '2',
+    title: 'Fresh Sushi Roll',
+    description: 'Traditional Japanese sushi rolls',
+    image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c',
+    chef: 'Yuki Chef',
+    date: '2024-02-21',
+    cookTime: '30 min',
+    difficulty: 'hard',
+    cookingMethods: ['rolling'],
+    cuisine: 'Japanese',
+    dishTypes: ['main'],
+    images: ['https://images.unsplash.com/photo-1579871494447-9811cf80d66c'],
+    ingredients: [],
+    steps: [],
+    totalTime: '30',
+    servings: { amount: 2, unit: 'servings' },
+    dietaryInfo: {
+      isVegetarian: false,
+      isVegan: false,
+      isGlutenFree: true,
+      isDairyFree: true,
+      containsNuts: false
+    },
+    categories: ['seafood'],
+    equipment: ['rice cooker']
+  },
+  {
+    id: '3',
+    title: 'Healthy Buddha Bowl',
+    description: 'Nutritious and colorful vegetarian bowl',
+    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+    chef: 'Sarah Wellness',
+    date: '2024-02-22',
+    cookTime: '20 min',
+    difficulty: 'easy',
+    cookingMethods: ['assembly'],
+    cuisine: 'International',
+    dishTypes: ['main'],
+    images: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c'],
+    ingredients: [],
+    steps: [],
+    totalTime: '20',
+    servings: { amount: 1, unit: 'serving' },
+    dietaryInfo: {
+      isVegetarian: true,
+      isVegan: true,
+      isGlutenFree: true,
+      isDairyFree: true,
+      containsNuts: true
+    },
+    categories: ['healthy'],
+    equipment: ['bowl']
+  }
 ];
 
 export const fetchRecipes = async (): Promise<Recipe[]> => {
-  console.log('Fetching recipes from Firestore');
+  console.log('Fetching recipes...');
   try {
+    // First try to fetch from Firebase
     const recipesRef = collection(db, 'recipes');
     const q = query(
       recipesRef, 
@@ -31,24 +108,28 @@ export const fetchRecipes = async (): Promise<Recipe[]> => {
     );
     const querySnapshot = await getDocs(q);
     
-    return querySnapshot.docs.map((doc, index) => {
-      const data = doc.data();
-      const image = data.images?.[data.featuredImageIndex || 0] || 
-                   PLACEHOLDER_IMAGES[index % PLACEHOLDER_IMAGES.length];
-      
-      return {
-        ...data,
-        id: doc.id,
-        image,
-        name: data.title,
-        chef: data.creatorName || 'Anonymous',
-        date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
-        cookTime: `${data.totalTime || 30} min`,
-      } as Recipe;
-    });
+    if (!querySnapshot.empty) {
+      console.log('Found recipes in Firebase');
+      return querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+          image: data.images?.[data.featuredImageIndex || 0],
+          chef: data.creatorName || 'Anonymous',
+          date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
+          cookTime: `${data.totalTime || 30} min`,
+        } as Recipe;
+      });
+    }
+    
+    // If no Firebase data, return sample data
+    console.log('No Firebase data found, returning sample recipes');
+    return SAMPLE_RECIPES;
   } catch (error) {
     console.error('Error fetching recipes:', error);
-    throw error;
+    // Return sample data as fallback
+    return SAMPLE_RECIPES;
   }
 };
 
@@ -85,7 +166,7 @@ export const fetchRecipeById = async (id: string): Promise<Recipe | null> => {
 
     const data = recipeDoc.data();
     const image = data.images?.[data.featuredImageIndex || 0] || 
-                 PLACEHOLDER_IMAGES[0];
+                 'https://via.placeholder.com/150';
 
     return {
       ...data,

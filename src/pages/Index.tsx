@@ -78,9 +78,10 @@ const Index = () => {
     console.error("Error loading recipes:", error);
   }
 
+  // Split recipes into different sections
+  const discoverRecipes = recipes?.slice(0, 3) || [];
   const popularRecipes = recipes?.slice(0, 3) || [];
   const friendsRecipes = recipes?.slice(3, 5) || [];
-  const discoverRecipes = recipes?.slice(0, 3) || [];
 
   const mapRecipeToProps = (recipe: Recipe): RecipeCardProps => ({
     id: recipe.id || '',
