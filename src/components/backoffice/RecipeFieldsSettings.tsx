@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Plus, X, Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  CUISINES,
+  RECIPE_CATEGORIES,
+  OCCASIONS,
+  SEASONS,
+  COOKING_EQUIPMENT,
+  COST_CATEGORIES,
+} from "@/types/recipe";
 
 interface FieldCategory {
   name: string;
