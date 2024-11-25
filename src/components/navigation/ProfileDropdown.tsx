@@ -5,15 +5,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Calendar, Settings, LogOut, User, ChevronDown } from "lucide-react";
+import { Calendar, Settings, LogOut, User, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { EditProfileModal } from "@/components/profile/EditProfileModal";
 
 export function ProfileDropdown() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -26,42 +28,61 @@ export function ProfileDropdown() {
 
   if (!user) return null;
 
+  // Default user data structure for the edit modal
+  const defaultUserData = {
+    name: user.displayName || "",
+    username: "",
+    birthday: "",
+    email: user.email || "",
+    phone: "",
+    bio: "",
+    gender: "prefer-not-to-say",
+    isPrivate: false,
+    avatarUrl: user.photoURL || "",
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <div className="flex items-center gap-2 cursor-pointer">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user.photoURL || undefined} />
-            <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
-          </Avatar>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </div>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate('/')}>
-          <Home className="mr-2 h-4 w-4" />
-          <span>Home</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/plan')}>
-          <Calendar className="mr-2 h-4 w-4" />
-          <span>Plan</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/profile')}>
-          <User className="mr-2 h-4 w-4" />
-          <span>Profile</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/profile')}>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Settings</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <div className="flex items-center gap-2 cursor-pointer">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user.photoURL || undefined} />
+              <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onClick={() => navigate('/profile')}>
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/create-recipe')}>
+            <Calendar className="mr-2 h-4 w-4" />
+            <span>Create Recipe</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setEditProfileOpen(true)}>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <EditProfileModal
+        open={editProfileOpen}
+        onOpenChange={setEditProfileOpen}
+        userData={defaultUserData}
+        onUpdate={() => {
+          console.log("Profile updated");
+          setEditProfileOpen(false);
+        }}
+      />
+    </>
   );
 }
