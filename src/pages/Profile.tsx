@@ -21,11 +21,11 @@ export default function Profile() {
       return;
     }
 
-    // Check if user is admin
+    // Check if user is superadmin
     const checkAdminStatus = async () => {
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        setIsAdmin(userDoc.exists() && userDoc.data().role === 'admin');
+        setIsAdmin(userDoc.exists() && userDoc.data()?.role === 'superadmin');
       } catch (error) {
         console.error("Error checking admin status:", error);
       }
