@@ -38,6 +38,9 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       
       const invitesCollection = collection(db, "invites");
       const invitePromises = emails.map(async (email) => {
+        const domain = import.meta.env.VITE_CUSTOM_DOMAIN || window.location.host;
+        const signupUrl = `${window.location.protocol}//${domain}/register?invite=${btoa(email)}&role=${selectedRole}`;
+        
         const inviteData = {
           email,
           role: selectedRole,
@@ -45,8 +48,8 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
           status: "pending",
           createdAt: new Date(),
           createdBy: user?.uid,
-          signupUrl: `${window.location.origin}/register?invite=${btoa(email)}&role=${selectedRole}`,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          signupUrl,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
           marketingContent: marketingOptions
         };
         

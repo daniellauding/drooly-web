@@ -45,20 +45,25 @@ service cloud.firestore {
       // Allow reading invites
       allow read: if true;
       
-      // Combined create rule with both role check and field validation
+      // Allow creating invites for authenticated users
       allow create: if request.auth != null && 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin') &&
         request.resource.data.keys().hasAll([
-          'email', 'role', 'status', 'createdAt', 'createdBy', 'expiresAt'
-        ]);
+          'email', 'role', 'status', 'createdAt', 'createdBy', 
+          'signupUrl', 'expiresAt', 'marketingContent'
+        ]) &&
+        (
+          // User is admin or superadmin
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'] ||
+          // Or it's a regular user invite with 'user' role only
+          (request.resource.data.role == 'user')
+        );
       
-      // Allow updating own invites
+      // Allow updating own invites or if admin/superadmin
       allow update: if request.auth != null && 
-        (resource.data.createdBy == request.auth.uid ||
+        (request.resource.data.createdBy == request.auth.uid ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']);
       
-      // Allow deleting invites
+      // Allow deleting own invites or if admin/superadmin
       allow delete: if request.auth != null && 
         (resource.data.createdBy == request.auth.uid ||
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']);
