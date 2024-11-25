@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,10 +28,26 @@ export function ScrapedRecipeReviewDialog({
   scrapedRecipe,
   onConfirm
 }: ScrapedRecipeReviewDialogProps) {
-  const [recipe, setRecipe] = React.useState<Partial<Recipe>>(scrapedRecipe);
+  const [recipe, setRecipe] = React.useState<Partial<Recipe>>({
+    title: '',
+    description: '',
+    privacy: 'private',
+    images: [],
+    ingredients: [],
+    steps: [],
+    ...scrapedRecipe
+  });
 
   React.useEffect(() => {
-    setRecipe(scrapedRecipe);
+    setRecipe({
+      title: '',
+      description: '',
+      privacy: 'private',
+      images: [],
+      ingredients: [],
+      steps: [],
+      ...scrapedRecipe
+    });
   }, [scrapedRecipe]);
 
   const handleConfirm = () => {
@@ -44,6 +60,9 @@ export function ScrapedRecipeReviewDialog({
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Review Scraped Recipe</DialogTitle>
+          <DialogDescription>
+            Review and edit the scraped recipe details before importing.
+          </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="h-[600px] pr-4">
@@ -57,7 +76,7 @@ export function ScrapedRecipeReviewDialog({
             <div className="space-y-2">
               <Label>Privacy</Label>
               <Select
-                value={recipe.privacy}
+                value={recipe.privacy || 'private'}
                 onValueChange={(value: 'public' | 'private' | 'unlisted') => 
                   setRecipe(prev => ({ ...prev, privacy: value }))
                 }
@@ -87,7 +106,7 @@ export function ScrapedRecipeReviewDialog({
             <div className="space-y-2">
               <Label>Title</Label>
               <Input
-                value={recipe.title}
+                value={recipe.title || ''}
                 onChange={(e) => setRecipe(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
@@ -95,7 +114,7 @@ export function ScrapedRecipeReviewDialog({
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
-                value={recipe.description}
+                value={recipe.description || ''}
                 onChange={(e) => setRecipe(prev => ({ ...prev, description: e.target.value }))}
               />
             </div>
@@ -103,10 +122,10 @@ export function ScrapedRecipeReviewDialog({
             <div className="space-y-2">
               <Label>Ingredients</Label>
               <div className="space-y-2">
-                {recipe.ingredients?.map((ing, index) => (
+                {(recipe.ingredients || []).map((ing, index) => (
                   <Input
                     key={index}
-                    value={ing.name}
+                    value={ing.name || ''}
                     onChange={(e) => {
                       const newIngredients = [...(recipe.ingredients || [])];
                       newIngredients[index] = { ...ing, name: e.target.value };
@@ -120,10 +139,10 @@ export function ScrapedRecipeReviewDialog({
             <div className="space-y-2">
               <Label>Steps</Label>
               <div className="space-y-2">
-                {recipe.steps?.map((step, index) => (
+                {(recipe.steps || []).map((step, index) => (
                   <Textarea
                     key={index}
-                    value={step.instructions}
+                    value={step.instructions || ''}
                     onChange={(e) => {
                       const newSteps = [...(recipe.steps || [])];
                       newSteps[index] = { ...step, instructions: e.target.value };
