@@ -11,6 +11,7 @@ import { RecipeCard } from "@/components/RecipeCard";
 import { Recipe } from "@/types/recipe";
 import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
 import { useToast } from "@/components/ui/use-toast";
+import { EditProfileModal } from "@/components/profile/EditProfileModal";
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -19,6 +20,17 @@ export default function Profile() {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const { toast } = useToast();
   const [remainingInvites, setRemainingInvites] = useState(5);
+  const [userData, setUserData] = useState({
+    name: "",
+    username: "",
+    birthday: "",
+    email: user?.email || "",
+    phone: "",
+    bio: "",
+    gender: "prefer-not-to-say",
+    isPrivate: false,
+    avatarUrl: "",
+  });
 
   useEffect(() => {
     if (!user) {
@@ -26,11 +38,19 @@ export default function Profile() {
       return;
     }
 
-    // Check if user is superadmin and get remaining invites
-    const checkUserStatus = async () => {
+    const fetchUserData = async () => {
       try {
+        console.log("Fetching user data");
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        setIsAdmin(userDoc.exists() && userDoc.data()?.role === 'superadmin');
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setIsAdmin(data.role === 'superadmin');
+          setUserData(prev => ({
+            ...prev,
+            ...data,
+            email: user.email || "",
+          }));
+        }
         
         // Get remaining invites count
         const invitesRef = collection(db, "invites");
@@ -39,12 +59,17 @@ export default function Profile() {
         const usedInvites = querySnapshot.size;
         setRemainingInvites(Math.max(0, 5 - usedInvites));
       } catch (error) {
-        console.error("Error checking user status:", error);
+        console.error("Error fetching user data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load user data. Please try again.",
+        });
       }
     };
 
-    checkUserStatus();
-  }, [user, navigate]);
+    fetchUserData();
+  }, [user, navigate, toast]);
 
   const { data: recipes, isLoading } = useQuery({
     queryKey: ['userRecipes', user?.uid],
@@ -63,6 +88,18 @@ export default function Profile() {
     enabled: !!user?.uid
   });
 
+  const handleProfileUpdate = async () => {
+    // Refetch user data after update
+    const userDoc = await getDoc(doc(db, "users", user!.uid));
+    if (userDoc.exists()) {
+      setUserData(prev => ({
+        ...prev,
+        ...userDoc.data(),
+        email: user!.email || "",
+      }));
+    }
+  };
+
   if (!user) return null;
 
   return (
@@ -70,10 +107,31 @@ export default function Profile() {
       <TopBar />
       <main className="container py-6 px-4 max-w-4xl mx-auto space-y-6">
         <div className="text-center space-y-4">
-          <div className="w-24 h-24 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
-            {user.email?.[0].toUpperCase()}
+          <div className="relative inline-block">
+            <div className="w-24 h-24 mx-auto bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+              {userData.avatarUrl ? (
+                <img
+                  src={userData.avatarUrl}
+                  alt={userData.name || user.email || "Profile"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-2xl">{(userData.name || user.email)?.[0]?.toUpperCase()}</span>
+              )}
+            </div>
+            <div className="absolute top-0 right-0">
+              <EditProfileModal userData={userData} onUpdate={handleProfileUpdate} />
+            </div>
           </div>
-          <h1 className="text-2xl font-bold">{user.email}</h1>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold">{userData.name || user.email}</h1>
+            {userData.username && (
+              <p className="text-muted-foreground">@{userData.username}</p>
+            )}
+            {userData.bio && (
+              <p className="text-sm max-w-md mx-auto">{userData.bio}</p>
+            )}
+          </div>
           
           {remainingInvites > 0 && (
             <Button 
@@ -86,24 +144,15 @@ export default function Profile() {
           )}
         </div>
 
-        <div className="space-y-4">
-          {isAdmin && (
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => navigate('/backoffice')}
-            >
-              Access Backoffice
-            </Button>
-          )}
+        {isAdmin && (
           <Button 
-            variant="destructive" 
+            variant="outline" 
             className="w-full"
-            onClick={() => logout()}
+            onClick={() => navigate('/backoffice')}
           >
-            Logout
+            Access Backoffice
           </Button>
-        </div>
+        )}
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">My Recipes</h2>
