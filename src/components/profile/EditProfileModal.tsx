@@ -1,5 +1,5 @@
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface EditProfileModalProps {
   userData: {
@@ -28,16 +27,19 @@ interface EditProfileModalProps {
     avatarUrl: string;
   };
   onUpdate: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function EditProfileModal({ userData, onUpdate }: EditProfileModalProps) {
-  const [open, setOpen] = useState(false);
+export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: EditProfileModalProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [formData, setFormData] = useState(userData);
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const { user, logout } = useAuth();
   const { toast } = useToast();
+
+  console.log("EditProfileModal rendered with open:", open);
 
   const handleUpdateProfile = async () => {
     try {
@@ -61,7 +63,7 @@ export function EditProfileModal({ userData, onUpdate }: EditProfileModalProps) 
       });
       
       onUpdate();
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -136,12 +138,7 @@ export function EditProfileModal({ userData, onUpdate }: EditProfileModalProps) 
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Settings2 className="h-5 w-5" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
