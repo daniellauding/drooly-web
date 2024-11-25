@@ -1,4 +1,4 @@
-import { Search, Bell, MessageSquare, PlusCircle } from "lucide-react";
+import { Search, Bell, MessageSquare, PlusCircle, Home } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
@@ -66,7 +66,15 @@ export function TopBar() {
           <img src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" alt="Recipe App" className="h-8 w-8" />
           <h1 className="text-2xl font-bold text-[#2C3E50]">Yummy</h1>
         </div>
-        <div className="relative flex-1 max-w-md ml-auto">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="ml-2"
+          onClick={() => navigate('/')}
+        >
+          <Home className="h-5 w-5" />
+        </Button>
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input 
             className="pl-9 bg-[#F7F9FC] border-none rounded-2xl" 
