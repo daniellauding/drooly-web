@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { List, Users } from "lucide-react";
+import { List, Users, Heart } from "lucide-react";
 import { FollowersDialog } from "./FollowersDialog";
 import { FollowingDialog } from "./FollowingDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -19,7 +19,7 @@ export function ProfileStats({ userId, recipesCount }: ProfileStatsProps) {
   const { data: followers = [] } = useQuery({
     queryKey: ['followers', userId],
     queryFn: async () => {
-      console.log('Fetching followers count for user:', userId);
+      console.log('Fetching followers for user:', userId);
       const userDoc = await getDocs(query(
         collection(db, "users"),
         where("following", "array-contains", userId)
@@ -34,12 +34,26 @@ export function ProfileStats({ userId, recipesCount }: ProfileStatsProps) {
   const { data: following = [] } = useQuery({
     queryKey: ['following', userId],
     queryFn: async () => {
-      console.log('Fetching following count for user:', userId);
+      console.log('Fetching following for user:', userId);
       const userDoc = await getDocs(query(
         collection(db, "users"),
         where("followers", "array-contains", userId)
       ));
       return userDoc.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }
+  });
+
+  const { data: favorites = [] } = useQuery({
+    queryKey: ['favorites', userId],
+    queryFn: async () => {
+      console.log('Fetching favorites for user:', userId);
+      const favoritesRef = collection(db, "favorites");
+      const q = query(favoritesRef, where("userId", "==", userId));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
@@ -79,6 +93,14 @@ export function ProfileStats({ userId, recipesCount }: ProfileStatsProps) {
         </div>
         <span className="text-sm text-muted-foreground">Following</span>
       </Button>
+
+      <div className="flex flex-col items-center gap-1">
+        <div className="flex items-center gap-2 text-lg font-semibold">
+          <Heart className="h-5 w-5 text-muted-foreground" />
+          <span>{favorites.length}</span>
+        </div>
+        <span className="text-sm text-muted-foreground">Favorites</span>
+      </div>
 
       <FollowersDialog
         userId={userId}
