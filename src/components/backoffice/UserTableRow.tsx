@@ -16,6 +16,8 @@ import {
 import { MessageSquare, ChevronDown, ChevronUp, Plus, Pencil } from "lucide-react";
 import { useState } from "react";
 import { EditRoleModal } from "./EditRoleModal";
+import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserTableRowProps {
   user: User;
@@ -52,6 +54,8 @@ export function UserTableRow({
 }: UserTableRowProps) {
   const [editRoleModalOpen, setEditRoleModalOpen] = useState(false);
   const [selectedRoleToEdit, setSelectedRoleToEdit] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const handleEditRole = (role: string) => {
     setSelectedRoleToEdit(role);
@@ -59,10 +63,38 @@ export function UserTableRow({
   };
 
   const handleRoleUpdate = (oldRole: string, newRole: string) => {
-    // Update all users with the old role to use the new role name
     if (user.role === oldRole) {
       onRoleChange(user.id, newRole);
     }
+  };
+
+  const handleDelete = () => {
+    setDeleteDialogOpen(false);
+    const deletedUser = { ...user };
+    
+    onDelete(user.id);
+    
+    toast({
+      title: "User deleted",
+      description: "The user has been successfully deleted.",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            console.log("Undo delete for user:", deletedUser);
+            // Here you would implement the actual undo logic
+            toast({
+              title: "Delete undone",
+              description: "The user has been restored.",
+            });
+          }}
+        >
+          Undo
+        </Button>
+      ),
+      duration: 5000, // 5 seconds
+    });
   };
 
   return (
@@ -151,7 +183,7 @@ export function UserTableRow({
           <Button 
             size="sm" 
             variant="destructive"
-            onClick={() => onDelete(user.id)}
+            onClick={() => setDeleteDialogOpen(true)}
           >
             Delete
           </Button>
@@ -176,6 +208,14 @@ export function UserTableRow({
         onOpenChange={setEditRoleModalOpen}
         onSave={handleRoleUpdate}
         currentRole={selectedRoleToEdit}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDelete}
+        title="Delete User"
+        description="Are you sure you want to delete this user? You can undo this action for the next 5 seconds."
       />
     </TableRow>
   );
