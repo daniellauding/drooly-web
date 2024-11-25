@@ -18,6 +18,7 @@ export const Default: Story = {
     options: ['Option 1', 'Option 2', 'Option 3'],
     selected: ['Option 1'],
     placeholder: 'Select items...',
+    onChange: (selected) => console.log('Selected items:', selected),
   },
 };
 
@@ -26,6 +27,7 @@ export const Empty: Story = {
     options: ['Red', 'Blue', 'Green', 'Yellow'],
     selected: [],
     placeholder: 'Choose colors...',
+    onChange: (selected) => console.log('Selected colors:', selected),
   },
 };
 
@@ -34,5 +36,6 @@ export const ManyOptions: Story = {
     options: ['Item 1', 'Item 2', 'Item 3', 'Item 4', 'Item 5', 'Item 6', 'Item 7', 'Item 8', 'Item 9', 'Item 10'],
     selected: ['Item 1', 'Item 3', 'Item 5'],
     placeholder: 'Select multiple items...',
+    onChange: (selected) => console.log('Selected items:', selected),
   },
 };

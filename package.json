@@ -40,6 +40,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
     "@storybook/addon-essentials": "^8.4.5",
+    "@storybook/addon-links": "^8.4.5",
     "@storybook/addon-themes": "^8.4.5",
     "@storybook/builder-vite": "^8.4.5",
     "@storybook/cli": "^8.4.5",
