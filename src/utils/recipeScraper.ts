@@ -4,31 +4,46 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   console.log("Attempting to scrape recipe from URL:", url);
   
   try {
-    // In a real implementation, this would call your backend API
-    // For now, we'll simulate the scraping
-    if (url.includes('zeinaskitchen.se')) {
-      return {
-        title: "Molokhia på libanesiskt vis",
-        description: "En traditionell libanesisk rätt med molokhia",
-        cuisine: "Middle Eastern",
-        ingredients: [
-          { name: "Molokhia", amount: "400", unit: "g" },
-          { name: "Vitlök", amount: "4", unit: "klyftor" }
-        ],
-        steps: [
-          {
-            title: "Preparation",
-            instructions: "Börja med att skala och hacka vitlöken...",
-            duration: "10 min"
-          }
-        ]
-      };
+    // Extract domain from URL
+    const domain = new URL(url).hostname;
+    console.log("Scraping from domain:", domain);
+
+    // Call backend scraping service
+    const response = await fetch('/api/scrape-recipe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to scrape recipe');
     }
-    
-    throw new Error("Unsupported website");
+
+    const data = await response.json();
+    console.log("Scraped recipe data:", data);
+
+    return {
+      title: data.title || "",
+      description: data.description || "",
+      cuisine: data.cuisine || "",
+      ingredients: data.ingredients?.map((ing: string) => ({
+        name: ing,
+        amount: "",
+        unit: ""
+      })) || [],
+      steps: data.instructions?.map((instruction: string) => ({
+        title: "Step",
+        instructions: instruction,
+        duration: "",
+        media: []
+      })) || [],
+      source: 'scrape'
+    };
   } catch (error) {
     console.error("Error scraping recipe:", error);
-    throw error;
+    throw new Error("Could not extract recipe details. The website might not be supported yet or the format might have changed. Please try entering the details manually.");
   }
 }
 

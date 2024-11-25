@@ -32,9 +32,10 @@ export function RecipeUrlDialog({ open, onOpenChange, onRecipeScraped }: RecipeU
         description: "The recipe details have been filled in from the provided URL.",
       });
     } catch (error) {
+      console.error("Error importing recipe:", error);
       toast({
         title: "Failed to import recipe",
-        description: "Could not extract recipe details from the provided URL. Please try again or enter details manually.",
+        description: error instanceof Error ? error.message : "Could not extract recipe details. Please try again or enter details manually.",
         variant: "destructive",
       });
     } finally {
@@ -48,7 +49,7 @@ export function RecipeUrlDialog({ open, onOpenChange, onRecipeScraped }: RecipeU
         <DialogHeader>
           <DialogTitle>Import Recipe from URL</DialogTitle>
           <DialogDescription>
-            Enter the URL of a recipe to automatically import its details
+            Enter the URL of a recipe to automatically import its details. Currently supported websites include common recipe websites.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
