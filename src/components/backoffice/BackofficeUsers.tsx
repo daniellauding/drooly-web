@@ -55,9 +55,6 @@ export function BackofficeUsers() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className="max-w-sm"
         />
-        <Button variant="outline" onClick={() => setCustomRoleModalOpen(true)}>
-          Add Custom Role
-        </Button>
         <Button onClick={() => setInviteModalOpen(true)}>
           Invite Users
         </Button>
@@ -100,6 +97,7 @@ export function BackofficeUsers() {
                   setMessageModalOpen(true);
                 }}
                 onToggleExpand={toggleUserExpansion}
+                onAddCustomRole={() => setCustomRoleModalOpen(true)}
                 isExpanded={expandedUsers.includes(user.id)}
               />
               {expandedUsers.includes(user.id) && (

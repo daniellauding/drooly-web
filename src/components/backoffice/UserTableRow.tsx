@@ -1,4 +1,4 @@
-import { User } from "./BackofficeUsers";
+import { User } from "./types";
 import {
   TableCell,
   TableRow,
@@ -11,8 +11,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectSeparator,
 } from "@/components/ui/select";
-import { MessageSquare, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, ChevronDown, ChevronUp, Plus } from "lucide-react";
 
 interface UserTableRowProps {
   user: User;
@@ -27,6 +28,7 @@ interface UserTableRowProps {
   onDelete: (id: string) => void;
   onMessageOpen: (id: string, email: string) => void;
   onToggleExpand: (id: string) => void;
+  onAddCustomRole: () => void;
   isExpanded: boolean;
 }
 
@@ -43,6 +45,7 @@ export function UserTableRow({
   onDelete,
   onMessageOpen,
   onToggleExpand,
+  onAddCustomRole,
   isExpanded,
 }: UserTableRowProps) {
   return (
@@ -74,7 +77,13 @@ export function UserTableRow({
       <TableCell>
         <Select
           value={user.role}
-          onValueChange={(value) => onRoleChange(user.id, value)}
+          onValueChange={(value) => {
+            if (value === "add-custom-role") {
+              onAddCustomRole();
+            } else {
+              onRoleChange(user.id, value);
+            }
+          }}
         >
           <SelectTrigger className="w-32">
             <SelectValue />
@@ -83,6 +92,13 @@ export function UserTableRow({
             {availableRoles.map((role) => (
               <SelectItem key={role} value={role}>{role}</SelectItem>
             ))}
+            <SelectSeparator />
+            <SelectItem value="add-custom-role" className="text-primary">
+              <div className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Add Custom Role
+              </div>
+            </SelectItem>
           </SelectContent>
         </Select>
       </TableCell>
