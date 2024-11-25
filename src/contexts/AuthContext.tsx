@@ -5,7 +5,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  sendEmailVerification
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
@@ -20,6 +21,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
+  sendVerificationEmail: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -37,6 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const userData = userDoc.data();
         setUser({ ...user, role: userData?.role });
+
+        if (!user.emailVerified) {
+          toast({
+            title: "Email verification required",
+            description: "Please verify your email address to access all features.",
+            duration: 5000,
+          });
+        }
       } else {
         setUser(null);
       }
@@ -44,7 +54,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return unsubscribe;
-  }, []);
+  }, [toast]);
+
+  const sendVerificationEmail = async () => {
+    if (auth.currentUser && !auth.currentUser.emailVerified) {
+      try {
+        await sendEmailVerification(auth.currentUser);
+        toast({
+          title: "Verification email sent",
+          description: "Please check your inbox and verify your email address.",
+        });
+      } catch (error) {
+        console.error("Error sending verification email:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to send verification email. Please try again.",
+        });
+      }
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -61,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string, name: string) => {
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(user);
       await setDoc(doc(db, "users", user.uid), {
         email,
         name,
@@ -68,6 +98,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date(),
       });
       setUser({ ...user, role: "user" });
+      toast({
+        title: "Verification email sent",
+        description: "Please check your inbox and verify your email address.",
+      });
     } catch (error) {
       console.error("Registration error:", error);
       throw error;
@@ -90,6 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    sendVerificationEmail,
   };
 
   return (
