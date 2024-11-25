@@ -1,6 +1,5 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { CustomRoleModal } from "./CustomRoleModal";
 import { UserMessageModal } from "./UserMessageModal";
@@ -9,7 +8,11 @@ import { UserRecipesList } from "./UserRecipesList";
 import { InviteUsersModal } from "./InviteUsersModal";
 import { useUserManagement } from "@/hooks/useUserManagement";
 
-export function BackofficeUsers() {
+interface BackofficeUsersProps {
+  searchQuery: string;
+}
+
+export function BackofficeUsers({ searchQuery }: BackofficeUsersProps) {
   const [customRoleModalOpen, setCustomRoleModalOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -24,8 +27,6 @@ export function BackofficeUsers() {
   const {
     users,
     isLoading,
-    searchQuery,
-    setSearchQuery,
     editingId,
     setEditingId,
     editName,
@@ -35,7 +36,7 @@ export function BackofficeUsers() {
     handleRoleChange,
     handleEdit,
     toggleUserExpansion
-  } = useUserManagement();
+  } = useUserManagement(searchQuery);
 
   const handleAddCustomRole = (role: string) => {
     if (!availableRoles.includes(role)) {
@@ -49,12 +50,6 @@ export function BackofficeUsers() {
   return (
     <div className="space-y-4">
       <div className="flex gap-4">
-        <Input
-          placeholder="Search users..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-sm"
-        />
         <Button onClick={() => setInviteModalOpen(true)}>
           Invite Users
         </Button>
