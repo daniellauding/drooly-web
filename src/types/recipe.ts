@@ -1,9 +1,8 @@
-export interface RecipeStep {
-  title: string;
-  instructions: string;
-  duration: string;
-  ingredientGroup?: string;
-  media?: string[];
+export interface Ingredient {
+  name: string;
+  amount: string;
+  unit: string;
+  group: string;
 }
 
 export interface Recipe {

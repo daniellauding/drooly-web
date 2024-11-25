@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { Recipe } from '@/types/recipe';
+import { Recipe, Ingredient } from '@/types/recipe';
 import { parseIngredients } from './scraper/ingredientParser';
 import { parseInstructions } from './scraper/instructionParser';
 
@@ -26,12 +26,6 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
         
         if (recipeSchema) {
           console.log('Found recipe schema:', recipeSchema);
-          
-          // Extract images
-          const images = recipeSchema.image ? 
-            (Array.isArray(recipeSchema.image) ? recipeSchema.image : [recipeSchema.image])
-            : [];
-            
           scrapedData = {
             title: recipeSchema.name,
             description: recipeSchema.description,
@@ -45,8 +39,7 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
             servings: {
               amount: parseInt(recipeSchema.recipeYield) || 4,
               unit: 'serving'
-            },
-            images
+            }
           };
         }
       } catch (error) {
@@ -54,30 +47,59 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       }
     }
 
+    // Extract images using multiple strategies
+    const images: string[] = [];
+    
+    // 1. Try featured image first
+    const featuredImage = $('.wp-post-image, article img').first().attr('src');
+    if (featuredImage) {
+      console.log('Found featured image:', featuredImage);
+      images.push(featuredImage);
+    }
+    
+    // 2. Try other common selectors
+    const imageSelectors = [
+      '.recipe-image img',
+      '.entry-content img',
+      'article img',
+      '.post-content img',
+      '.recipe__image img',
+      '.recipe-featured-image img'
+    ];
+
+    imageSelectors.forEach(selector => {
+      $(selector).each((_, el) => {
+        const src = $(el).attr('src');
+        if (src && !src.includes('avatar') && !src.includes('logo') && !images.includes(src)) {
+          console.log('Found additional image:', src);
+          images.push(src);
+        }
+      });
+    });
+
     // If no schema or missing data, try site-specific extraction
-    if (!scrapedData.ingredients?.length) {
+    if (!scrapedData.title) {
       console.log('Falling back to HTML pattern matching');
       
-      // Extract ingredients from common selectors
       const rawIngredients = $('.ingredients li, .recipe-ingredients li').map((_, el) => $(el).text().trim()).get();
-      
-      // Extract instructions from common selectors
       const rawInstructions = $('.instructions li, .recipe-instructions li').map((_, el) => $(el).text().trim()).get();
-      
-      // Extract images if none were found in schema
-      const images = !scrapedData.images?.length ? extractImages($) : scrapedData.images;
       
       scrapedData = {
         ...scrapedData,
-        title: scrapedData.title || $('h1').first().text().trim(),
-        description: scrapedData.description || $('meta[name="description"]').attr('content'),
+        title: $('h1').first().text().trim(),
+        description: $('meta[name="description"]').attr('content'),
         ingredients: parseIngredients(rawIngredients),
-        steps: parseInstructions(rawInstructions),
-        images
+        steps: parseInstructions(rawInstructions)
       };
     }
 
-    console.log('Scraped recipe data:', scrapedData);
+    // Add images to the scraped data
+    if (images.length > 0) {
+      scrapedData.images = images;
+      scrapedData.featuredImageIndex = 0;
+    }
+
+    console.log('Successfully scraped recipe with images:', scrapedData);
     return {
       ...scrapedData,
       source: 'scrape',
@@ -93,31 +115,6 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
     );
   }
 }
-
-const extractImages = ($: cheerio.CheerioAPI): string[] => {
-  const images: string[] = [];
-  
-  // Try multiple selectors for recipe images
-  const imageSelectors = [
-    '.recipe-image img',
-    '.entry-content img',
-    'article img',
-    '.post-content img',
-    'img.recipe-image',
-    // Add more selectors as needed
-  ];
-
-  imageSelectors.forEach(selector => {
-    $(selector).each((_, el) => {
-      const src = $(el).attr('src');
-      if (src && !src.includes('avatar') && !src.includes('logo')) {
-        images.push(src);
-      }
-    });
-  });
-
-  return images;
-};
 
 export async function importFromTrello(cardId: string): Promise<Partial<Recipe>> {
   console.log("Importing recipe from Trello card:", cardId);

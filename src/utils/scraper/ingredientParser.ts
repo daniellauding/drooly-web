@@ -1,7 +1,6 @@
-import { Ingredient } from "@/types/recipe";
+import { Ingredient } from '@/types/recipe';
 
 const isInstruction = (text: string): boolean => {
-  // Check if text is likely an instruction rather than ingredient
   const instructionIndicators = [
     'fräs', 'tillsätt', 'häll', 'låt', 'koka', 'blanda', 'rör', 'mixa',
     'skär', 'hacka', 'värm', 'stek', 'grädda', 'servera'
@@ -14,9 +13,9 @@ const isInstruction = (text: string): boolean => {
 
 const cleanIngredientText = (text: string): string => {
   return text
-    .replace(/\s+/g, ' ')  // Replace multiple spaces with single space
-    .replace(/\n/g, ' ')   // Replace newlines with space
-    .replace(/\t/g, ' ')   // Replace tabs with space
+    .replace(/\s+/g, ' ')
+    .replace(/\n/g, ' ')
+    .replace(/\t/g, ' ')
     .trim();
 };
 
@@ -38,7 +37,6 @@ export const parseIngredients = (rawIngredients: any[]): Ingredient[] => {
     .map(ing => {
       if (typeof ing === 'string') {
         const cleanedText = cleanIngredientText(ing);
-        // Try to parse amount and unit from text
         const match = cleanedText.match(/^(\d+(?:[,.]\d+)?)\s*(g|kg|ml|l|dl|msk|tsk|st|burk)?\s*(.+)/i);
         
         if (match) {
