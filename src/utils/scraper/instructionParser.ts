@@ -18,8 +18,8 @@ export const parseInstructions = (rawInstructions: string[]): RecipeStep[] => {
       .filter(text => text.length > 0)
   )];
 
-  return uniqueInstructions.map(instruction => ({
-    title: "Step",
+  return uniqueInstructions.map((instruction, index) => ({
+    title: `Step ${index + 1}`,
     instructions: instruction,
     duration: "",
     media: []

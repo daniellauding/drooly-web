@@ -3,7 +3,7 @@ import { Ingredient } from '@/types/recipe';
 const isInstruction = (text: string): boolean => {
   const instructionIndicators = [
     'fräs', 'tillsätt', 'häll', 'låt', 'koka', 'blanda', 'rör', 'mixa',
-    'skär', 'hacka', 'värm', 'stek', 'grädda', 'servera'
+    'skär', 'hacka', 'värm', 'stek', 'grädda', 'servera', 'gör', 'så här'
   ];
   
   return instructionIndicators.some(indicator => 
@@ -29,37 +29,30 @@ const removeDuplicates = (ingredients: Ingredient[]): Ingredient[] => {
   });
 };
 
-export const parseIngredients = (rawIngredients: any[]): Ingredient[] => {
+export const parseIngredients = (rawIngredients: string[]): Ingredient[] => {
   console.log('Parsing ingredients:', rawIngredients);
   
   const ingredients = rawIngredients
-    .filter(ing => typeof ing === 'string' || (ing?.name && !isInstruction(ing.name)))
+    .filter(ing => typeof ing === 'string' && !isInstruction(ing))
     .map(ing => {
-      if (typeof ing === 'string') {
-        const cleanedText = cleanIngredientText(ing);
-        const match = cleanedText.match(/^(\d+(?:[,.]\d+)?)\s*(g|kg|ml|l|dl|msk|tsk|st|burk)?\s*(.+)/i);
-        
-        if (match) {
-          return {
-            name: match[3].trim(),
-            amount: match[1].trim(),
-            unit: (match[2] || "").trim(),
-            group: "main"
-          };
-        }
-        
+      const cleanedText = cleanIngredientText(ing);
+      // Swedish measurements: msk (tablespoon), tsk (teaspoon), dl (deciliter), st (piece)
+      const match = cleanedText.match(/^(\d+(?:[,.]\d+)?)\s*(g|kg|ml|l|dl|msk|tsk|st|krm|burk|port)?\s*(.+)/i);
+      
+      if (match) {
         return {
-          name: cleanedText,
-          amount: "",
-          unit: "",
+          name: match[3].trim(),
+          amount: match[1].trim(),
+          unit: (match[2] || "").trim(),
           group: "main"
         };
       }
       
       return {
-        ...ing,
-        name: cleanIngredientText(ing.name),
-        group: ing.group || "main"
+        name: cleanedText,
+        amount: "",
+        unit: "",
+        group: "main"
       };
     });
 

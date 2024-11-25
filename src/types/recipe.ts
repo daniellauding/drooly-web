@@ -60,6 +60,14 @@ export interface Recipe {
   }[];
 }
 
+export interface RecipeStep {
+  title: string;
+  instructions: string;
+  duration: string;
+  ingredientGroup?: string;
+  media?: string[];
+}
+
 export const CUISINES = [
   "American", "Italian", "Japanese", "Mexican", "Indian", "French", "Thai", 
   "Mediterranean", "Chinese", "Korean", "Vietnamese", "Greek", "Spanish", 

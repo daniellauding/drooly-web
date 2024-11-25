@@ -1,6 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { Recipe, Ingredient } from '@/types/recipe';
+import { Recipe } from '@/types/recipe';
 import { parseIngredients } from './scraper/ingredientParser';
 import { parseInstructions } from './scraper/instructionParser';
 
@@ -47,17 +47,46 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       }
     }
 
-    // Extract images using multiple strategies
+    // If no schema or missing data, fallback to HTML pattern matching
+    if (!scrapedData.title || !scrapedData.ingredients?.length) {
+      console.log('Falling back to HTML pattern matching');
+      
+      // Extract ingredients from common Swedish recipe selectors
+      const rawIngredients = $('.ingredients li, .recipe-ingredients li, .recipe-ingress li, .entry-content ul li')
+        .map((_, el) => $(el).text().trim())
+        .get()
+        .filter(text => text.length > 0);
+
+      // Extract instructions from common Swedish recipe selectors
+      const rawInstructions = $('.instructions li, .recipe-instructions li, .recipe-steps li, .entry-content ol li')
+        .map((_, el) => $(el).text().trim())
+        .get()
+        .filter(text => text.length > 0);
+
+      // Get description from meta or first paragraph
+      const description = $('meta[name="description"]').attr('content') || 
+                         $('.recipe-ingress p, .entry-content p').first().text().trim();
+
+      scrapedData = {
+        ...scrapedData,
+        title: scrapedData.title || $('h1').first().text().trim(),
+        description: description,
+        ingredients: parseIngredients(rawIngredients),
+        steps: parseInstructions(rawInstructions)
+      };
+    }
+
+    // Extract images
     const images: string[] = [];
     
-    // 1. Try featured image first
+    // Try featured image first
     const featuredImage = $('.wp-post-image, article img').first().attr('src');
     if (featuredImage) {
       console.log('Found featured image:', featuredImage);
       images.push(featuredImage);
     }
     
-    // 2. Try other common selectors
+    // Try other common selectors
     const imageSelectors = [
       '.recipe-image img',
       '.entry-content img',
@@ -77,32 +106,20 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       });
     });
 
-    // If no schema or missing data, try site-specific extraction
     if (!scrapedData.title) {
-      console.log('Falling back to HTML pattern matching');
-      
-      const rawIngredients = $('.ingredients li, .recipe-ingredients li').map((_, el) => $(el).text().trim()).get();
-      const rawInstructions = $('.instructions li, .recipe-instructions li').map((_, el) => $(el).text().trim()).get();
-      
-      scrapedData = {
-        ...scrapedData,
-        title: $('h1').first().text().trim(),
-        description: $('meta[name="description"]').attr('content'),
-        ingredients: parseIngredients(rawIngredients),
-        steps: parseInstructions(rawInstructions)
-      };
+      throw new Error('Could not extract recipe details');
     }
 
-    // Add images to the scraped data
-    if (images.length > 0) {
-      scrapedData.images = images;
-      scrapedData.featuredImageIndex = 0;
-    }
+    console.log('Successfully scraped recipe with images:', {
+      ...scrapedData,
+      images
+    });
 
-    console.log('Successfully scraped recipe with images:', scrapedData);
     return {
       ...scrapedData,
-      source: 'scrape',
+      images,
+      featuredImageIndex: 0,
+      source: 'scrape' as const,
       sourceUrl: url,
       privacy: 'public' as const,
       servings: scrapedData.servings || { amount: 4, unit: 'serving' }
