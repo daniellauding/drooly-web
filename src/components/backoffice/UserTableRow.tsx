@@ -13,7 +13,9 @@ import {
   SelectValue,
   SelectSeparator,
 } from "@/components/ui/select";
-import { MessageSquare, ChevronDown, ChevronUp, Plus } from "lucide-react";
+import { MessageSquare, ChevronDown, ChevronUp, Plus, Pencil } from "lucide-react";
+import { useState } from "react";
+import { EditRoleModal } from "./EditRoleModal";
 
 interface UserTableRowProps {
   user: User;
@@ -48,6 +50,21 @@ export function UserTableRow({
   onAddCustomRole,
   isExpanded,
 }: UserTableRowProps) {
+  const [editRoleModalOpen, setEditRoleModalOpen] = useState(false);
+  const [selectedRoleToEdit, setSelectedRoleToEdit] = useState("");
+
+  const handleEditRole = (role: string) => {
+    setSelectedRoleToEdit(role);
+    setEditRoleModalOpen(true);
+  };
+
+  const handleRoleUpdate = (oldRole: string, newRole: string) => {
+    // Update all users with the old role to use the new role name
+    if (user.role === oldRole) {
+      onRoleChange(user.id, newRole);
+    }
+  };
+
   return (
     <TableRow>
       <TableCell className="font-mono text-xs text-muted-foreground">
@@ -75,32 +92,48 @@ export function UserTableRow({
       </TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>
-        <Select
-          value={user.role}
-          onValueChange={(value) => {
-            if (value === "add-custom-role") {
-              onAddCustomRole();
-            } else {
-              onRoleChange(user.id, value);
-            }
-          }}
-        >
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {availableRoles.map((role) => (
-              <SelectItem key={role} value={role}>{role}</SelectItem>
-            ))}
-            <SelectSeparator />
-            <SelectItem value="add-custom-role" className="text-primary">
-              <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add Custom Role
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select
+            value={user.role}
+            onValueChange={(value) => {
+              if (value === "add-custom-role") {
+                onAddCustomRole();
+              } else {
+                onRoleChange(user.id, value);
+              }
+            }}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableRoles.map((role) => (
+                <SelectItem key={role} value={role} className="flex justify-between">
+                  {role}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-4 w-4 p-0 ml-2"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleEditRole(role);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </SelectItem>
+              ))}
+              <SelectSeparator />
+              <SelectItem value="add-custom-role" className="text-primary">
+                <div className="flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Custom Role
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </TableCell>
       <TableCell>
         {user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
@@ -137,6 +170,13 @@ export function UserTableRow({
           )}
         </Button>
       </TableCell>
+
+      <EditRoleModal
+        open={editRoleModalOpen}
+        onOpenChange={setEditRoleModalOpen}
+        onSave={handleRoleUpdate}
+        currentRole={selectedRoleToEdit}
+      />
     </TableRow>
   );
 }
