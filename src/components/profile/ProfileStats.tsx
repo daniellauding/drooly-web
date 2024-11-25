@@ -10,41 +10,13 @@ import { db } from "@/lib/firebase";
 interface ProfileStatsProps {
   userId: string;
   recipesCount: number;
+  followersCount: number;
+  followingCount: number;
 }
 
-export function ProfileStats({ userId, recipesCount }: ProfileStatsProps) {
+export function ProfileStats({ userId, recipesCount, followersCount, followingCount }: ProfileStatsProps) {
   const [followersDialogOpen, setFollowersDialogOpen] = useState(false);
   const [followingDialogOpen, setFollowingDialogOpen] = useState(false);
-
-  const { data: followers = [] } = useQuery({
-    queryKey: ['followers', userId],
-    queryFn: async () => {
-      console.log('Fetching followers for user:', userId);
-      const userDoc = await getDocs(query(
-        collection(db, "users"),
-        where("following", "array-contains", userId)
-      ));
-      return userDoc.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    }
-  });
-
-  const { data: following = [] } = useQuery({
-    queryKey: ['following', userId],
-    queryFn: async () => {
-      console.log('Fetching following for user:', userId);
-      const userDoc = await getDocs(query(
-        collection(db, "users"),
-        where("followers", "array-contains", userId)
-      ));
-      return userDoc.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-    }
-  });
 
   const { data: favorites = [] } = useQuery({
     queryKey: ['favorites', userId],
@@ -77,7 +49,7 @@ export function ProfileStats({ userId, recipesCount }: ProfileStatsProps) {
       >
         <div className="flex items-center gap-2 text-lg font-semibold">
           <Users className="h-5 w-5 text-muted-foreground" />
-          <span>{followers.length}</span>
+          <span>{followersCount}</span>
         </div>
         <span className="text-sm text-muted-foreground">Followers</span>
       </Button>
@@ -89,7 +61,7 @@ export function ProfileStats({ userId, recipesCount }: ProfileStatsProps) {
       >
         <div className="flex items-center gap-2 text-lg font-semibold">
           <Users className="h-5 w-5 text-muted-foreground" />
-          <span>{following.length}</span>
+          <span>{followingCount}</span>
         </div>
         <span className="text-sm text-muted-foreground">Following</span>
       </Button>
