@@ -2,13 +2,28 @@ import { Recipe } from "@/types/recipe";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeSwiper } from "@/components/RecipeSwiper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface RecipeSectionsProps {
   isLoading: boolean;
+  error?: Error | null;
   recipes: Recipe[];
 }
 
-export function RecipeSections({ isLoading, recipes }: RecipeSectionsProps) {
+export function RecipeSections({ isLoading, error, recipes }: RecipeSectionsProps) {
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>
+          Failed to load recipes. Please try refreshing the page.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   const popularRecipes = recipes?.slice(0, 3) || [];
 
   return (
@@ -26,7 +41,7 @@ export function RecipeSections({ isLoading, recipes }: RecipeSectionsProps) {
         )}
       </section>
 
-      <section>
+      <section className="mt-12">
         <h2 className="text-2xl font-bold mb-6">Popular Recipes</h2>
         {isLoading ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
