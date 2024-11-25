@@ -76,7 +76,9 @@ export default function Profile() {
             ...prev,
             id: userDoc.id,
             ...data,
+            email: user?.email || '',
           }));
+          console.log("Fetched user data:", data);
         }
         
         if (targetUserId === user?.uid) {

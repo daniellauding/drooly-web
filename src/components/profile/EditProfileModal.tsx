@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Camera, X, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { ProfileBasicInfo } from "./ProfileBasicInfo";
@@ -13,6 +13,7 @@ import { ProfilePrivacySettings } from "./ProfilePrivacySettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AvatarUpload } from "./AvatarUpload";
 
 interface EditProfileModalProps {
   userData: {
@@ -31,15 +32,45 @@ interface EditProfileModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: EditProfileModalProps) {
+export function EditProfileModal({ userData: initialUserData, onUpdate, open, onOpenChange }: EditProfileModalProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [formData, setFormData] = useState(userData);
+  const [formData, setFormData] = useState(initialUserData);
   const [newPassword, setNewPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const { user, logout } = useAuth();
   const { toast } = useToast();
 
-  console.log("EditProfileModal rendered with open:", open);
+  // Load user data when modal opens
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user) return;
+      
+      try {
+        console.log("Loading user data for modal:", user.uid);
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          console.log("Loaded user data:", data);
+          setFormData(prev => ({
+            ...prev,
+            ...data,
+            email: user.email || '',
+          }));
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load user data. Please try again.",
+        });
+      }
+    };
+
+    if (open) {
+      loadUserData();
+    }
+  }, [open, user, toast]);
 
   const handleUpdateProfile = async () => {
     try {
@@ -55,6 +86,13 @@ export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: Edi
         gender: formData.gender,
         isPrivate: formData.isPrivate,
         avatarUrl: formData.avatarUrl,
+        updatedAt: new Date(),
+      });
+
+      // Update the auth profile as well
+      await user.updateProfile({
+        displayName: formData.name,
+        photoURL: formData.avatarUrl,
       });
 
       toast({
@@ -147,42 +185,10 @@ export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: Edi
         <div className="space-y-6">
           {/* Top Section with Avatar and Key Info */}
           <div className="flex flex-col sm:flex-row gap-6">
-            <div className="relative">
-              <img
-                src={formData.avatarUrl || "/placeholder.svg"}
-                alt="Profile"
-                className="w-24 h-24 rounded-full object-cover"
-              />
-              <div className="absolute -bottom-2 -right-2 flex gap-1">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon"
-                  className="h-8 w-8 rounded-full"
-                  onClick={() => document.getElementById('avatar-upload')?.click()}
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-                {formData.avatarUrl && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="h-8 w-8 rounded-full"
-                    onClick={() => setFormData(prev => ({ ...prev, avatarUrl: "" }))}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </div>
+            <AvatarUpload
+              currentAvatar={formData.avatarUrl}
+              onAvatarChange={(newAvatar) => setFormData(prev => ({ ...prev, avatarUrl: newAvatar }))}
+            />
             <div className="flex-1 space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="username">Username</Label>
