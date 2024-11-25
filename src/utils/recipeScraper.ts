@@ -2,6 +2,52 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { Recipe } from '@/types/recipe';
 
+const cleanIngredients = (ingredients: any[]) => {
+  // Remove duplicates by comparing name+amount+unit
+  const seen = new Set();
+  return ingredients
+    .filter(ing => {
+      const key = `${ing.name}-${ing.amount}-${ing.unit}`;
+      const isDuplicate = seen.has(key);
+      seen.add(key);
+      return !isDuplicate;
+    })
+    // Remove ingredients that are actually instructions (longer than 100 chars)
+    .filter(ing => ing.name.length < 100)
+    // Clean up whitespace and newlines
+    .map(ing => ({
+      ...ing,
+      name: ing.name.replace(/\s+/g, ' ').trim(),
+      amount: ing.amount.trim(),
+      unit: ing.unit.trim()
+    }));
+};
+
+const extractImages = ($: cheerio.CheerioAPI): string[] => {
+  const images: string[] = [];
+  
+  // Try multiple selectors for recipe images
+  const imageSelectors = [
+    '.recipe-image img',
+    '.entry-content img',
+    'article img',
+    '.post-content img',
+    'img.recipe-image',
+    // Add more selectors as needed
+  ];
+
+  imageSelectors.forEach(selector => {
+    $(selector).each((_, el) => {
+      const src = $(el).attr('src');
+      if (src && !src.includes('avatar') && !src.includes('logo')) {
+        images.push(src);
+      }
+    });
+  });
+
+  return images;
+};
+
 const extractSwedishRecipe = ($: cheerio.CheerioAPI) => {
   console.log('Attempting to extract Swedish recipe');
   
@@ -166,7 +212,10 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
             servings: {
               amount: parseInt(recipeSchema.recipeYield) || 4,
               unit: 'serving'
-            }
+            },
+            images: recipeSchema.image ? 
+              (Array.isArray(recipeSchema.image) ? recipeSchema.image : [recipeSchema.image])
+              : []
           };
         }
       } catch (error) {
@@ -184,7 +233,16 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       };
     }
 
-    // Always return what we found, even if incomplete
+    // Extract images if none were found in schema
+    if (!scrapedData.images?.length) {
+      scrapedData.images = extractImages($);
+    }
+
+    // Clean up the data
+    if (scrapedData.ingredients) {
+      scrapedData.ingredients = cleanIngredients(scrapedData.ingredients);
+    }
+
     console.log('Scraped recipe data:', scrapedData);
     return {
       ...scrapedData,
@@ -195,7 +253,6 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
     };
   } catch (error) {
     console.error('Error scraping recipe:', error);
-    // Return partial data even if there's an error
     return {
       title: "",
       description: "",

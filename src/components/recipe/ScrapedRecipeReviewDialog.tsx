@@ -9,6 +9,7 @@ import { X, Camera, Check } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { MultiSelect } from "@/components/MultiSelect";
 import { COOKING_EQUIPMENT } from "@/types/recipe";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface ScrapedRecipeReviewDialogProps {
   open: boolean;
@@ -31,7 +32,7 @@ export function ScrapedRecipeReviewDialog({
     cookingMethods: [],
     equipment: [],
     servings: { amount: 4, unit: 'serving' },
-    ...cleanScrapedRecipe(scrapedRecipe)
+    ...scrapedRecipe
   });
 
   React.useEffect(() => {
@@ -43,7 +44,7 @@ export function ScrapedRecipeReviewDialog({
       cookingMethods: [],
       equipment: [],
       servings: { amount: 4, unit: 'serving' },
-      ...cleanScrapedRecipe(scrapedRecipe)
+      ...scrapedRecipe
     });
   }, [scrapedRecipe]);
 
@@ -63,6 +64,20 @@ export function ScrapedRecipeReviewDialog({
 
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-6 py-4">
+            {recipe.images && recipe.images.length > 0 && (
+              <div className="space-y-2">
+                <Label>Recipe Images</Label>
+                <ImageUpload
+                  images={recipe.images}
+                  featuredImageIndex={recipe.featuredImageIndex}
+                  onChange={(images, featuredImageIndex) => {
+                    handleFieldChange('images', images);
+                    handleFieldChange('featuredImageIndex', featuredImageIndex);
+                  }}
+                />
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Recipe Title</Label>
@@ -82,64 +97,10 @@ export function ScrapedRecipeReviewDialog({
               </div>
 
               <div className="space-y-2">
-                <Label>Cuisine Type</Label>
-                <Input
-                  value={recipe.cuisine || ''}
-                  onChange={(e) => handleFieldChange('cuisine', e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Servings Amount</Label>
-                  <Input
-                    type="number"
-                    value={recipe.servings?.amount || ''}
-                    onChange={(e) => handleFieldChange('servings', { 
-                      ...recipe.servings,
-                      amount: parseInt(e.target.value) || 0 
-                    })}
-                    min="1"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Serving Unit</Label>
-                  <Input
-                    value={recipe.servings?.unit || ''}
-                    onChange={(e) => handleFieldChange('servings', {
-                      ...recipe.servings,
-                      unit: e.target.value
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Cooking Methods</Label>
-                <Input
-                  value={recipe.cookingMethods?.join(', ') || ''}
-                  onChange={(e) => handleFieldChange('cookingMethods', 
-                    e.target.value.split(',').map(m => m.trim()).filter(Boolean)
-                  )}
-                  placeholder="e.g., fry, bake, steam"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Required Equipment</Label>
-                <MultiSelect
-                  options={COOKING_EQUIPMENT}
-                  selected={recipe.equipment || []}
-                  onChange={(equipment) => handleFieldChange('equipment', equipment)}
-                  placeholder="Select required equipment"
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label>Ingredients</Label>
                 <div className="border rounded-md p-4 space-y-2">
                   {recipe.ingredients?.map((ingredient, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                    <div key={index} className="flex gap-2">
                       <Input
                         value={ingredient.name}
                         onChange={(e) => {
@@ -148,6 +109,7 @@ export function ScrapedRecipeReviewDialog({
                           handleFieldChange('ingredients', newIngredients);
                         }}
                         className="flex-1"
+                        placeholder="Ingredient name"
                       />
                       <Input
                         value={ingredient.amount}
@@ -222,6 +184,42 @@ export function ScrapedRecipeReviewDialog({
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Required Equipment</Label>
+                <MultiSelect
+                  options={COOKING_EQUIPMENT}
+                  selected={recipe.equipment || []}
+                  onChange={(equipment) => handleFieldChange('equipment', equipment)}
+                  placeholder="Select required equipment"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Servings Amount</Label>
+                  <Input
+                    type="number"
+                    value={recipe.servings?.amount || ''}
+                    onChange={(e) => handleFieldChange('servings', {
+                      ...recipe.servings,
+                      amount: parseInt(e.target.value) || 0
+                    })}
+                    min="1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Serving Unit</Label>
+                  <Input
+                    value={recipe.servings?.unit || ''}
+                    onChange={(e) => handleFieldChange('servings', {
+                      ...recipe.servings,
+                      unit: e.target.value
+                    })}
+                    placeholder="e.g., serving, piece"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </ScrollArea>
@@ -246,37 +244,4 @@ export function ScrapedRecipeReviewDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-function cleanScrapedRecipe(recipe: Partial<Recipe>): Partial<Recipe> {
-  if (!recipe) return {};
-
-  // Remove duplicate ingredients
-  const uniqueIngredients = recipe.ingredients ? 
-    Array.from(new Set(recipe.ingredients.map(i => JSON.stringify(i))))
-      .map(str => JSON.parse(str))
-      .filter(ing => ing.name && !ing.name.includes("Ingredienser") && !ing.name.includes("instructions")) : [];
-
-  // Clean up steps
-  const cleanedSteps = recipe.steps ? 
-    recipe.steps
-      .filter(step => 
-        step.instructions && 
-        !step.instructions.includes("Ingredienser") &&
-        !step.instructions.includes("curry currysås") &&
-        step.instructions.length > 10
-      )
-      .map(step => ({
-        ...step,
-        instructions: step.instructions.trim()
-      }))
-      .filter((step, index, self) => 
-        self.findIndex(s => s.instructions === step.instructions) === index
-      ) : [];
-
-  return {
-    ...recipe,
-    ingredients: uniqueIngredients,
-    steps: cleanedSteps
-  };
 }
