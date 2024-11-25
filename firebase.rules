@@ -51,22 +51,18 @@ service cloud.firestore {
           'email', 'role', 'status', 'createdAt', 'createdBy', 
           'signupUrl', 'expiresAt', 'marketingContent'
         ]) &&
-        (
-          // User is admin or superadmin
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'] ||
-          // Or it's a regular user invite with 'user' role only
-          (request.resource.data.role == 'user')
-        );
+        // Verify the createdBy field matches the authenticated user
+        request.resource.data.createdBy == request.auth.uid &&
+        // Verify role is 'user' for regular users
+        request.resource.data.role == 'user';
       
-      // Allow updating own invites or if admin/superadmin
+      // Allow updating own invites
       allow update: if request.auth != null && 
-        (request.resource.data.createdBy == request.auth.uid ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']);
+        resource.data.createdBy == request.auth.uid;
       
-      // Allow deleting own invites or if admin/superadmin
+      // Allow deleting own invites
       allow delete: if request.auth != null && 
-        (resource.data.createdBy == request.auth.uid ||
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']);
+        resource.data.createdBy == request.auth.uid;
     }
   }
 }
