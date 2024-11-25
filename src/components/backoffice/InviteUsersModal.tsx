@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Loader2, Mail } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
+import { InviteForm } from "./InviteForm";
+import { MarketingOptions } from "./MarketingOptions";
+import { InviteLink } from "./InviteLink";
 
 interface InviteUsersModalProps {
   open: boolean;
@@ -18,7 +19,6 @@ interface InviteUsersModalProps {
 
 export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) {
   const [emails, setEmails] = useState<string[]>([]);
-  const [newEmail, setNewEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState("user");
   const [customMessage, setCustomMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -28,17 +28,6 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
   });
   const { toast } = useToast();
   const { user } = useAuth();
-
-  const handleAddEmail = () => {
-    if (newEmail && !emails.includes(newEmail)) {
-      setEmails([...emails, newEmail]);
-      setNewEmail("");
-    }
-  };
-
-  const handleRemoveEmail = (email: string) => {
-    setEmails(emails.filter(e => e !== email));
-  };
 
   const handleSendInvites = async () => {
     if (emails.length === 0) return;
@@ -70,7 +59,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
 
       toast({
         title: "Invites created successfully",
-        description: `Created ${emails.length} invites. Note: Email sending is not yet implemented.`
+        description: `Created ${emails.length} invites`
       });
       
       onOpenChange(false);
@@ -112,64 +101,19 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Add Recipients</label>
-            <div className="flex gap-2">
-              <Input
-                type="email"
-                placeholder="Enter email address"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
-              />
-              <Button onClick={handleAddEmail} type="button">
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+          <InviteForm emails={emails} setEmails={setEmails} />
 
-            <div className="flex flex-wrap gap-2 mt-2">
-              {emails.map((email) => (
-                <div
-                  key={email}
-                  className="bg-primary/10 text-primary px-2 py-1 rounded-full text-sm flex items-center gap-2"
-                >
-                  {email}
-                  <button
-                    onClick={() => handleRemoveEmail(email)}
-                    className="hover:text-primary/70"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+          {emails.map((email) => (
+            <div key={email} className="space-y-2">
+              <label className="text-sm font-medium">Invite Link for {email}</label>
+              <InviteLink email={email} role={selectedRole} />
             </div>
-          </div>
+          ))}
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Marketing Content</label>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="popularRecipes"
-                  checked={marketingOptions.popularRecipes}
-                  onCheckedChange={(checked) => 
-                    setMarketingOptions(prev => ({ ...prev, popularRecipes: checked as boolean }))
-                  }
-                />
-                <label htmlFor="popularRecipes">Include popular recipes</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="topCreators"
-                  checked={marketingOptions.topCreators}
-                  onCheckedChange={(checked) => 
-                    setMarketingOptions(prev => ({ ...prev, topCreators: checked as boolean }))
-                  }
-                />
-                <label htmlFor="topCreators">Include top creators</label>
-              </div>
-            </div>
-          </div>
+          <MarketingOptions 
+            options={marketingOptions}
+            onChange={setMarketingOptions}
+          />
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Custom Message (optional)</label>
