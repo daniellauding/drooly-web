@@ -2,36 +2,39 @@ import { useQuery } from "@tanstack/react-query";
 import { collection, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Recipe } from "@/types/recipe";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { RecipeTableRow } from "./RecipeTableRow";
 import { RecipeExpandedRow } from "./RecipeExpandedRow";
-import { SendInviteModal } from "./SendInviteModal";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 export function BackofficeRecipes() {
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
 
   const { data: recipes, isLoading, refetch } = useQuery({
-    queryKey: ['admin-recipes'],
+    queryKey: ['admin-recipes', searchQuery],
     queryFn: async () => {
-      console.log("Fetching recipes for backoffice");
+      console.log("Fetching recipes for backoffice with search:", searchQuery);
       const recipesRef = collection(db, 'recipes');
       const snapshot = await getDocs(recipesRef);
-      return snapshot.docs.map(doc => ({
+      const allRecipes = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Recipe[];
+      
+      if (searchQuery) {
+        return allRecipes.filter(recipe => 
+          recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          recipe.description.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+      
+      return allRecipes;
     }
   });
 
@@ -86,6 +89,16 @@ export function BackofficeRecipes() {
 
   return (
     <div className="space-y-4">
+      <div className="relative max-w-sm">
+        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search recipes..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-8"
+        />
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -112,10 +125,6 @@ export function BackofficeRecipes() {
                 onCancel={() => setEditingId(null)}
                 onDelete={handleDelete}
                 onToggleExpand={() => toggleRowExpansion(recipe.id!)}
-                onInvite={(recipe) => {
-                  setSelectedRecipe(recipe);
-                  setShowInviteModal(true);
-                }}
               />
               {expandedRows.includes(recipe.id!) && (
                 <RecipeExpandedRow 
@@ -127,12 +136,6 @@ export function BackofficeRecipes() {
           ))}
         </TableBody>
       </Table>
-
-      <SendInviteModal
-        open={showInviteModal}
-        onOpenChange={setShowInviteModal}
-        recipe={selectedRecipe}
-      />
     </div>
   );
 }

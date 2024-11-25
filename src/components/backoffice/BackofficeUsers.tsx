@@ -1,20 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { collection, getDocs, deleteDoc, doc, updateDoc, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { CustomRoleModal } from "./CustomRoleModal";
 import { UserMessageModal } from "./UserMessageModal";
 import { UserTableRow } from "./UserTableRow";
 import { UserRecipesList } from "./UserRecipesList";
+import { InviteUsersModal } from "./InviteUsersModal";
 
 export interface User {
   id: string;
@@ -27,10 +23,12 @@ export interface User {
 
 export function BackofficeUsers() {
   const { toast } = useToast();
+  const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [customRoleModalOpen, setCustomRoleModalOpen] = useState(false);
   const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedUserEmail, setSelectedUserEmail] = useState<string>("");
   const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
@@ -41,13 +39,21 @@ export function BackofficeUsers() {
   ]);
 
   const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['admin-users'],
+    queryKey: ['admin-users', searchQuery],
     queryFn: async () => {
-      console.log("Fetching users data...");
+      console.log("Fetching users data with search:", searchQuery);
       const usersRef = collection(db, 'users');
-      const snapshot = await getDocs(usersRef);
+      let q = query(usersRef);
       
-      // Fetch recipes count for each user
+      if (searchQuery) {
+        q = query(usersRef, 
+          where('email', '>=', searchQuery),
+          where('email', '<=', searchQuery + '\uf8ff')
+        );
+      }
+      
+      const snapshot = await getDocs(q);
+      
       const usersData = await Promise.all(snapshot.docs.map(async (doc) => {
         const recipesRef = collection(db, 'recipes');
         const recipesQuery = query(recipesRef, where('creatorId', '==', doc.id));
@@ -63,7 +69,6 @@ export function BackofficeUsers() {
         };
       }));
 
-      console.log("Fetched users data:", usersData);
       return usersData as User[];
     }
   });
@@ -132,17 +137,13 @@ export function BackofficeUsers() {
   };
 
   const handleAddCustomRole = (role: string) => {
-    setAvailableRoles(prev => [...prev, role]);
-    toast({
-      title: "Role added",
-      description: `The role "${role}" has been added to the available roles.`
-    });
-  };
-
-  const toggleUserExpansion = (userId: string) => {
-    setExpandedUsers(prev => 
-      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    );
+    if (!availableRoles.includes(role)) {
+      setAvailableRoles(prev => [...prev, role]);
+      toast({
+        title: "Role added",
+        description: `The role "${role}" has been added to the available roles.`
+      });
+    }
   };
 
   if (isLoading) return <div className="p-4">Loading users data...</div>;
@@ -150,12 +151,20 @@ export function BackofficeUsers() {
 
   return (
     <div className="space-y-4">
-      <Button 
-        variant="outline" 
-        onClick={() => setCustomRoleModalOpen(true)}
-      >
-        Add Custom Role
-      </Button>
+      <div className="flex gap-4">
+        <Input
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
+        <Button variant="outline" onClick={() => setCustomRoleModalOpen(true)}>
+          Add Custom Role
+        </Button>
+        <Button onClick={() => setInviteModalOpen(true)}>
+          Invite Users
+        </Button>
+      </div>
 
       <Table>
         <TableHeader>
@@ -215,6 +224,11 @@ export function BackofficeUsers() {
         onOpenChange={setMessageModalOpen}
         userId={selectedUserId}
         userEmail={selectedUserEmail}
+      />
+
+      <InviteUsersModal
+        open={inviteModalOpen}
+        onOpenChange={setInviteModalOpen}
       />
     </div>
   );
