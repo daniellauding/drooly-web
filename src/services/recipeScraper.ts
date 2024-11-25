@@ -14,16 +14,33 @@ interface ScrapedRecipe {
   };
 }
 
+const extractTextFromElement = ($: cheerio.CheerioAPI, selectors: string[]): string => {
+  for (const selector of selectors) {
+    const element = $(selector);
+    if (element.length) {
+      return element.first().text().trim();
+    }
+  }
+  return '';
+};
+
+const extractListItems = ($: cheerio.CheerioAPI, selectors: string[]): string[] => {
+  for (const selector of selectors) {
+    const elements = $(selector);
+    if (elements.length) {
+      return elements.map((_, el) => $(el).text().trim()).get().filter(text => text.length > 0);
+    }
+  }
+  return [];
+};
+
 export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   console.log('Starting recipe scrape for URL:', url);
   
   try {
-    // Use a CORS proxy to bypass CORS restrictions
     const corsProxy = 'https://corsproxy.io/?';
     const response = await axios.get(`${corsProxy}${encodeURIComponent(url)}`);
     const html = response.data;
-    
-    // Load HTML into cheerio
     const $ = cheerio.load(html);
     
     // Try to find JSON-LD schema first (most reliable)
@@ -58,18 +75,55 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       }
     }
 
-    // If no schema found, fallback to HTML pattern matching
-    if (!scrapedData.title) {
+    // If no schema or missing data, fallback to HTML pattern matching
+    if (!scrapedData.title || !scrapedData.ingredients?.length || !scrapedData.instructions?.length) {
       console.log('Falling back to HTML pattern matching');
+      
+      // Common selectors for different recipe sites
+      const titleSelectors = ['h1', '.recipe-title', '.recipe-header h1', '[itemprop="name"]'];
+      const descriptionSelectors = [
+        'meta[name="description"]',
+        '.recipe-description',
+        '.recipe-ingress',
+        '[itemprop="description"]',
+        '.recipe-preamble'
+      ];
+      const ingredientSelectors = [
+        '.ingredients li',
+        '.recipe-ingredients li',
+        '.ingredient-list li',
+        '[itemprop="recipeIngredient"]',
+        '.recipe-ingress li',
+        '.entry-content ul li',
+        '.ingredients-list li'
+      ];
+      const instructionSelectors = [
+        '.instructions li',
+        '.recipe-instructions li',
+        '.recipe-steps li',
+        '[itemprop="recipeInstructions"] li',
+        '.method-steps li',
+        '.entry-content ol li',
+        '.preparation-steps li'
+      ];
+
+      const title = scrapedData.title || extractTextFromElement($, titleSelectors);
+      const description = scrapedData.description || 
+                         $('meta[name="description"]').attr('content') || 
+                         extractTextFromElement($, descriptionSelectors);
+      const ingredients = scrapedData.ingredients?.length ? 
+                         scrapedData.ingredients : 
+                         extractListItems($, ingredientSelectors);
+      const instructions = scrapedData.instructions?.length ? 
+                          scrapedData.instructions : 
+                          extractListItems($, instructionSelectors);
+
       scrapedData = {
-        title: $('h1').first().text().trim(),
-        description: $('meta[name="description"]').attr('content'),
-        ingredients: $('.ingredients li, .recipe-ingredients li').map((_, el) => $(el).text().trim()).get(),
-        instructions: $('.instructions li, .recipe-instructions li').map((_, el) => $(el).text().trim()).get(),
-        servings: {
-          amount: 4,
-          unit: 'serving'
-        }
+        ...scrapedData,
+        title,
+        description,
+        ingredients,
+        instructions
       };
     }
 
@@ -84,12 +138,12 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       description: scrapedData.description || "",
       ingredients: scrapedData.ingredients?.map(ing => ({
         name: ing,
-        amount: "",
-        unit: "",
+        amount: "1",
+        unit: "piece",
         group: "main"
       })) || [],
-      steps: scrapedData.instructions?.map(instruction => ({
-        title: "Step",
+      steps: scrapedData.instructions?.map((instruction, index) => ({
+        title: `Step ${index + 1}`,
         instructions: instruction,
         duration: "",
         media: []
