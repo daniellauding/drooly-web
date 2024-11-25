@@ -7,12 +7,17 @@ import { formatRecipeData } from "@/utils/recipeFormatters";
 
 interface UserRecipesListProps {
   userId: string;
+  recipes?: Recipe[];
 }
 
-export function UserRecipesList({ userId }: UserRecipesListProps) {
+export function UserRecipesList({ userId, recipes: initialRecipes }: UserRecipesListProps) {
   const { data: recipes, isLoading } = useQuery({
     queryKey: ['user-recipes', userId],
     queryFn: async () => {
+      if (initialRecipes) {
+        return initialRecipes;
+      }
+
       console.log('Fetching recipes for user:', userId);
       const recipesRef = collection(db, 'recipes');
       const q = query(recipesRef, where('creatorId', '==', userId));
@@ -26,7 +31,8 @@ export function UserRecipesList({ userId }: UserRecipesListProps) {
       const userRecipes = snapshot.docs.map(formatRecipeData);
       console.log('Found recipes:', userRecipes);
       return userRecipes;
-    }
+    },
+    initialData: initialRecipes
   });
 
   if (isLoading) {

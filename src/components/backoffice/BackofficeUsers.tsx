@@ -96,7 +96,7 @@ export function BackofficeUsers({ searchQuery }: BackofficeUsersProps) {
                 isExpanded={expandedUsers.includes(user.id)}
               />
               {expandedUsers.includes(user.id) && (
-                <UserRecipesList recipes={user.recipes || []} />
+                <UserRecipesList userId={user.id} recipes={user.recipes} />
               )}
             </>
           ))}
