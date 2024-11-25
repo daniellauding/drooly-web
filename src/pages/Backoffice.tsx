@@ -10,6 +10,7 @@ import { BackofficeImages } from "@/components/backoffice/BackofficeImages";
 import { BackofficeComments } from "@/components/backoffice/BackofficeComments";
 import { BackofficePlans } from "@/components/backoffice/BackofficePlans";
 import { BackofficeTranslations } from "@/components/backoffice/BackofficeTranslations";
+import { RecipeFieldsSettings } from "@/components/backoffice/RecipeFieldsSettings";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
@@ -51,6 +52,7 @@ export default function Backoffice() {
             <TabsTrigger value="comments">Comments</TabsTrigger>
             <TabsTrigger value="plans">Plans</TabsTrigger>
             <TabsTrigger value="translations">Translations</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           
           <TabsContent value="recipes">
@@ -58,7 +60,7 @@ export default function Backoffice() {
           </TabsContent>
           
           <TabsContent value="users">
-            <BackofficeUsers />
+            <BackofficeUsers searchQuery={searchQuery} />
           </TabsContent>
           
           <TabsContent value="images">
@@ -75,6 +77,10 @@ export default function Backoffice() {
           
           <TabsContent value="translations">
             <BackofficeTranslations />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <RecipeFieldsSettings />
           </TabsContent>
         </Tabs>
       </main>
