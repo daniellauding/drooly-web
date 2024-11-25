@@ -14,74 +14,66 @@ interface ScrapedRecipe {
   };
 }
 
-async function fetchHtml(url: string): Promise<string> {
-  console.log('Fetching HTML from URL:', url);
-  try {
-    // Use a CORS proxy to bypass CORS restrictions
-    const corsProxy = 'https://corsproxy.io/?';
-    const response = await axios.get(`${corsProxy}${encodeURIComponent(url)}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching URL:', error);
-    throw new Error('Failed to fetch recipe page');
-  }
-}
-
-function extractRecipeSchema(html: string): ScrapedRecipe | null {
-  const $ = cheerio.load(html);
-  
-  // Try to find JSON-LD schema first (most reliable)
-  const jsonLd = $('script[type="application/ld+json"]').text();
-  if (jsonLd) {
-    try {
-      const schemas = JSON.parse(jsonLd);
-      const recipeSchema = Array.isArray(schemas) 
-        ? schemas.find(s => s['@type'] === 'Recipe')
-        : schemas['@type'] === 'Recipe' ? schemas : null;
-      
-      if (recipeSchema) {
-        console.log('Found recipe schema:', recipeSchema);
-        return {
-          title: recipeSchema.name,
-          description: recipeSchema.description,
-          ingredients: recipeSchema.recipeIngredient,
-          instructions: Array.isArray(recipeSchema.recipeInstructions) 
-            ? recipeSchema.recipeInstructions.map((i: any) => i.text || i)
-            : [recipeSchema.recipeInstructions],
-          cookingTime: recipeSchema.totalTime || recipeSchema.cookTime,
-          servings: {
-            amount: parseInt(recipeSchema.recipeYield) || 4,
-            unit: 'serving'
-          }
-        };
-      }
-    } catch (error) {
-      console.error('Error parsing JSON-LD:', error);
-    }
-  }
-
-  // Fallback to common HTML patterns
-  console.log('Falling back to HTML pattern matching');
-  return {
-    title: $('h1').first().text().trim(),
-    description: $('meta[name="description"]').attr('content'),
-    ingredients: $('.ingredients li, .recipe-ingredients li').map((_, el) => $(el).text().trim()).get(),
-    instructions: $('.instructions li, .recipe-instructions li').map((_, el) => $(el).text().trim()).get(),
-    servings: {
-      amount: 4,
-      unit: 'serving'
-    }
-  };
-}
-
 export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   console.log('Starting recipe scrape for URL:', url);
   
   try {
-    const html = await fetchHtml(url);
-    const scrapedData = extractRecipeSchema(html);
+    // Use a CORS proxy to bypass CORS restrictions
+    const corsProxy = 'https://corsproxy.io/?';
+    const response = await axios.get(`${corsProxy}${encodeURIComponent(url)}`);
+    const html = response.data;
     
-    if (!scrapedData) {
+    // Load HTML into cheerio
+    const $ = cheerio.load(html);
+    
+    // Try to find JSON-LD schema first (most reliable)
+    const jsonLd = $('script[type="application/ld+json"]').text();
+    let scrapedData: ScrapedRecipe = {};
+    
+    if (jsonLd) {
+      try {
+        const schemas = JSON.parse(jsonLd);
+        const recipeSchema = Array.isArray(schemas) 
+          ? schemas.find(s => s['@type'] === 'Recipe')
+          : schemas['@type'] === 'Recipe' ? schemas : null;
+        
+        if (recipeSchema) {
+          console.log('Found recipe schema:', recipeSchema);
+          scrapedData = {
+            title: recipeSchema.name,
+            description: recipeSchema.description,
+            ingredients: recipeSchema.recipeIngredient,
+            instructions: Array.isArray(recipeSchema.recipeInstructions) 
+              ? recipeSchema.recipeInstructions.map((i: any) => i.text || i)
+              : [recipeSchema.recipeInstructions],
+            cookingTime: recipeSchema.totalTime || recipeSchema.cookTime,
+            servings: {
+              amount: parseInt(recipeSchema.recipeYield) || 4,
+              unit: 'serving'
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Error parsing JSON-LD:', error);
+      }
+    }
+
+    // If no schema found, fallback to HTML pattern matching
+    if (!scrapedData.title) {
+      console.log('Falling back to HTML pattern matching');
+      scrapedData = {
+        title: $('h1').first().text().trim(),
+        description: $('meta[name="description"]').attr('content'),
+        ingredients: $('.ingredients li, .recipe-ingredients li').map((_, el) => $(el).text().trim()).get(),
+        instructions: $('.instructions li, .recipe-instructions li').map((_, el) => $(el).text().trim()).get(),
+        servings: {
+          amount: 4,
+          unit: 'serving'
+        }
+      };
+    }
+
+    if (!scrapedData.title) {
       throw new Error('Could not extract recipe details');
     }
 
