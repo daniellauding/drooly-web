@@ -12,12 +12,14 @@ import { Recipe } from "@/types/recipe";
 import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
 import { useToast } from "@/components/ui/use-toast";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import { Pencil } from "lucide-react";
 
 export default function Profile() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
   const { toast } = useToast();
   const [remainingInvites, setRemainingInvites] = useState(5);
   const [userData, setUserData] = useState({
@@ -89,7 +91,6 @@ export default function Profile() {
   });
 
   const handleProfileUpdate = async () => {
-    // Refetch user data after update
     const userDoc = await getDoc(doc(db, "users", user!.uid));
     if (userDoc.exists()) {
       setUserData(prev => ({
@@ -119,9 +120,14 @@ export default function Profile() {
                 <span className="text-2xl">{(userData.name || user.email)?.[0]?.toUpperCase()}</span>
               )}
             </div>
-            <div className="absolute top-0 right-0">
-              <EditProfileModal userData={userData} onUpdate={handleProfileUpdate} />
-            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute -bottom-2 -right-2 rounded-full"
+              onClick={() => setEditProfileOpen(true)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-bold">{userData.name || user.email}</h1>
@@ -181,6 +187,13 @@ export default function Profile() {
         </div>
       </main>
       <BottomBar />
+
+      <EditProfileModal
+        open={editProfileOpen}
+        onOpenChange={setEditProfileOpen}
+        userData={userData}
+        onUpdate={handleProfileUpdate}
+      />
 
       <SendInviteModal
         open={inviteModalOpen}
