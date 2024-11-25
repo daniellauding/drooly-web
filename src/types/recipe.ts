@@ -17,10 +17,6 @@ export interface Recipe {
   images: string[];
   featuredImageIndex: number;
   ingredients: any[];
-  ingredientSections?: Array<{
-    title?: string;
-    ingredients: string[];
-  }>;
   servings: {
     amount: number;
     unit: string;
@@ -39,10 +35,11 @@ export interface Recipe {
   };
   categories: string[];
   estimatedCost: string;
+  equipment: string[];
   season?: string;
   occasion?: string;
-  equipment: string[];
   createdAt?: { seconds: number };
+  updatedAt?: { seconds: number };
   creatorId?: string;
   creatorName?: string;
   status?: string;
@@ -52,9 +49,13 @@ export interface Recipe {
   cookTime?: string;
   source?: 'image' | 'scrape' | 'ai' | 'manual';
   stats?: {
-    likes?: number;
-    comments?: number;
-    shares?: number;
+    views: number;
+    likes: string[];
+    comments: number;
+  };
+  creator?: {
+    name: string;
+    id: string;
   };
 }
 
