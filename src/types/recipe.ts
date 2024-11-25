@@ -53,10 +53,7 @@ export interface Recipe {
     likes: string[];
     comments: number;
   };
-  creator?: {
-    name: string;
-    id: string;
-  };
+  ingredientSections?: string[];
 }
 
 export const CUISINES = [

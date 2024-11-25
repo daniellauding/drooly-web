@@ -15,6 +15,19 @@ const initialTranslations: Translation[] = [
   { key: "welcome", en: "Welcome to Drooly" },
   { key: "login", en: "Log in" },
   { key: "signup", en: "Sign up" },
+  { key: "create_recipe", en: "Create Recipe" },
+  { key: "save", en: "Save" },
+  { key: "cancel", en: "Cancel" },
+  { key: "delete", en: "Delete" },
+  { key: "edit", en: "Edit" },
+  { key: "add_ingredient", en: "Add Ingredient" },
+  { key: "add_step", en: "Add Step" },
+  { key: "publish", en: "Publish" },
+  { key: "save_draft", en: "Save as Draft" },
+  { key: "invite_users", en: "Invite Users" },
+  { key: "send_invite", en: "Send Invite" },
+  { key: "add_language", en: "Add Language" },
+  { key: "search", en: "Search" },
 ];
 
 export function BackofficeTranslations() {

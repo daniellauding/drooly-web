@@ -1,55 +1,79 @@
-import type { Meta } from '@storybook/react';
-import { ColorPalette, ColorItem } from '@storybook/blocks';
+import { Meta, StoryObj } from "@storybook/react";
+import { ColorItemProps } from "@stitches/react";
+import { ColorItems } from "./ColorItems";
 
 const meta: Meta = {
-  title: 'Design System/Colors',
+  title: "Design Tokens",
+  component: ColorItems,
 };
 
 export default meta;
 
-export const Colors = () => (
-  <div className="space-y-8">
-    <h1 className="text-2xl font-bold">Design System</h1>
-    
+const ColorItems: ColorItemProps[] = [
+  {
+    title: "Primary",
+    subtitle: "Main brand color",
+    colors: {
+      primary: "hsl(var(--primary))",
+      "primary-foreground": "hsl(var(--primary-foreground))",
+    },
+  },
+  {
+    title: "Secondary",
+    subtitle: "Secondary interface color",
+    colors: {
+      secondary: "hsl(var(--secondary))",
+      "secondary-foreground": "hsl(var(--secondary-foreground))",
+    },
+  },
+  {
+    title: "Destructive",
+    subtitle: "Error and warning states",
+    colors: {
+      destructive: "hsl(var(--destructive))",
+      "destructive-foreground": "hsl(var(--destructive-foreground))",
+    },
+  },
+  {
+    title: "Muted",
+    subtitle: "Subtle interface elements",
+    colors: {
+      muted: "hsl(var(--muted))",
+      "muted-foreground": "hsl(var(--muted-foreground))",
+    },
+  },
+  {
+    title: "Accent",
+    subtitle: "Highlighted elements",
+    colors: {
+      accent: "hsl(var(--accent))",
+      "accent-foreground": "hsl(var(--accent-foreground))",
+    },
+  },
+];
+
+const ColorItem = (props: ColorItemProps) => {
+  return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Colors</h2>
-      <ColorPalette>
-        <ColorItem
-          title="Primary"
-          colors={{
-            'primary': 'hsl(var(--primary))',
-            'primary-foreground': 'hsl(var(--primary-foreground))',
-          }}
-        />
-        <ColorItem
-          title="Secondary"
-          colors={{
-            'secondary': 'hsl(var(--secondary))',
-            'secondary-foreground': 'hsl(var(--secondary-foreground))',
-          }}
-        />
-        <ColorItem
-          title="Destructive"
-          colors={{
-            'destructive': 'hsl(var(--destructive))',
-            'destructive-foreground': 'hsl(var(--destructive-foreground))',
-          }}
-        />
-        <ColorItem
-          title="Muted"
-          colors={{
-            'muted': 'hsl(var(--muted))',
-            'muted-foreground': 'hsl(var(--muted-foreground))',
-          }}
-        />
-        <ColorItem
-          title="Accent"
-          colors={{
-            'accent': 'hsl(var(--accent))',
-            'accent-foreground': 'hsl(var(--accent-foreground))',
-          }}
-        />
-      </ColorPalette>
+      <h3>{props.title}</h3>
+      <p>{props.subtitle}</p>
+      <div>
+        {Object.entries(props.colors).map(([key, value]) => (
+          <div key={key} style={{ backgroundColor: value }}>
+            {key}: {value}
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+export const Default: StoryObj = {
+  render: () => (
+    <div>
+      {ColorItems.map((item, index) => (
+        <ColorItem key={index} {...item} />
+      ))}
+    </div>
+  ),
+};

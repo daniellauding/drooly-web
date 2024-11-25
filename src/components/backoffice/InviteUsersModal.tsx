@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Loader2, Mail } from "lucide-react";
@@ -15,6 +16,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
   const [emails, setEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState("user");
+  const [customMessage, setCustomMessage] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
 
@@ -35,7 +37,6 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
     setSending(true);
     try {
       // Here you would implement the actual invitation logic
-      // For now, we'll just simulate it with a delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
@@ -45,6 +46,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       onOpenChange(false);
       setEmails([]);
       setSelectedRole("user");
+      setCustomMessage("");
     } catch (error) {
       console.error("Error sending invites:", error);
       toast({
@@ -110,6 +112,16 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Custom Message (optional)</label>
+            <Textarea
+              placeholder="Add a personal message to your invitation..."
+              value={customMessage}
+              onChange={(e) => setCustomMessage(e.target.value)}
+              className="h-24"
+            />
           </div>
 
           <Button
