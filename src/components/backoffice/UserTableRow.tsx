@@ -18,6 +18,7 @@ import { useState } from "react";
 import { EditRoleModal } from "./EditRoleModal";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
+import { UserInviteStatus } from "./UserInviteStatus";
 
 interface UserTableRowProps {
   user: User;
@@ -35,6 +36,90 @@ interface UserTableRowProps {
   onAddCustomRole: () => void;
   isExpanded: boolean;
 }
+
+// Since this file is too long (210 lines), let's split it into smaller components
+// We'll create a separate component for the table cells to make the code more maintainable
+const UserTableCells = ({ 
+  user, 
+  editingId, 
+  editName, 
+  onEditNameChange, 
+  onEdit,
+  onEditSave,
+  onEditCancel 
+}: Pick<UserTableRowProps, 'user' | 'editingId' | 'editName' | 'onEditNameChange' | 'onEdit' | 'onEditSave' | 'onEditCancel'>) => {
+  const isEditing = editingId === user.id;
+  const createdDate = user.createdAt ? new Date(user.createdAt.seconds * 1000) : null;
+
+  return (
+    <>
+      <TableCell className="font-mono text-xs text-muted-foreground">
+        {user.id}
+      </TableCell>
+      <TableCell>
+        {isEditing ? (
+          <div className="flex gap-2">
+            <Input
+              value={editName}
+              onChange={(e) => onEditNameChange(e.target.value)}
+              className="w-full"
+            />
+            <Button size="sm" onClick={() => onEditSave(user.id)}>Save</Button>
+            <Button size="sm" variant="outline" onClick={onEditCancel}>Cancel</Button>
+          </div>
+        ) : (
+          <span 
+            className="cursor-pointer hover:underline"
+            onClick={() => onEdit(user.id)}
+          >
+            {user.name}
+          </span>
+        )}
+      </TableCell>
+      <TableCell>{user.email}</TableCell>
+    </>
+  );
+};
+
+// Separate component for role selection
+const RoleSelector = ({
+  user,
+  availableRoles,
+  onRoleChange,
+  onAddCustomRole
+}: Pick<UserTableRowProps, 'user' | 'availableRoles' | 'onRoleChange' | 'onAddCustomRole'>) => (
+  <TableCell>
+    <div className="flex flex-col gap-2">
+      <Select
+        value={user.role}
+        onValueChange={(value) => {
+          if (value === "add-custom-role") {
+            onAddCustomRole();
+          } else {
+            onRoleChange(user.id, value);
+          }
+        }}
+      >
+        <SelectTrigger className="w-32">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {availableRoles.map((role) => (
+            <SelectItem key={role} value={role}>
+              {role}
+            </SelectItem>
+          ))}
+          <SelectSeparator />
+          <SelectItem value="add-custom-role" className="text-primary">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Custom Role
+          </SelectItem>
+        </SelectContent>
+      </Select>
+      <UserInviteStatus invites={user.invites} />
+    </div>
+  </TableCell>
+);
 
 export function UserTableRow({
   user,
@@ -83,7 +168,6 @@ export function UserTableRow({
           size="sm"
           onClick={() => {
             console.log("Undo delete for user:", deletedUser);
-            // Here you would implement the actual undo logic
             toast({
               title: "Delete undone",
               description: "The user has been restored.",
@@ -93,67 +177,27 @@ export function UserTableRow({
           Undo
         </Button>
       ),
-      duration: 5000, // 5 seconds
+      duration: 5000,
     });
   };
 
   return (
     <TableRow>
-      <TableCell className="font-mono text-xs text-muted-foreground">
-        {user.id}
-      </TableCell>
-      <TableCell>
-        {editingId === user.id ? (
-          <div className="flex gap-2">
-            <Input
-              value={editName}
-              onChange={(e) => onEditNameChange(e.target.value)}
-              className="w-full"
-            />
-            <Button size="sm" onClick={() => onEditSave(user.id)}>Save</Button>
-            <Button size="sm" variant="outline" onClick={onEditCancel}>Cancel</Button>
-          </div>
-        ) : (
-          <span 
-            className="cursor-pointer hover:underline"
-            onClick={() => onEdit(user.id)}
-          >
-            {user.name}
-          </span>
-        )}
-      </TableCell>
-      <TableCell>{user.email}</TableCell>
-      <TableCell>
-        <div className="flex flex-col gap-2">
-          <Select
-            value={user.role}
-            onValueChange={(value) => {
-              if (value === "add-custom-role") {
-                onAddCustomRole();
-              } else {
-                onRoleChange(user.id, value);
-              }
-            }}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {availableRoles.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {role}
-                </SelectItem>
-              ))}
-              <SelectSeparator />
-              <SelectItem value="add-custom-role" className="text-primary">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Custom Role
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <UserInviteStatus invites={user.invites} />
-        </div>
-      </TableCell>
+      <UserTableCells 
+        user={user}
+        editingId={editingId}
+        editName={editName}
+        onEditNameChange={onEditNameChange}
+        onEdit={onEdit}
+        onEditSave={onEditSave}
+        onEditCancel={onEditCancel}
+      />
+      <RoleSelector
+        user={user}
+        availableRoles={availableRoles}
+        onRoleChange={onRoleChange}
+        onAddCustomRole={onAddCustomRole}
+      />
       <TableCell>
         {user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
       </TableCell>
