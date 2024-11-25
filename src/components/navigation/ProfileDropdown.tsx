@@ -31,7 +31,7 @@ export function ProfileDropdown() {
       <DropdownMenuTrigger asChild>
         <div className="flex items-center gap-2 cursor-pointer">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" />
+            <AvatarImage src={user.photoURL || undefined} />
             <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
