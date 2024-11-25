@@ -40,5 +40,13 @@ service cloud.firestore {
           request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
       }
     }
+
+    match /invites/{inviteId} {
+      allow read: if true;
+      allow create: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+      allow delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    }
   }
 }

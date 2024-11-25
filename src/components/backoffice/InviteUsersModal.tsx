@@ -6,6 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Loader2, Mail } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface InviteUsersModalProps {
   open: boolean;
@@ -19,6 +22,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
   const [customMessage, setCustomMessage] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleAddEmail = () => {
     if (newEmail && !emails.includes(newEmail)) {
@@ -36,22 +40,47 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
 
     setSending(true);
     try {
-      // Here you would implement the actual invitation logic
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Creating invites for emails:", emails);
+      
+      // Create invites in Firebase
+      const invitesCollection = collection(db, "invites");
+      const invitePromises = emails.map(async (email) => {
+        const inviteData = {
+          email,
+          role: selectedRole,
+          message: customMessage,
+          status: "pending",
+          createdAt: new Date(),
+          createdBy: user?.uid,
+          signupUrl: `${window.location.origin}/register?invite=${btoa(email)}&role=${selectedRole}`,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        };
+        
+        console.log("Creating invite:", inviteData);
+        return addDoc(invitesCollection, inviteData);
+      });
+
+      await Promise.all(invitePromises);
+      console.log("All invites created successfully");
+
+      // Here you would typically integrate with your email service
+      // For now, we'll just log the emails that would be sent
+      console.log("Would send emails to:", emails, "with signup URLs");
 
       toast({
-        title: "Invites sent successfully",
-        description: `Sent invites to ${emails.length} recipients`
+        title: "Invites created successfully",
+        description: `Created ${emails.length} invites. Note: Email sending is not yet implemented.`
       });
+      
       onOpenChange(false);
       setEmails([]);
       setSelectedRole("user");
       setCustomMessage("");
     } catch (error) {
-      console.error("Error sending invites:", error);
+      console.error("Error creating invites:", error);
       toast({
         variant: "destructive",
-        title: "Error sending invites",
+        title: "Error creating invites",
         description: "Please try again later."
       });
     } finally {
