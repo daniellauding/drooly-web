@@ -7,7 +7,7 @@ import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
-import { deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential, updateProfile } from "firebase/auth";
 import { ProfileBasicInfo } from "./ProfileBasicInfo";
 import { ProfilePrivacySettings } from "./ProfilePrivacySettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,8 +89,8 @@ export function EditProfileModal({ userData: initialUserData, onUpdate, open, on
         updatedAt: new Date(),
       });
 
-      // Update the auth profile as well
-      await user.updateProfile({
+      // Update the auth profile using imported updateProfile
+      await updateProfile(auth.currentUser!, {
         displayName: formData.name,
         photoURL: formData.avatarUrl,
       });
