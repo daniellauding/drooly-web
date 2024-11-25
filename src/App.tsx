@@ -6,6 +6,7 @@ import { Toaster } from "./components/ui/toaster";
 import { Routes, Route } from "react-router-dom";
 import CreateRecipe from "./pages/CreateRecipe";
 import RecipeDetail from "./pages/RecipeDetail";
+import Home from "./pages/Index"; // Import Home component from Index.tsx
 
 const queryClient = new QueryClient();
 
