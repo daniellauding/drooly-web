@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Mail } from "lucide-react";
 import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDoc, doc } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { InviteForm } from "./InviteForm";
 import { MarketingOptions } from "./MarketingOptions";
@@ -30,19 +30,41 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
   const { user } = useAuth();
 
   const handleSendInvites = async () => {
-    if (!emails.length || !user?.emailVerified) {
+    if (!emails.length) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: user?.emailVerified 
-          ? "Please add at least one email address."
-          : "Please verify your email before sending invites."
+        description: "Please add at least one email address."
+      });
+      return;
+    }
+
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in to send invites."
       });
       return;
     }
 
     setSending(true);
     try {
+      // Check if user is superadmin
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.data();
+      const isSuperAdmin = userData?.role === 'superadmin';
+
+      // Only check email verification for non-superadmins
+      if (!isSuperAdmin && !user.emailVerified) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Please verify your email before sending invites."
+        });
+        return;
+      }
+
       console.log("Creating invites for emails:", emails);
       
       const invitesCollection = collection(db, "invites");
