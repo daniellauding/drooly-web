@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        console.log("Auth state changed - User:", user.email, "Verified:", user.emailVerified);
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const userData = userDoc.data();
         setUser({ ...user, role: userData?.role });
@@ -43,8 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!user.emailVerified) {
           toast({
             title: "Email verification required",
-            description: "Please verify your email address to access all features.",
-            duration: 5000,
+            description: "Please check your inbox and verify your email to access all features.",
+            duration: 10000,
           });
         }
       } else {
@@ -59,10 +60,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const sendVerificationEmail = async () => {
     if (auth.currentUser && !auth.currentUser.emailVerified) {
       try {
+        console.log("Sending verification email to:", auth.currentUser.email);
         await sendEmailVerification(auth.currentUser);
         toast({
           title: "Verification email sent",
           description: "Please check your inbox and verify your email address.",
+          duration: 5000,
         });
       } catch (error) {
         console.error("Error sending verification email:", error);
@@ -77,10 +80,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login for:", email);
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
       setUser({ ...user, role: userData?.role });
+
+      if (!user.emailVerified) {
+        await sendVerificationEmail();
+      }
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -89,18 +97,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (email: string, password: string, name: string) => {
     try {
+      console.log("Registering new user:", email);
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Send verification email immediately after registration
       await sendEmailVerification(user);
+      
+      // Create user document in Firestore
       await setDoc(doc(db, "users", user.uid), {
         email,
         name,
         role: "user",
         createdAt: new Date(),
       });
+      
       setUser({ ...user, role: "user" });
+      
       toast({
-        title: "Verification email sent",
-        description: "Please check your inbox and verify your email address.",
+        title: "Account created successfully",
+        description: "Please check your inbox and verify your email address to access all features.",
+        duration: 10000,
       });
     } catch (error) {
       console.error("Registration error:", error);
