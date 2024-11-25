@@ -14,6 +14,42 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// Fallback image from Unsplash for recipes without images
+const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c";
+
+// Format recipe data with fallback values
+const formatRecipeData = (doc: any): Recipe => {
+  const data = doc.data();
+  console.log('Formatting recipe data:', data);
+
+  // Handle blob URLs by replacing with fallback image
+  const imageUrl = data.images?.[data.featuredImageIndex || 0];
+  const validImage = imageUrl && !imageUrl.startsWith('blob:') ? imageUrl : FALLBACK_IMAGE;
+
+  // Format cooking time with fallback
+  const cookTime = data.totalTime 
+    ? data.totalTime
+    : `${data.servings?.amount || 4} servings`;
+
+  // Format date
+  const date = data.createdAt 
+    ? new Date(data.createdAt.seconds * 1000).toLocaleDateString()
+    : 'Recently added';
+
+  return {
+    id: doc.id,
+    ...data,
+    image: validImage,
+    chef: data.creatorName || 'Anonymous Chef',
+    date,
+    cookTime,
+    title: data.title || 'Untitled Recipe',
+    description: data.description || 'A delicious recipe waiting to be discovered',
+    difficulty: data.difficulty || 'Medium',
+    cuisine: data.cuisine || 'International',
+  };
+};
+
 const WEEKLY_STORIES = [
   {
     id: "1",
@@ -92,19 +128,7 @@ const Index = () => {
           return [];
         }
 
-        const fetchedRecipes = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          console.log('Recipe data:', data);
-          return {
-            id: doc.id,
-            ...data,
-            image: data.images?.[data.featuredImageIndex || 0],
-            chef: data.creatorName || 'Anonymous',
-            date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
-            cookTime: data.totalTime || '30 min'
-          };
-        }) as Recipe[];
-
+        const fetchedRecipes = querySnapshot.docs.map(formatRecipeData);
         console.log('Processed recipes:', fetchedRecipes);
         return fetchedRecipes;
       } catch (error) {
@@ -164,11 +188,11 @@ const Index = () => {
                       key={recipe.id}
                       id={recipe.id}
                       title={recipe.title}
-                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
-                      cookTime={recipe.totalTime}
+                      image={recipe.image}
+                      cookTime={recipe.cookTime}
                       difficulty={recipe.difficulty}
-                      chef={recipe.creatorName}
-                      date={new Date(recipe.createdAt?.seconds * 1000).toLocaleDateString()}
+                      chef={recipe.chef}
+                      date={recipe.date}
                     />
                   ))}
                 </div>
