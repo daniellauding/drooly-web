@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Home, Calendar, Settings, LogOut, User } from "lucide-react";
+import { Home, Calendar, Settings, LogOut, User, ChevronDown } from "lucide-react";
 
 export function ProfileDropdown() {
   const { user, logout } = useAuth();
@@ -29,10 +29,13 @@ export function ProfileDropdown() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="h-8 w-8 cursor-pointer">
-          <AvatarImage src={user.photoURL || undefined} />
-          <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
-        </Avatar>
+        <div className="flex items-center gap-2 cursor-pointer">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" />
+            <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
