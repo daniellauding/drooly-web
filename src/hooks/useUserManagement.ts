@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { useToast } from '@/components/ui/use-toast';
 import { User } from '@/components/backoffice/types';
+import { httpsCallable, getFunctions } from 'firebase/functions';
 
 export function useUserManagement(searchQuery: string) {
   const [users, setUsers] = useState<User[]>([]);
@@ -11,11 +12,13 @@ export function useUserManagement(searchQuery: string) {
   const [editName, setEditName] = useState("");
   const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
   const { toast } = useToast();
+  const functions = getFunctions();
 
   useEffect(() => {
     const fetchUsers = async () => {
       setIsLoading(true);
       try {
+        console.log('Fetching users from Firestore');
         const usersRef = collection(db, 'users');
         const snapshot = await getDocs(usersRef);
         const fetchedUsers = snapshot.docs.map(doc => ({
@@ -23,7 +26,6 @@ export function useUserManagement(searchQuery: string) {
           ...doc.data()
         })) as User[];
 
-        // Apply search filter
         const filteredUsers = searchQuery
           ? fetchedUsers.filter(user =>
               user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -33,6 +35,7 @@ export function useUserManagement(searchQuery: string) {
           : fetchedUsers;
 
         setUsers(filteredUsers);
+        console.log('Users fetched successfully:', filteredUsers.length);
       } catch (error) {
         console.error('Error fetching users:', error);
         toast({
@@ -49,14 +52,22 @@ export function useUserManagement(searchQuery: string) {
   }, [searchQuery, toast]);
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-
     try {
+      console.log('Deleting user:', id);
+      
+      // Delete from Firestore
       await deleteDoc(doc(db, 'users', id));
+      
+      // Delete from Firebase Authentication using Cloud Function
+      const deleteUserAuth = httpsCallable(functions, 'deleteUserAuth');
+      await deleteUserAuth({ uid: id });
+      
       setUsers(users.filter(user => user.id !== id));
+      
+      console.log('User deleted successfully from both Firestore and Auth');
       toast({
         title: "User deleted",
-        description: "The user has been successfully deleted."
+        description: "The user has been completely removed from the system."
       });
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -70,6 +81,7 @@ export function useUserManagement(searchQuery: string) {
 
   const handleRoleChange = async (id: string, newRole: string) => {
     try {
+      console.log('Updating user role:', id, newRole);
       await updateDoc(doc(db, 'users', id), { role: newRole });
       setUsers(users.map(user =>
         user.id === id ? { ...user, role: newRole } : user
@@ -90,6 +102,7 @@ export function useUserManagement(searchQuery: string) {
 
   const handleEdit = async (id: string) => {
     try {
+      console.log('Updating user name:', id, editName);
       await updateDoc(doc(db, 'users', id), { name: editName });
       setUsers(users.map(user =>
         user.id === id ? { ...user, name: editName } : user
