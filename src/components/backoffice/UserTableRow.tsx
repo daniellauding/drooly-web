@@ -124,7 +124,7 @@ export function UserTableRow({
       </TableCell>
       <TableCell>{user.email}</TableCell>
       <TableCell>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2">
           <Select
             value={user.role}
             onValueChange={(value) => {
@@ -140,31 +140,18 @@ export function UserTableRow({
             </SelectTrigger>
             <SelectContent>
               {availableRoles.map((role) => (
-                <SelectItem key={role} value={role} className="flex justify-between">
+                <SelectItem key={role} value={role}>
                   {role}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-4 w-4 p-0 ml-2"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleEditRole(role);
-                    }}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
                 </SelectItem>
               ))}
               <SelectSeparator />
               <SelectItem value="add-custom-role" className="text-primary">
-                <div className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add Custom Role
-                </div>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Custom Role
               </SelectItem>
             </SelectContent>
           </Select>
+          <UserInviteStatus invites={user.invites} />
         </div>
       </TableCell>
       <TableCell>

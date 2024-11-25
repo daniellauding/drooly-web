@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Loader2, Mail } from "lucide-react";
 import { db } from "@/lib/firebase";
@@ -21,6 +22,10 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
   const [selectedRole, setSelectedRole] = useState("user");
   const [customMessage, setCustomMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [marketingOptions, setMarketingOptions] = useState({
+    popularRecipes: false,
+    topCreators: false
+  });
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -42,7 +47,6 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
     try {
       console.log("Creating invites for emails:", emails);
       
-      // Create invites in Firebase
       const invitesCollection = collection(db, "invites");
       const invitePromises = emails.map(async (email) => {
         const inviteData = {
@@ -53,7 +57,8 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
           createdAt: new Date(),
           createdBy: user?.uid,
           signupUrl: `${window.location.origin}/register?invite=${btoa(email)}&role=${selectedRole}`,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          marketingContent: marketingOptions
         };
         
         console.log("Creating invite:", inviteData);
@@ -62,10 +67,6 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
 
       await Promise.all(invitePromises);
       console.log("All invites created successfully");
-
-      // Here you would typically integrate with your email service
-      // For now, we'll just log the emails that would be sent
-      console.log("Would send emails to:", emails, "with signup URLs");
 
       toast({
         title: "Invites created successfully",
@@ -76,6 +77,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       setEmails([]);
       setSelectedRole("user");
       setCustomMessage("");
+      setMarketingOptions({ popularRecipes: false, topCreators: false });
     } catch (error) {
       console.error("Error creating invites:", error);
       toast({
@@ -140,6 +142,32 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Marketing Content</label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="popularRecipes"
+                  checked={marketingOptions.popularRecipes}
+                  onCheckedChange={(checked) => 
+                    setMarketingOptions(prev => ({ ...prev, popularRecipes: checked as boolean }))
+                  }
+                />
+                <label htmlFor="popularRecipes">Include popular recipes</label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="topCreators"
+                  checked={marketingOptions.topCreators}
+                  onCheckedChange={(checked) => 
+                    setMarketingOptions(prev => ({ ...prev, topCreators: checked as boolean }))
+                  }
+                />
+                <label htmlFor="topCreators">Include top creators</label>
+              </div>
             </div>
           </div>
 
