@@ -50,6 +50,12 @@ export interface Recipe {
   chef?: string;
   date?: string;
   cookTime?: string;
+  source?: 'image' | 'scrape' | 'ai' | 'manual';
+  stats?: {
+    likes?: number;
+    comments?: number;
+    shares?: number;
+  };
 }
 
 export const CUISINES = [
