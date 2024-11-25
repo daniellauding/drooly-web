@@ -14,7 +14,7 @@ service cloud.firestore {
           'cuisine', 'dishTypes', 'images', 'ingredients', 
           'steps', 'totalTime', 'servings', 'creatorId', 
           'createdAt', 'status', 'dietaryInfo', 'categories',
-          'equipment'
+          'equipment', 'tags', 'season', 'occasion', 'estimatedCost'
         ]);
     }
     
