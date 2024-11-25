@@ -1,19 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Settings2, Trash2, LogOut, Camera, X } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
-import { useState } from "react";
+import { Camera, X, Trash2, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { ProfileBasicInfo } from "./ProfileBasicInfo";
+import { ProfilePrivacySettings } from "./ProfilePrivacySettings";
+import { ProfileSecuritySettings } from "./ProfileSecuritySettings";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface EditProfileModalProps {
   userData: {
@@ -140,7 +138,7 @@ export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: Edi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
@@ -186,129 +184,34 @@ export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: Edi
             </div>
           </div>
 
-          {/* Basic Info */}
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                value={formData.username}
-                onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
-              />
-            </div>
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="privacy">Privacy</TabsTrigger>
+              <TabsTrigger value="security">Security</TabsTrigger>
+            </TabsList>
 
-            <div className="grid gap-2">
-              <Label htmlFor="birthday">Birthday</Label>
-              <Input
-                id="birthday"
-                type="date"
-                value={formData.birthday}
-                onChange={e => setFormData(prev => ({ ...prev, birthday: e.target.value }))}
-              />
-            </div>
+            <TabsContent value="profile" className="space-y-4">
+              <ProfileBasicInfo formData={formData} setFormData={setFormData} />
+            </TabsContent>
 
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                disabled
+            <TabsContent value="privacy" className="space-y-4">
+              <ProfilePrivacySettings 
+                isPrivate={formData.isPrivate}
+                onPrivacyChange={(checked) => setFormData(prev => ({ ...prev, isPrivate: checked }))}
               />
-            </div>
+            </TabsContent>
 
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+            <TabsContent value="security" className="space-y-4">
+              <ProfileSecuritySettings
+                currentPassword={currentPassword}
+                newPassword={newPassword}
+                onCurrentPasswordChange={setCurrentPassword}
+                onNewPasswordChange={setNewPassword}
+                onPasswordUpdate={handlePasswordUpdate}
               />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={formData.bio}
-                onChange={e => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Gender</Label>
-              <RadioGroup
-                value={formData.gender}
-                onValueChange={value => setFormData(prev => ({ ...prev, gender: value }))}
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="female" id="female" />
-                  <Label htmlFor="female">Female</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="male" id="male" />
-                  <Label htmlFor="male">Male</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="custom" id="custom" />
-                  <Label htmlFor="custom">Custom</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="prefer-not-to-say" id="prefer-not-to-say" />
-                  <Label htmlFor="prefer-not-to-say">Prefer not to say</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label>Private Account</Label>
-                <p className="text-sm text-muted-foreground">
-                  Only approved followers can see your content when enabled
-                </p>
-              </div>
-              <Switch
-                checked={formData.isPrivate}
-                onCheckedChange={checked => setFormData(prev => ({ ...prev, isPrivate: checked }))}
-              />
-            </div>
-          </div>
-
-          {/* Password Update */}
-          <div className="space-y-4 border-t pt-4">
-            <h4 className="font-medium">Update Password</h4>
-            <div className="grid gap-2">
-              <Label htmlFor="current-password">Current Password</Label>
-              <Input
-                id="current-password"
-                type="password"
-                value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="new-password">New Password</Label>
-              <Input
-                id="new-password"
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-              />
-            </div>
-            <Button onClick={handlePasswordUpdate} disabled={!currentPassword || !newPassword}>
-              Update Password
-            </Button>
-          </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Actions */}
           <div className="flex justify-between border-t pt-4">
