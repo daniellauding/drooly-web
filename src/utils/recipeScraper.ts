@@ -2,6 +2,45 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { Recipe } from '@/types/recipe';
 
+const extractSwedishRecipe = ($: cheerio.CheerioAPI) => {
+  console.log('Attempting to extract Swedish recipe');
+  
+  // Extract description from the top text
+  const description = $('.entry-content p').first().text().trim();
+  
+  // Extract ingredients
+  const ingredients = $('.entry-content')
+    .find('h2:contains("Ingredienser")')
+    .next('ul')
+    .find('li')
+    .map((_, el) => ({
+      name: $(el).text().trim(),
+      amount: "",
+      unit: "",
+      group: "main"
+    }))
+    .get();
+
+  // Extract instructions
+  const instructions = $('.entry-content')
+    .find('h2:contains("Instruktioner")')
+    .nextAll('p')
+    .map((_, el) => ({
+      title: "Step",
+      instructions: $(el).text().trim(),
+      duration: "",
+      media: []
+    }))
+    .get()
+    .filter(step => step.instructions.length > 0);
+
+  return {
+    description,
+    ingredients,
+    steps: instructions
+  };
+};
+
 export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   console.log('Starting recipe scrape for URL:', url);
   
@@ -11,28 +50,28 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
     const html = response.data;
     const $ = cheerio.load(html);
     
-    // Try to find JSON-LD schema first (most reliable)
+    // Try to find JSON-LD schema first
     const jsonLd = $('script[type="application/ld+json"]').text();
     let scrapedData: Partial<Recipe> = {};
     
     if (jsonLd) {
       try {
-        const schemas = Array.isArray(JSON.parse(jsonLd)) ? JSON.parse(jsonLd) : [JSON.parse(jsonLd)];
-        const recipeSchema = schemas.find(s => s['@type'] === 'Recipe');
+        const schemas = JSON.parse(jsonLd);
+        const recipeSchema = Array.isArray(schemas) 
+          ? schemas.find(s => s['@type'] === 'Recipe')
+          : schemas['@type'] === 'Recipe' ? schemas : null;
         
         if (recipeSchema) {
           console.log('Found recipe schema:', recipeSchema);
           scrapedData = {
             title: recipeSchema.name,
             description: recipeSchema.description,
-            ingredients: Array.isArray(recipeSchema.recipeIngredient) 
-              ? recipeSchema.recipeIngredient.map((ing: string) => ({
-                  name: ing,
-                  amount: "",
-                  unit: "",
-                  group: "main"
-                }))
-              : [],
+            ingredients: recipeSchema.recipeIngredient?.map((ing: string) => ({
+              name: ing,
+              amount: "",
+              unit: "",
+              group: "main"
+            })) || [],
             steps: Array.isArray(recipeSchema.recipeInstructions)
               ? recipeSchema.recipeInstructions.map((instruction: any) => ({
                   title: "Step",
@@ -45,11 +84,7 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
             servings: {
               amount: parseInt(recipeSchema.recipeYield) || 4,
               unit: 'serving'
-            },
-            images: recipeSchema.image ? (Array.isArray(recipeSchema.image) ? recipeSchema.image : [recipeSchema.image]) : [],
-            source: 'scrape',
-            sourceUrl: url,
-            privacy: 'public' as const
+            }
           };
         }
       } catch (error) {
@@ -57,70 +92,19 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       }
     }
 
-    // If no schema or missing data, try site-specific selectors
-    if (!scrapedData.title || !scrapedData.ingredients?.length) {
-      console.log('Falling back to HTML pattern matching');
+    // If no schema or missing data, try site-specific extraction
+    if (!scrapedData.ingredients?.length) {
+      console.log('Falling back to site-specific extraction');
       
-      // RecipeTin Eats specific selectors
-      if (url.includes('recipetineats.com')) {
+      if (url.includes('godastmat.se')) {
+        const swedishData = extractSwedishRecipe($);
         scrapedData = {
           ...scrapedData,
-          title: scrapedData.title || $('.wprm-recipe-name').first().text().trim(),
-          description: scrapedData.description || $('.wprm-recipe-summary').first().text().trim(),
-          ingredients: scrapedData.ingredients || $('.wprm-recipe-ingredient').map((_, el) => ({
-            name: $(el).text().trim(),
-            amount: "",
-            unit: "",
-            group: "main"
-          })).get(),
-          steps: scrapedData.steps || $('.wprm-recipe-instruction').map((_, el) => ({
-            title: "Step",
-            instructions: $(el).text().trim(),
-            duration: "",
-            media: []
-          })).get()
+          ...swedishData,
+          title: scrapedData.title || $('h1.entry-title').first().text().trim()
         };
       }
-      // Arla.se specific selectors
-      else if (url.includes('arla.se')) {
-        scrapedData = {
-          ...scrapedData,
-          title: scrapedData.title || $('h1').first().text().trim(),
-          description: scrapedData.description || $('.recipe-description').first().text().trim(),
-          ingredients: scrapedData.ingredients || $('.recipe-ingredients li').map((_, el) => ({
-            name: $(el).text().trim(),
-            amount: "",
-            unit: "",
-            group: "main"
-          })).get(),
-          steps: scrapedData.steps || $('.recipe-instructions li').map((_, el) => ({
-            title: "Step",
-            instructions: $(el).text().trim(),
-            duration: "",
-            media: []
-          })).get()
-        };
-      }
-      // Generic selectors as fallback
-      else {
-        scrapedData = {
-          ...scrapedData,
-          title: scrapedData.title || $('h1').first().text().trim(),
-          description: scrapedData.description || $('meta[name="description"]').attr('content'),
-          ingredients: scrapedData.ingredients || $('.ingredients li, .recipe-ingredients li').map((_, el) => ({
-            name: $(el).text().trim(),
-            amount: "",
-            unit: "",
-            group: "main"
-          })).get(),
-          steps: scrapedData.steps || $('.instructions li, .recipe-instructions li').map((_, el) => ({
-            title: "Step",
-            instructions: $(el).text().trim(),
-            duration: "",
-            media: []
-          })).get()
-        };
-      }
+      // Add other site-specific handlers here
     }
 
     if (!scrapedData.title) {
@@ -137,26 +121,17 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   } catch (error) {
     console.error('Error scraping recipe:', error);
     throw new Error(
-      'Could not extract recipe details. The website might be blocking our requests, ' +
-      'or the recipe format is not recognized. Please try entering the details manually.'
+      'Could not extract recipe details. Please try entering the details manually.'
     );
   }
 }
 
 export async function importFromTrello(cardId: string): Promise<Partial<Recipe>> {
   console.log("Importing recipe from Trello card:", cardId);
-  
-  try {
-    // This would integrate with Trello's API
-    // For now, we'll return a mock response
-    return {
-      title: "Recipe from Trello",
-      description: "Imported from Trello card",
-      tags: ["trello-import"],
-      privacy: 'public' as const
-    };
-  } catch (error) {
-    console.error("Error importing from Trello:", error);
-    throw error;
-  }
+  return {
+    title: "Recipe from Trello",
+    description: "Imported from Trello card",
+    tags: ["trello-import"],
+    privacy: 'public' as const
+  };
 }
