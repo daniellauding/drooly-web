@@ -1,3 +1,5 @@
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 import { Recipe } from "@/types/recipe";
 
 export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
@@ -8,42 +10,93 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
     const domain = new URL(url).hostname;
     console.log("Scraping from domain:", domain);
 
-    // Call backend scraping service
-    const response = await fetch('/api/scrape-recipe', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to scrape recipe');
+    // Use CORS proxy to fetch the page
+    const corsProxy = 'https://corsproxy.io/?';
+    const response = await axios.get(`${corsProxy}${encodeURIComponent(url)}`);
+    const html = response.data;
+    
+    // Load HTML into cheerio
+    const $ = cheerio.load(html);
+    
+    // Try to find JSON-LD schema first (most reliable)
+    const jsonLd = $('script[type="application/ld+json"]').text();
+    let scrapedData: any = {};
+    
+    if (jsonLd) {
+      try {
+        const schemas = JSON.parse(jsonLd);
+        const recipeSchema = Array.isArray(schemas) 
+          ? schemas.find((s: any) => s['@type'] === 'Recipe')
+          : schemas['@type'] === 'Recipe' ? schemas : null;
+        
+        if (recipeSchema) {
+          console.log('Found recipe schema:', recipeSchema);
+          scrapedData = {
+            title: recipeSchema.name,
+            description: recipeSchema.description,
+            ingredients: recipeSchema.recipeIngredient?.map((ing: string) => ({
+              name: ing,
+              amount: "",
+              unit: "",
+              group: "main"
+            })),
+            steps: recipeSchema.recipeInstructions?.map((instruction: any) => ({
+              title: "Step",
+              instructions: typeof instruction === 'string' ? instruction : instruction.text,
+              duration: "",
+              media: []
+            })),
+            totalTime: recipeSchema.totalTime || recipeSchema.cookTime,
+            servings: {
+              amount: parseInt(recipeSchema.recipeYield) || 4,
+              unit: 'serving'
+            }
+          };
+        }
+      } catch (error) {
+        console.error('Error parsing JSON-LD:', error);
+      }
     }
 
-    const data = await response.json();
-    console.log("Scraped recipe data:", data);
+    // If no schema found, fallback to HTML pattern matching
+    if (!scrapedData.title) {
+      console.log('Falling back to HTML pattern matching');
+      const ingredients = $('.ingredients li, .recipe-ingredients li').map((_, el) => $(el).text().trim()).get();
+      const instructions = $('.instructions li, .recipe-instructions li').map((_, el) => $(el).text().trim()).get();
+      
+      scrapedData = {
+        title: $('h1').first().text().trim(),
+        description: $('meta[name="description"]').attr('content'),
+        ingredients: ingredients.map(ing => ({
+          name: ing,
+          amount: "",
+          unit: "",
+          group: "main"
+        })),
+        steps: instructions.map(instruction => ({
+          title: "Step",
+          instructions: instruction,
+          duration: "",
+          media: []
+        })),
+        servings: {
+          amount: 4,
+          unit: 'serving'
+        }
+      };
+    }
 
-    return {
-      title: data.title || "",
-      description: data.description || "",
-      cuisine: data.cuisine || "",
-      ingredients: data.ingredients?.map((ing: string) => ({
-        name: ing,
-        amount: "",
-        unit: ""
-      })) || [],
-      steps: data.instructions?.map((instruction: string) => ({
-        title: "Step",
-        instructions: instruction,
-        duration: "",
-        media: []
-      })) || [],
-      source: 'scrape'
-    };
+    if (!scrapedData.title) {
+      throw new Error("Could not extract recipe details");
+    }
+
+    console.log("Successfully scraped recipe:", scrapedData);
+    return scrapedData;
   } catch (error) {
     console.error("Error scraping recipe:", error);
-    throw new Error("Could not extract recipe details. The website might not be supported yet or the format might have changed. Please try entering the details manually.");
+    throw new Error(
+      "Could not extract recipe details. The website might not be supported yet or the format might have changed. Please try entering the details manually."
+    );
   }
 }
 
