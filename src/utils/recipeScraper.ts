@@ -6,19 +6,15 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   console.log("Attempting to scrape recipe from URL:", url);
   
   try {
-    // Extract domain from URL
     const domain = new URL(url).hostname;
     console.log("Scraping from domain:", domain);
 
-    // Use CORS proxy to fetch the page
     const corsProxy = 'https://corsproxy.io/?';
     const response = await axios.get(`${corsProxy}${encodeURIComponent(url)}`);
     const html = response.data;
-    
-    // Load HTML into cheerio
     const $ = cheerio.load(html);
     
-    // Try to find JSON-LD schema first (most reliable)
+    // Try JSON-LD schema first
     const jsonLd = $('script[type="application/ld+json"]').text();
     let scrapedData: any = {};
     
@@ -31,64 +27,66 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
         
         if (recipeSchema) {
           console.log('Found recipe schema:', recipeSchema);
-          scrapedData = {
-            title: recipeSchema.name,
-            description: recipeSchema.description,
-            ingredients: recipeSchema.recipeIngredient?.map((ing: string) => ({
-              name: ing,
-              amount: "",
-              unit: "",
-              group: "main"
-            })),
-            steps: recipeSchema.recipeInstructions?.map((instruction: any) => ({
-              title: "Step",
-              instructions: typeof instruction === 'string' ? instruction : instruction.text,
-              duration: "",
-              media: []
-            })),
-            totalTime: recipeSchema.totalTime || recipeSchema.cookTime,
-            servings: {
-              amount: parseInt(recipeSchema.recipeYield) || 4,
-              unit: 'serving'
-            }
-          };
+          scrapedData = extractFromSchema(recipeSchema);
         }
       } catch (error) {
         console.error('Error parsing JSON-LD:', error);
       }
     }
 
-    // If no schema found, fallback to HTML pattern matching
-    if (!scrapedData.title) {
+    // If no schema or missing data, try HTML scraping
+    if (!scrapedData.title || !scrapedData.ingredients?.length) {
       console.log('Falling back to HTML pattern matching');
-      const ingredients = $('.ingredients li, .recipe-ingredients li').map((_, el) => $(el).text().trim()).get();
-      const instructions = $('.instructions li, .recipe-instructions li').map((_, el) => $(el).text().trim()).get();
       
-      scrapedData = {
-        title: $('h1').first().text().trim(),
-        description: $('meta[name="description"]').attr('content'),
-        ingredients: ingredients.map(ing => ({
+      // Title
+      scrapedData.title = scrapedData.title || $('h1').first().text().trim();
+      
+      // Description
+      scrapedData.description = scrapedData.description || 
+        $('meta[name="description"]').attr('content') ||
+        $('.recipe-description, .description').first().text().trim();
+      
+      // Ingredients
+      const ingredients = $('.ingredients li, .recipe-ingredients li, .ingredienser li').map((_, el) => $(el).text().trim()).get();
+      if (ingredients.length > 0) {
+        scrapedData.ingredients = ingredients.map(ing => ({
           name: ing,
           amount: "",
           unit: "",
           group: "main"
-        })),
-        steps: instructions.map(instruction => ({
+        }));
+      }
+      
+      // Instructions
+      const instructions = $('.instructions li, .recipe-instructions li, .tillagning li').map((_, el) => $(el).text().trim()).get();
+      if (instructions.length > 0) {
+        scrapedData.steps = instructions.map(instruction => ({
           title: "Step",
           instructions: instruction,
           duration: "",
           media: []
-        })),
-        servings: {
-          amount: 4,
-          unit: 'serving'
-        }
-      };
+        }));
+      }
+
+      // Images
+      const images = $('img[class*="recipe"], .recipe-image img, .main-image img').map((_, el) => $(el).attr('src')).get();
+      if (images.length > 0) {
+        scrapedData.images = images.filter(img => img && !img.includes('placeholder'));
+      }
+
+      // Tags
+      const tags = $('.tags a, .recipe-tags a').map((_, el) => $(el).text().trim()).get();
+      if (tags.length > 0) {
+        scrapedData.tags = tags;
+      }
     }
 
     if (!scrapedData.title) {
       throw new Error("Could not extract recipe details");
     }
+
+    // Add source URL
+    scrapedData.sourceUrl = url;
 
     console.log("Successfully scraped recipe:", scrapedData);
     return scrapedData;
@@ -100,19 +98,27 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   }
 }
 
-export async function importFromTrello(cardId: string): Promise<Partial<Recipe>> {
-  console.log("Importing recipe from Trello card:", cardId);
-  
-  try {
-    // This would integrate with Trello's API
-    // For now, we'll return a mock response
-    return {
-      title: "Recipe from Trello",
-      description: "Imported from Trello card",
-      tags: ["trello-import"]
-    };
-  } catch (error) {
-    console.error("Error importing from Trello:", error);
-    throw error;
-  }
+function extractFromSchema(schema: any): Partial<Recipe> {
+  return {
+    title: schema.name,
+    description: schema.description,
+    ingredients: schema.recipeIngredient?.map((ing: string) => ({
+      name: ing,
+      amount: "",
+      unit: "",
+      group: "main"
+    })),
+    steps: schema.recipeInstructions?.map((instruction: any) => ({
+      title: "Step",
+      instructions: typeof instruction === 'string' ? instruction : instruction.text,
+      duration: "",
+      media: []
+    })),
+    totalTime: schema.totalTime || schema.cookTime,
+    servings: {
+      amount: parseInt(schema.recipeYield) || 4,
+      unit: 'serving'
+    },
+    images: schema.image ? (Array.isArray(schema.image) ? schema.image : [schema.image]) : []
+  };
 }

@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { scrapeRecipe } from "@/utils/recipeScraper";
 import { Recipe } from "@/types/recipe";
+import { ScrapedRecipeReviewDialog } from "./ScrapedRecipeReviewDialog";
 
 interface RecipeUrlDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface RecipeUrlDialogProps {
 export function RecipeUrlDialog({ open, onOpenChange, onRecipeScraped }: RecipeUrlDialogProps) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [scrapedRecipe, setScrapedRecipe] = useState<Partial<Recipe> | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,13 +26,8 @@ export function RecipeUrlDialog({ open, onOpenChange, onRecipeScraped }: RecipeU
 
     setLoading(true);
     try {
-      const scrapedRecipe = await scrapeRecipe(url);
-      onRecipeScraped(scrapedRecipe);
-      onOpenChange(false);
-      toast({
-        title: "Recipe imported successfully",
-        description: "The recipe details have been filled in from the provided URL.",
-      });
+      const recipe = await scrapeRecipe(url);
+      setScrapedRecipe(recipe);
     } catch (error) {
       console.error("Error importing recipe:", error);
       toast({
@@ -43,29 +40,49 @@ export function RecipeUrlDialog({ open, onOpenChange, onRecipeScraped }: RecipeU
     }
   };
 
+  const handleRecipeConfirm = (recipe: Partial<Recipe>) => {
+    onRecipeScraped(recipe);
+    setUrl("");
+    setScrapedRecipe(null);
+    onOpenChange(false);
+    toast({
+      title: "Recipe imported successfully",
+      description: "The recipe details have been imported and can now be edited.",
+    });
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Import Recipe from URL</DialogTitle>
-          <DialogDescription>
-            Enter the URL of a recipe to automatically import its details. Currently supported websites include common recipe websites.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            placeholder="https://example.com/recipe"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            type="url"
-            required
-          />
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Import Recipe
-          </Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Import Recipe from URL</DialogTitle>
+            <DialogDescription>
+              Enter the URL of a recipe to automatically import its details. Currently supported websites include common recipe websites.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              placeholder="https://example.com/recipe"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              type="url"
+              required
+            />
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Import Recipe
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ScrapedRecipeReviewDialog
+        open={!!scrapedRecipe}
+        onOpenChange={(open) => !open && setScrapedRecipe(null)}
+        scrapedRecipe={scrapedRecipe || {}}
+        onConfirm={handleRecipeConfirm}
+      />
+    </>
   );
 }
