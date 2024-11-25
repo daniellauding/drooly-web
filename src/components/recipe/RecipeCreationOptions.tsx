@@ -10,6 +10,7 @@ import {
 import { RecipeUrlDialog } from "./RecipeUrlDialog";
 import { ImageRecognitionDialog } from "./ImageRecognitionDialog";
 import { TrelloImportDialog } from "./TrelloImportDialog";
+import { InstagramImportDialog } from "./InstagramImportDialog";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeCreationOptionsProps {
@@ -20,6 +21,7 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [showImageRecognitionDialog, setShowImageRecognitionDialog] = useState(false);
   const [showTrelloDialog, setShowTrelloDialog] = useState(false);
+  const [showInstagramDialog, setShowInstagramDialog] = useState(false);
 
   return (
     <>
@@ -47,7 +49,7 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
               <Bot className="mr-2 h-4 w-4" />
               AI Assistant
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowInstagramDialog(true)}>
               <Instagram className="mr-2 h-4 w-4" />
               Import from Instagram
             </DropdownMenuItem>
@@ -74,6 +76,12 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
       <TrelloImportDialog
         open={showTrelloDialog}
         onOpenChange={setShowTrelloDialog}
+        onRecipeImported={onRecipeImported}
+      />
+
+      <InstagramImportDialog
+        open={showInstagramDialog}
+        onOpenChange={setShowInstagramDialog}
         onRecipeImported={onRecipeImported}
       />
     </>
