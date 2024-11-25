@@ -3,9 +3,9 @@ import { TopBar } from "@/components/TopBar";
 import { BottomBar } from "@/components/BottomBar";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { RecipeCard } from "@/components/RecipeCard";
 import { Recipe } from "@/types/recipe";
@@ -13,11 +13,25 @@ import { Recipe } from "@/types/recipe";
 export default function Profile() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
+      return;
     }
+
+    // Check if user is admin
+    const checkAdminStatus = async () => {
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        setIsAdmin(userDoc.exists() && userDoc.data().role === 'admin');
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+      }
+    };
+
+    checkAdminStatus();
   }, [user, navigate]);
 
   const { data: recipes, isLoading } = useQuery({
@@ -53,6 +67,15 @@ export default function Profile() {
         </div>
 
         <div className="space-y-4">
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => navigate('/backoffice')}
+            >
+              Access Backoffice
+            </Button>
+          )}
           <Button 
             variant="destructive" 
             className="w-full"

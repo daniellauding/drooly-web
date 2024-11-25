@@ -13,6 +13,7 @@ import Register from "./pages/Register";
 import Messages from "./pages/Messages";
 import Create from "./pages/Create";
 import CreateRecipe from "./pages/CreateRecipe";
+import Backoffice from "./pages/Backoffice";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/register" element={<Register />} />
             <Route path="/create" element={<Create />} />
             <Route path="/create/recipe" element={<CreateRecipe />} />
+            <Route path="/backoffice" element={<Backoffice />} />
             <Route path="/favorites" element={<Navigate to="/" />} />
             <Route path="/search" element={<Navigate to="/" />} />
           </Routes>
