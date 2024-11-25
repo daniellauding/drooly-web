@@ -52,9 +52,7 @@ service cloud.firestore {
           'signupUrl', 'expiresAt', 'marketingContent'
         ]) &&
         // Verify the createdBy field matches the authenticated user
-        request.resource.data.createdBy == request.auth.uid &&
-        // Verify role is 'user' for regular users
-        request.resource.data.role == 'user';
+        request.resource.data.createdBy == request.auth.uid;
       
       // Allow updating own invites
       allow update: if request.auth != null && 

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -87,6 +87,9 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Invite Users to Drooly</DialogTitle>
+          <DialogDescription>
+            Send invites to users you'd like to join Drooly. They'll receive a unique signup link.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
