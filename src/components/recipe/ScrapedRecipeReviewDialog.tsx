@@ -7,6 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Recipe } from "@/types/recipe";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ImageUpload } from "@/components/ImageUpload";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ScrapedRecipeReviewDialogProps {
   open: boolean;
@@ -46,6 +53,25 @@ export function ScrapedRecipeReviewDialog({
                 Scraped from: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{recipe.sourceUrl}</a>
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label>Privacy</Label>
+              <Select
+                value={recipe.privacy}
+                onValueChange={(value: 'public' | 'private' | 'unlisted') => 
+                  setRecipe(prev => ({ ...prev, privacy: value }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select privacy setting" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                  <SelectItem value="unlisted">Unlisted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="space-y-2">
               <Label>Images</Label>

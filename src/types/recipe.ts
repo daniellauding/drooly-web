@@ -49,6 +49,7 @@ export interface Recipe {
   cookTime?: string;
   source?: 'image' | 'scrape' | 'ai' | 'manual' | 'trello';
   sourceUrl?: string;
+  privacy?: 'public' | 'private' | 'unlisted';
   stats?: {
     views: number;
     likes: string[];
