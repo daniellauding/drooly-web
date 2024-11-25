@@ -28,6 +28,8 @@ export function ProfileDropdown() {
 
   if (!user) return null;
 
+  console.log("Current user photoURL:", user.photoURL);
+
   // Default user data structure for the edit modal
   const defaultUserData = {
     name: user.displayName || "",
@@ -47,8 +49,13 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer">
             <Avatar className="h-8 w-8">
-              <AvatarImage src={user.photoURL || undefined} />
-              <AvatarFallback>{user.email?.[0]?.toUpperCase()}</AvatarFallback>
+              <AvatarImage 
+                src={user.photoURL || ""} 
+                alt={user.displayName || user.email || "User avatar"}
+              />
+              <AvatarFallback>
+                {(user.displayName || user.email || "U")[0].toUpperCase()}
+              </AvatarFallback>
             </Avatar>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </div>

@@ -36,10 +36,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log("Auth state changed - User:", user.email, "Verified:", user.emailVerified);
+        console.log("Auth state changed - User:", user.email, "PhotoURL:", user.photoURL);
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const userData = userDoc.data();
-        setUser({ ...user, role: userData?.role });
+        
+        // Update user with both Firebase Auth and Firestore data
+        setUser({ 
+          ...user, 
+          role: userData?.role,
+          photoURL: userData?.avatarUrl || user.photoURL // Prioritize Firestore avatarUrl
+        });
 
         if (!user.emailVerified) {
           toast({
