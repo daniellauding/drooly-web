@@ -5,39 +5,121 @@ import { Recipe } from '@/types/recipe';
 const extractSwedishRecipe = ($: cheerio.CheerioAPI) => {
   console.log('Attempting to extract Swedish recipe');
   
-  // Extract description from the top text
-  const description = $('.entry-content p').first().text().trim();
+  // Extract title - try multiple selectors
+  const title = 
+    $('h1.entry-title').first().text().trim() || 
+    $('h1').first().text().trim() ||
+    $('.recipe-title').first().text().trim();
   
-  // Extract ingredients
-  const ingredients = $('.entry-content')
-    .find('h2:contains("Ingredienser")')
-    .next('ul')
-    .find('li')
-    .map((_, el) => ({
-      name: $(el).text().trim(),
-      amount: "",
-      unit: "",
-      group: "main"
-    }))
-    .get();
+  // Extract description - try multiple approaches
+  const description = 
+    $('.entry-content p').first().text().trim() ||
+    $('meta[name="description"]').attr('content') ||
+    $('.recipe-description').text().trim();
+  
+  // Extract ingredients more aggressively
+  const ingredients = [];
+  
+  // Try multiple common ingredient selectors
+  const ingredientSelectors = [
+    '.ingredients li',
+    '.recipe-ingredients li',
+    '.entry-content ul li',
+    '.entry-content p',
+    'ul li'
+  ];
 
-  // Extract instructions
-  const instructions = $('.entry-content')
-    .find('h2:contains("Instruktioner")')
-    .nextAll('p')
-    .map((_, el) => ({
-      title: "Step",
-      instructions: $(el).text().trim(),
-      duration: "",
-      media: []
-    }))
-    .get()
-    .filter(step => step.instructions.length > 0);
+  ingredientSelectors.forEach(selector => {
+    $(selector).each((_, el) => {
+      const text = $(el).text().trim();
+      
+      // Only add if it looks like an ingredient (contains numbers or common units)
+      if (text && (
+        /\d+/.test(text) || 
+        /\b(g|kg|ml|l|dl|msk|tsk|st|burk)\b/i.test(text)
+      )) {
+        // Try to parse amount, unit, and name
+        const match = text.match(/^(\d+(?:[,.]\d+)?)\s*(g|kg|ml|l|dl|msk|tsk|st|burk)?\s*(.+)/i);
+        if (match) {
+          ingredients.push({
+            name: match[3].trim(),
+            amount: match[1].trim(),
+            unit: (match[2] || "").trim(),
+            group: "main"
+          });
+        } else {
+          // If parsing fails, just add as name
+          ingredients.push({
+            name: text,
+            amount: "",
+            unit: "",
+            group: "main"
+          });
+        }
+      }
+    });
+  });
+
+  // Extract instructions by looking for common patterns
+  const instructions = [];
+  let foundInstructions = false;
+  
+  $('.entry-content p, .entry-content div').each((_, el) => {
+    const text = $(el).text().trim();
+    
+    // Look for instruction section markers
+    if (text.toLowerCase().includes('gör så här') || 
+        text.toLowerCase().includes('instruktioner') ||
+        text.toLowerCase().includes('tillagning')) {
+      foundInstructions = true;
+      return;
+    }
+    
+    if (foundInstructions && text.length > 10) {
+      instructions.push({
+        title: "Step",
+        instructions: text,
+        duration: "",
+        media: []
+      });
+    }
+  });
+
+  // Try to detect cuisine type
+  let cuisine = "";
+  if (title.toLowerCase().includes('indisk') || description.toLowerCase().includes('indisk')) {
+    cuisine = "indian";
+  } else if (title.toLowerCase().includes('thai') || description.toLowerCase().includes('thai')) {
+    cuisine = "thai";
+  }
+  // Add more cuisine detection as needed
+
+  // Try to extract cooking methods
+  const cookingMethods = [];
+  const methodKeywords = ['koka', 'stek', 'fritera', 'baka', 'grilla', 'woka'];
+  methodKeywords.forEach(method => {
+    if (description.toLowerCase().includes(method)) {
+      cookingMethods.push(method);
+    }
+  });
+
+  // Try to extract equipment
+  const equipment = [];
+  const equipmentKeywords = ['gryta', 'panna', 'wok', 'ugn', 'form'];
+  equipmentKeywords.forEach(item => {
+    if (description.toLowerCase().includes(item)) {
+      equipment.push(item);
+    }
+  });
 
   return {
+    title,
     description,
     ingredients,
-    steps: instructions
+    steps: instructions,
+    cuisine,
+    cookingMethods,
+    equipment
   };
 };
 
@@ -95,34 +177,35 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
     // If no schema or missing data, try site-specific extraction
     if (!scrapedData.ingredients?.length) {
       console.log('Falling back to site-specific extraction');
-      
-      if (url.includes('godastmat.se')) {
-        const swedishData = extractSwedishRecipe($);
-        scrapedData = {
-          ...scrapedData,
-          ...swedishData,
-          title: scrapedData.title || $('h1.entry-title').first().text().trim()
-        };
-      }
-      // Add other site-specific handlers here
+      const swedishData = extractSwedishRecipe($);
+      scrapedData = {
+        ...scrapedData,
+        ...swedishData
+      };
     }
 
-    if (!scrapedData.title) {
-      throw new Error('Could not extract recipe details');
-    }
-
-    console.log('Successfully scraped recipe:', scrapedData);
+    // Always return what we found, even if incomplete
+    console.log('Scraped recipe data:', scrapedData);
     return {
       ...scrapedData,
       source: 'scrape',
       sourceUrl: url,
-      privacy: 'public' as const
+      privacy: 'public' as const,
+      servings: scrapedData.servings || { amount: 4, unit: 'serving' }
     };
   } catch (error) {
     console.error('Error scraping recipe:', error);
-    throw new Error(
-      'Could not extract recipe details. Please try entering the details manually.'
-    );
+    // Return partial data even if there's an error
+    return {
+      title: "",
+      description: "",
+      ingredients: [],
+      steps: [],
+      source: 'scrape',
+      sourceUrl: url,
+      privacy: 'public' as const,
+      servings: { amount: 4, unit: 'serving' }
+    };
   }
 }
 
