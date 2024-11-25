@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { Recipe } from "@/types/recipe";
 import { Loader2, Mail } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, getDoc, doc } from "firebase/firestore";
@@ -15,9 +15,18 @@ import { InviteLink } from "./InviteLink";
 interface InviteUsersModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  recipe: Recipe | null;
+  remainingInvites?: number;
+  onInviteSent?: () => void;
 }
 
-export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) {
+export function InviteUsersModal({ 
+  open, 
+  onOpenChange, 
+  recipe,
+  remainingInvites = Infinity,
+  onInviteSent
+}: InviteUsersModalProps) {
   const [emails, setEmails] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState("user");
   const [customMessage, setCustomMessage] = useState("");
@@ -30,7 +39,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
   const { user } = useAuth();
 
   const handleSendInvites = async () => {
-    if (!emails.length) {
+    if (!emails.length || !user) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -39,24 +48,16 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       return;
     }
 
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "You must be logged in to send invites."
-      });
-      return;
-    }
-
     setSending(true);
     try {
-      // Check if user is superadmin
+      console.log("Checking user role...");
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
       const isSuperAdmin = userData?.role === 'superadmin';
-
-      // Only check email verification for non-superadmins
+      console.log("User role check - Is superadmin:", isSuperAdmin);
+      
       if (!isSuperAdmin && !user.emailVerified) {
+        console.log("User is not superadmin and email is not verified");
         toast({
           variant: "destructive",
           title: "Error",
@@ -68,8 +69,9 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       console.log("Creating invites for emails:", emails);
       
       const invitesCollection = collection(db, "invites");
+      const domain = import.meta.env.VITE_CUSTOM_DOMAIN || window.location.host;
+
       const invitePromises = emails.map(async (email) => {
-        const domain = import.meta.env.VITE_CUSTOM_DOMAIN || window.location.host;
         const signupUrl = `${window.location.protocol}//${domain}/register?invite=${btoa(email)}&role=${selectedRole}`;
         
         const inviteData = {
@@ -92,15 +94,14 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       console.log("All invites created successfully");
 
       toast({
-        title: "Invites created successfully",
-        description: `Created ${emails.length} invites`
+        title: "Invites sent successfully",
+        description: `Sent invites to ${emails.length} recipients`
       });
-      
+
+      onInviteSent?.();
       onOpenChange(false);
       setEmails([]);
-      setSelectedRole("user");
       setCustomMessage("");
-      setMarketingOptions({ popularRecipes: false, topCreators: false });
     } catch (error) {
       console.error("Error creating invites:", error);
       toast({
@@ -124,19 +125,12 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Role</label>
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="superadmin">Superadmin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {recipe && (
+            <div>
+              <label className="text-sm font-medium">Recipe</label>
+              <p className="text-muted-foreground">{recipe.title}</p>
+            </div>
+          )}
 
           <InviteForm emails={emails} setEmails={setEmails} />
 
