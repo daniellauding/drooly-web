@@ -7,12 +7,13 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { RecipeTableRow } from "./RecipeTableRow";
 import { RecipeExpandedRow } from "./RecipeExpandedRow";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
 
-export function BackofficeRecipes() {
+interface BackofficeRecipesProps {
+  searchQuery: string;
+}
+
+export function BackofficeRecipes({ searchQuery }: BackofficeRecipesProps) {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
@@ -89,16 +90,6 @@ export function BackofficeRecipes() {
 
   return (
     <div className="space-y-4">
-      <div className="relative max-w-sm">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search recipes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-8"
-        />
-      </div>
-
       <Table>
         <TableHeader>
           <TableRow>
@@ -129,7 +120,7 @@ export function BackofficeRecipes() {
               {expandedRows.includes(recipe.id!) && (
                 <RecipeExpandedRow 
                   recipe={recipe}
-                  onUpdate={(updates) => handleUpdate(recipe.id!, updates)}
+                  onSave={(updates) => handleUpdate(recipe.id!, updates)}
                 />
               )}
             </>

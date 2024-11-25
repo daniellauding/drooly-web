@@ -1,21 +1,19 @@
-import { useState } from "react";
 import { Recipe } from "@/types/recipe";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, ChevronUp, Heart, MessageSquare, Share2, Mail } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { ChevronDown, ChevronUp, Pencil, Save, X, Trash } from "lucide-react";
+import { format } from "date-fns";
 
 interface RecipeTableRowProps {
   recipe: Recipe;
   editingId: string | null;
   isExpanded: boolean;
   onEdit: (id: string) => void;
-  onSave: (id: string, updates: Partial<Recipe>) => void;
+  onSave: (id: string, updates: Partial<Recipe>) => Promise<void>;
   onCancel: () => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
   onToggleExpand: () => void;
-  onInvite: (recipe: Recipe) => void;
 }
 
 export function RecipeTableRow({
@@ -26,117 +24,91 @@ export function RecipeTableRow({
   onSave,
   onCancel,
   onDelete,
-  onToggleExpand,
-  onInvite
+  onToggleExpand
 }: RecipeTableRowProps) {
-  const navigate = useNavigate();
-  const [editedFields, setEditedFields] = useState<Partial<Recipe>>({});
-
-  const handleFieldChange = (field: keyof Recipe, value: any) => {
-    setEditedFields(prev => ({ ...prev, [field]: value }));
-  };
-
-  const getSourceLabel = (source?: string) => {
-    switch (source) {
-      case 'image':
-        return 'Image Recognition';
-      case 'scrape':
-        return 'Web Scrape';
-      case 'ai':
-        return 'AI Assistant';
-      case 'manual':
-        return 'Manual Entry';
-      default:
-        return 'Unknown';
-    }
-  };
+  const isEditing = editingId === recipe.id;
+  const createdDate = recipe.createdAt ? new Date(recipe.createdAt.seconds * 1000) : null;
+  const updatedDate = recipe.updatedAt ? new Date(recipe.updatedAt.seconds * 1000) : null;
 
   return (
-    <TableRow className="hover:bg-muted/50">
+    <TableRow>
+      <TableCell className="font-mono text-sm">{recipe.id}</TableCell>
       <TableCell>
-        <span className="text-xs text-muted-foreground font-mono">
-          {recipe.id}
-        </span>
-      </TableCell>
-      <TableCell>
-        {editingId === recipe.id ? (
-          <div className="flex gap-2">
-            <Input
-              value={editedFields.title ?? recipe.title}
-              onChange={(e) => handleFieldChange('title', e.target.value)}
-              className="w-full"
-            />
-            <Button size="sm" onClick={() => onSave(recipe.id!, editedFields)}>Save</Button>
-            <Button size="sm" variant="outline" onClick={onCancel}>Cancel</Button>
-          </div>
+        {isEditing ? (
+          <Input
+            defaultValue={recipe.title}
+            onChange={(e) => {
+              // Handle title change
+            }}
+          />
         ) : (
-          <span 
-            className="cursor-pointer hover:underline"
-            onClick={() => onEdit(recipe.id!)}
-          >
-            {recipe.title}
-          </span>
+          recipe.title
         )}
       </TableCell>
-      <TableCell>{recipe.creatorName || 'Unknown'}</TableCell>
-      <TableCell>
-        <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-sm">
-          {getSourceLabel(recipe.source)}
-        </span>
+      <TableCell>{recipe.creator?.name || 'Unknown'}</TableCell>
+      <TableCell>{recipe.source || 'Direct'}</TableCell>
+      <TableCell className="text-sm">
+        <div>Created: {createdDate ? format(createdDate, 'MMM d, yyyy') : 'Unknown'}</div>
+        {updatedDate && (
+          <div className="text-muted-foreground">
+            Updated: {format(updatedDate, 'MMM d, yyyy')}
+          </div>
+        )}
       </TableCell>
       <TableCell>
-        <div className="space-y-1">
-          <div className="text-sm">
-            Created: {recipe.createdAt ? new Date(recipe.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
-          </div>
-          {recipe.updatedAt && (
-            <div className="text-xs text-muted-foreground">
-              Updated: {new Date(recipe.updatedAt.seconds * 1000).toLocaleDateString()}
-            </div>
+        <div className="text-sm">
+          <div>Views: {recipe.views || 0}</div>
+          <div>Likes: {recipe.likes?.length || 0}</div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-2">
+          {isEditing ? (
+            <>
+              <Button
+                size="sm"
+                onClick={() => onSave(recipe.id!, {})}
+                className="h-8 px-2"
+              >
+                <Save className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onCancel}
+                className="h-8 px-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onEdit(recipe.id!)}
+                className="h-8 px-2"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onDelete(recipe.id!)}
+                className="h-8 px-2 text-destructive"
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </>
           )}
         </div>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <Heart className="w-4 h-4 text-red-500" />
-            <span>{recipe.stats?.likes || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <MessageSquare className="w-4 h-4 text-blue-500" />
-            <span>{recipe.stats?.comments || 0}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Share2 className="w-4 h-4 text-green-500" />
-            <span>{recipe.stats?.shares || 0}</span>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => navigate(`/recipe/${recipe.id}`)}>View</Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => onInvite(recipe)}
-          >
-            <Mail className="h-4 w-4 mr-2" />
-            Invite
-          </Button>
-          <Button 
-            size="sm" 
-            variant="destructive"
-            onClick={() => onDelete(recipe.id!)}
-          >
-            Delete
-          </Button>
-        </div>
-      </TableCell>
-      <TableCell>
-        <Button 
-          variant="ghost" 
+        <Button
           size="sm"
+          variant="ghost"
           onClick={onToggleExpand}
+          className="h-8 w-8 p-0"
         >
           {isExpanded ? (
             <ChevronUp className="h-4 w-4" />
