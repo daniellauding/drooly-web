@@ -45,7 +45,7 @@ export function RecipeTableRow({
           recipe.title
         )}
       </TableCell>
-      <TableCell>{recipe.creator?.name || 'Unknown'}</TableCell>
+      <TableCell>{recipe.creatorName || 'Unknown'}</TableCell>
       <TableCell>{recipe.source || 'Direct'}</TableCell>
       <TableCell className="text-sm">
         <div>Created: {createdDate ? format(createdDate, 'MMM d, yyyy') : 'Unknown'}</div>
@@ -57,8 +57,8 @@ export function RecipeTableRow({
       </TableCell>
       <TableCell>
         <div className="text-sm">
-          <div>Views: {recipe.views || 0}</div>
-          <div>Likes: {recipe.likes?.length || 0}</div>
+          <div>Views: {recipe.stats?.views || 0}</div>
+          <div>Likes: {recipe.stats?.likes?.length || 0}</div>
         </div>
       </TableCell>
       <TableCell>

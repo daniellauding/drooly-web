@@ -12,11 +12,11 @@ interface RecipeExpandedRowProps {
 export function RecipeExpandedRow({ recipe, onSave }: RecipeExpandedRowProps) {
   const [description, setDescription] = useState(recipe.description);
 
-  const renderArrayField = (field: string[], label: string) => (
+  const renderArrayField = (field: string[] | undefined, label: string) => (
     <div className="mb-4">
       <h4 className="font-medium mb-2">{label}:</h4>
       <div className="flex flex-wrap gap-2">
-        {field.map((item, index) => (
+        {field?.map((item, index) => (
           <span key={index} className="bg-muted px-2 py-1 rounded text-sm">
             {item}
           </span>
@@ -78,7 +78,7 @@ export function RecipeExpandedRow({ recipe, onSave }: RecipeExpandedRowProps) {
           <div>
             <h3 className="font-semibold mb-4">Dietary Information</h3>
             <div className="grid grid-cols-2 gap-4">
-              {Object.entries(recipe.dietaryInfo).map(([key, value]) => (
+              {recipe.dietaryInfo && Object.entries(recipe.dietaryInfo).map(([key, value]) => (
                 <div key={key} className="flex items-center gap-2">
                   <span className={value ? "text-green-600" : "text-red-600"}>
                     {value ? "✓" : "✗"}

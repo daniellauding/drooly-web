@@ -26,7 +26,7 @@ export interface Recipe {
   totalTime: string;
   worksWith: string[];
   serveWith: string[];
-  dietaryInfo: {
+  dietaryInfo?: {
     isVegetarian: boolean;
     isVegan: boolean;
     isGlutenFree: boolean;
@@ -53,7 +53,10 @@ export interface Recipe {
     likes: string[];
     comments: number;
   };
-  ingredientSections?: string[];
+  ingredientSections?: {
+    title: string;
+    ingredients: string[];
+  }[];
 }
 
 export const CUISINES = [

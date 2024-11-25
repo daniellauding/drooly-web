@@ -13,10 +13,6 @@ import { BackofficeTranslations } from "@/components/backoffice/BackofficeTransl
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
-interface BackofficeComponentProps {
-  searchQuery: string;
-}
-
 export default function Backoffice() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -30,10 +26,6 @@ export default function Backoffice() {
   }, [user, navigate]);
 
   if (!user?.role || user.role !== 'superadmin') return null;
-
-  const backofficeProps: BackofficeComponentProps = {
-    searchQuery
-  };
 
   return (
     <div className="min-h-screen pb-20">
@@ -62,23 +54,23 @@ export default function Backoffice() {
           </TabsList>
           
           <TabsContent value="recipes">
-            <BackofficeRecipes {...backofficeProps} />
+            <BackofficeRecipes searchQuery={searchQuery} />
           </TabsContent>
           
           <TabsContent value="users">
-            <BackofficeUsers {...backofficeProps} />
+            <BackofficeUsers />
           </TabsContent>
           
           <TabsContent value="images">
-            <BackofficeImages {...backofficeProps} />
+            <BackofficeImages />
           </TabsContent>
           
           <TabsContent value="comments">
-            <BackofficeComments {...backofficeProps} />
+            <BackofficeComments />
           </TabsContent>
           
           <TabsContent value="plans">
-            <BackofficePlans {...backofficeProps} />
+            <BackofficePlans />
           </TabsContent>
           
           <TabsContent value="translations">
