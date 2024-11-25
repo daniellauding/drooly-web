@@ -54,8 +54,9 @@ service cloud.firestore {
     }
 
     match /invites/{inviteId} {
-      // Allow reading invites
-      allow read: if true;
+      // Allow reading invites if authenticated and verified
+      allow read: if request.auth != null && 
+                 request.auth.token.email_verified;
       
       // Allow creating invites for authenticated and verified users
       allow create: if request.auth != null && 
@@ -63,17 +64,17 @@ service cloud.firestore {
         request.resource.data.keys().hasAll([
           'email', 'role', 'status', 'createdAt', 'createdBy', 
           'signupUrl', 'expiresAt', 'marketingContent'
-        ]) &&
-        // Verify the createdBy field matches the authenticated user
-        request.resource.data.createdBy == request.auth.uid;
+        ]);
       
       // Allow updating own invites
       allow update: if request.auth != null && 
-        resource.data.createdBy == request.auth.uid;
+                   request.auth.token.email_verified &&
+                   resource.data.createdBy == request.auth.uid;
       
       // Allow deleting own invites
       allow delete: if request.auth != null && 
-        resource.data.createdBy == request.auth.uid;
+                   request.auth.token.email_verified &&
+                   resource.data.createdBy == request.auth.uid;
     }
   }
 }

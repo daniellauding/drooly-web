@@ -30,7 +30,16 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
   const { user } = useAuth();
 
   const handleSendInvites = async () => {
-    if (emails.length === 0) return;
+    if (!emails.length || !user?.emailVerified) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: user?.emailVerified 
+          ? "Please add at least one email address."
+          : "Please verify your email before sending invites."
+      });
+      return;
+    }
 
     setSending(true);
     try {
@@ -47,7 +56,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
           message: customMessage,
           status: "pending",
           createdAt: new Date(),
-          createdBy: user?.uid,
+          createdBy: user.uid,
           signupUrl,
           expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
           marketingContent: marketingOptions
@@ -75,7 +84,7 @@ export function InviteUsersModal({ open, onOpenChange }: InviteUsersModalProps) 
       toast({
         variant: "destructive",
         title: "Error creating invites",
-        description: "Please try again later."
+        description: "Please ensure you have the necessary permissions and try again."
       });
     } finally {
       setSending(false);
