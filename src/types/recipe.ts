@@ -100,14 +100,6 @@ export const validateRecipe = (recipe: Recipe): ValidationResult => {
     });
   }
 
-  // Difficulty validation
-  if (!recipe.difficulty) {
-    errors.push({
-      field: 'difficulty',
-      message: 'Difficulty level is required'
-    });
-  }
-
   // Ingredients validation
   if (recipe.ingredients.length === 0) {
     errors.push({
@@ -122,11 +114,12 @@ export const validateRecipe = (recipe: Recipe): ValidationResult => {
           message: `Ingredient ${index + 1} requires a name`
         });
       }
+      // Set default values for amount and unit if not provided
       if (!ingredient.amount?.trim()) {
-        errors.push({
-          field: 'ingredients',
-          message: `Ingredient ${index + 1} requires an amount`
-        });
+        ingredient.amount = '1';
+      }
+      if (!ingredient.unit?.trim()) {
+        ingredient.unit = 'piece';
       }
     });
   }
@@ -139,50 +132,20 @@ export const validateRecipe = (recipe: Recipe): ValidationResult => {
     });
   } else {
     recipe.steps.forEach((step, index) => {
-      if (!step.title?.trim()) {
-        errors.push({
-          field: 'steps',
-          message: `Step ${index + 1} requires a title`
-        });
-      }
       if (!step.instructions?.trim()) {
         errors.push({
-          field: 'steps',
+          field: `steps.${index}`,
           message: `Step ${index + 1} requires instructions`
         });
       }
     });
   }
 
-  // Servings validation
-  if (!recipe.servings.amount || !recipe.servings.unit) {
+  // Servings validation - only if provided
+  if (recipe.servings.amount && !recipe.servings.unit) {
     errors.push({
       field: 'servings',
-      message: 'Servings amount and unit are required'
-    });
-  }
-
-  // Cooking time validation
-  if (!recipe.totalTime?.trim()) {
-    errors.push({
-      field: 'totalTime',
-      message: 'Total cooking time is required'
-    });
-  }
-
-  // Categories validation
-  if (recipe.categories.length === 0) {
-    errors.push({
-      field: 'categories',
-      message: 'Select at least one category'
-    });
-  }
-
-  // Equipment validation
-  if (recipe.equipment.length === 0) {
-    errors.push({
-      field: 'equipment',
-      message: 'Select at least one piece of equipment'
+      message: 'Servings unit is required when amount is specified'
     });
   }
 
