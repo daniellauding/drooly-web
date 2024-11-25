@@ -2,18 +2,9 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { X, Camera, Check } from "lucide-react";
 import { Recipe } from "@/types/recipe";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { ImageUpload } from "@/components/ImageUpload";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 interface ScrapedRecipeReviewDialogProps {
   open: boolean;
@@ -32,9 +23,10 @@ export function ScrapedRecipeReviewDialog({
     title: '',
     description: '',
     privacy: 'private',
-    images: [],
-    ingredients: [],
-    steps: [],
+    cuisine: '',
+    cookingMethods: [],
+    equipment: [],
+    servings: { amount: 4, unit: 'serving' },
     ...scrapedRecipe
   });
 
@@ -43,124 +35,153 @@ export function ScrapedRecipeReviewDialog({
       title: '',
       description: '',
       privacy: 'private',
-      images: [],
-      ingredients: [],
-      steps: [],
+      cuisine: '',
+      cookingMethods: [],
+      equipment: [],
+      servings: { amount: 4, unit: 'serving' },
       ...scrapedRecipe
     });
   }, [scrapedRecipe]);
 
-  const handleConfirm = () => {
-    onConfirm(recipe);
-    onOpenChange(false);
+  const handleFieldChange = (field: string, value: any) => {
+    setRecipe(prev => ({ ...prev, [field]: value }));
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Review Scraped Recipe</DialogTitle>
+          <DialogTitle>Review Recipe Details</DialogTitle>
           <DialogDescription>
-            Review and edit the scraped recipe details before importing.
+            Please review and edit the information below if needed.
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="h-[600px] pr-4">
-          <div className="space-y-6">
-            {recipe.source === 'scrape' && recipe.sourceUrl && (
-              <div className="text-sm text-muted-foreground">
-                Scraped from: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{recipe.sourceUrl}</a>
-              </div>
-            )}
-
+        <div className="space-y-6 py-4">
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Privacy</Label>
-              <Select
-                value={recipe.privacy || 'private'}
-                onValueChange={(value: 'public' | 'private' | 'unlisted') => 
-                  setRecipe(prev => ({ ...prev, privacy: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select privacy setting" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="public">Public</SelectItem>
-                  <SelectItem value="private">Private</SelectItem>
-                  <SelectItem value="unlisted">Unlisted</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Images</Label>
-              <ImageUpload
-                images={recipe.images || []}
-                featuredImageIndex={0}
-                onChange={(images, featuredIndex) => 
-                  setRecipe(prev => ({ ...prev, images, featuredImageIndex: featuredIndex }))
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Title</Label>
-              <Input
-                value={recipe.title || ''}
-                onChange={(e) => setRecipe(prev => ({ ...prev, title: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea
-                value={recipe.description || ''}
-                onChange={(e) => setRecipe(prev => ({ ...prev, description: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Ingredients</Label>
-              <div className="space-y-2">
-                {(recipe.ingredients || []).map((ing, index) => (
-                  <Input
-                    key={index}
-                    value={ing.name || ''}
-                    onChange={(e) => {
-                      const newIngredients = [...(recipe.ingredients || [])];
-                      newIngredients[index] = { ...ing, name: e.target.value };
-                      setRecipe(prev => ({ ...prev, ingredients: newIngredients }));
-                    }}
-                  />
-                ))}
+              <Label>Recipe Title</Label>
+              <div className="relative">
+                <Input
+                  value={recipe.title || ''}
+                  onChange={(e) => handleFieldChange('title', e.target.value)}
+                  className="pr-8"
+                />
+                {recipe.title && (
+                  <button
+                    onClick={() => handleFieldChange('title', '')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Steps</Label>
-              <div className="space-y-2">
-                {(recipe.steps || []).map((step, index) => (
-                  <Textarea
-                    key={index}
-                    value={step.instructions || ''}
-                    onChange={(e) => {
-                      const newSteps = [...(recipe.steps || [])];
-                      newSteps[index] = { ...step, instructions: e.target.value };
-                      setRecipe(prev => ({ ...prev, steps: newSteps }));
-                    }}
-                  />
-                ))}
+              <Label>Cuisine Type</Label>
+              <div className="relative">
+                <Input
+                  value={recipe.cuisine || ''}
+                  onChange={(e) => handleFieldChange('cuisine', e.target.value)}
+                  className="pr-8"
+                />
+                {recipe.cuisine && (
+                  <button
+                    onClick={() => handleFieldChange('cuisine', '')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Number of Servings</Label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  value={recipe.servings?.amount || ''}
+                  onChange={(e) => handleFieldChange('servings', { 
+                    ...recipe.servings,
+                    amount: parseInt(e.target.value) || 0 
+                  })}
+                  className="pr-8"
+                  min="1"
+                />
+                {recipe.servings?.amount && (
+                  <button
+                    onClick={() => handleFieldChange('servings', { amount: '', unit: 'serving' })}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cooking Methods</Label>
+              <div className="relative">
+                <Input
+                  value={recipe.cookingMethods?.join(', ') || ''}
+                  onChange={(e) => handleFieldChange('cookingMethods', 
+                    e.target.value.split(',').map(m => m.trim()).filter(Boolean)
+                  )}
+                  className="pr-8"
+                  placeholder="e.g., wok, fry, bake"
+                />
+                {recipe.cookingMethods?.length > 0 && (
+                  <button
+                    onClick={() => handleFieldChange('cookingMethods', [])}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Required Equipment</Label>
+              <div className="relative">
+                <Input
+                  value={recipe.equipment?.join(', ') || ''}
+                  onChange={(e) => handleFieldChange('equipment', 
+                    e.target.value.split(',').map(eq => eq.trim()).filter(Boolean)
+                  )}
+                  className="pr-8"
+                  placeholder="e.g., wok, pan, oven"
+                />
+                {recipe.equipment?.length > 0 && (
+                  <button
+                    onClick={() => handleFieldChange('equipment', [])}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
-        <div className="flex justify-end gap-4 mt-6">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+        <div className="flex justify-between gap-4 mt-6">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="flex-1"
+          >
+            <Camera className="mr-2 h-4 w-4" />
+            Try Again
           </Button>
-          <Button onClick={handleConfirm}>
-            Use Recipe
+          <Button 
+            onClick={() => onConfirm(recipe)}
+            className="flex-1"
+          >
+            <Check className="mr-2 h-4 w-4" />
+            Use This Recipe
           </Button>
         </div>
       </DialogContent>
