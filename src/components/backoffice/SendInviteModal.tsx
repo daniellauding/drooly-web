@@ -6,22 +6,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
 import { Plus, Loader2 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SendInviteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipe: Recipe | null;
+  remainingInvites?: number;
+  onInviteSent?: () => void;
 }
 
-export function SendInviteModal({ open, onOpenChange, recipe }: SendInviteModalProps) {
+export function SendInviteModal({ 
+  open, 
+  onOpenChange, 
+  recipe,
+  remainingInvites = Infinity,
+  onInviteSent
+}: SendInviteModalProps) {
   const [emails, setEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleAddEmail = () => {
-    if (newEmail && !emails.includes(newEmail)) {
+    if (newEmail && !emails.includes(newEmail) && emails.length < remainingInvites) {
       setEmails([...emails, newEmail]);
       setNewEmail("");
     }
@@ -32,18 +44,46 @@ export function SendInviteModal({ open, onOpenChange, recipe }: SendInviteModalP
   };
 
   const handleSend = async () => {
-    if (!recipe || emails.length === 0) return;
+    if (emails.length === 0) return;
 
     setSending(true);
     try {
-      // Here you would implement the actual email sending logic
-      // For now, we'll just simulate it with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Creating invites for emails:", emails);
+      
+      const invitesCollection = collection(db, "invites");
+      const domain = import.meta.env.VITE_CUSTOM_DOMAIN || window.location.host;
+
+      const invitePromises = emails.map(async (email) => {
+        const signupUrl = `${window.location.protocol}//${domain}/register?invite=${btoa(email)}&role=user`;
+        
+        const inviteData = {
+          email,
+          role: 'user',
+          message,
+          status: "pending",
+          createdAt: new Date(),
+          createdBy: user?.uid,
+          signupUrl,
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          marketingContent: {
+            popularRecipes: true,
+            topCreators: true
+          }
+        };
+        
+        console.log("Creating invite:", inviteData);
+        return addDoc(invitesCollection, inviteData);
+      });
+
+      await Promise.all(invitePromises);
+      console.log("All invites created successfully");
 
       toast({
         title: "Invites sent successfully",
         description: `Sent invites to ${emails.length} recipients`
       });
+
+      onInviteSent?.();
       onOpenChange(false);
       setEmails([]);
       setMessage("");
@@ -63,17 +103,19 @@ export function SendInviteModal({ open, onOpenChange, recipe }: SendInviteModalP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Send Recipe Invitation</DialogTitle>
+          <DialogTitle>Invite Friends to Drooly</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Recipe</label>
-            <p className="text-muted-foreground">{recipe?.title}</p>
-          </div>
+          {recipe && (
+            <div>
+              <label className="text-sm font-medium">Recipe</label>
+              <p className="text-muted-foreground">{recipe.title}</p>
+            </div>
+          )}
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Add Recipients</label>
+            <label className="text-sm font-medium">Add Recipients ({remainingInvites - emails.length} invites remaining)</label>
             <div className="flex gap-2">
               <Input
                 type="email"
@@ -81,8 +123,13 @@ export function SendInviteModal({ open, onOpenChange, recipe }: SendInviteModalP
                 value={newEmail}
                 onChange={(e) => setNewEmail(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddEmail()}
+                disabled={emails.length >= remainingInvites}
               />
-              <Button onClick={handleAddEmail} type="button">
+              <Button 
+                onClick={handleAddEmail} 
+                type="button"
+                disabled={emails.length >= remainingInvites}
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>

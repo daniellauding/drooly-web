@@ -9,11 +9,16 @@ import { collection, query, where, getDocs, doc, getDoc } from "firebase/firesto
 import { db } from "@/lib/firebase";
 import { RecipeCard } from "@/components/RecipeCard";
 import { Recipe } from "@/types/recipe";
+import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Profile() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const { toast } = useToast();
+  const [remainingInvites, setRemainingInvites] = useState(5);
 
   useEffect(() => {
     if (!user) {
@@ -21,17 +26,24 @@ export default function Profile() {
       return;
     }
 
-    // Check if user is superadmin
-    const checkAdminStatus = async () => {
+    // Check if user is superadmin and get remaining invites
+    const checkUserStatus = async () => {
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         setIsAdmin(userDoc.exists() && userDoc.data()?.role === 'superadmin');
+        
+        // Get remaining invites count
+        const invitesRef = collection(db, "invites");
+        const q = query(invitesRef, where("createdBy", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+        const usedInvites = querySnapshot.size;
+        setRemainingInvites(Math.max(0, 5 - usedInvites));
       } catch (error) {
-        console.error("Error checking admin status:", error);
+        console.error("Error checking user status:", error);
       }
     };
 
-    checkAdminStatus();
+    checkUserStatus();
   }, [user, navigate]);
 
   const { data: recipes, isLoading } = useQuery({
@@ -51,8 +63,6 @@ export default function Profile() {
     enabled: !!user?.uid
   });
 
-  console.log('User recipes:', recipes);
-
   if (!user) return null;
 
   return (
@@ -64,6 +74,16 @@ export default function Profile() {
             {user.email?.[0].toUpperCase()}
           </div>
           <h1 className="text-2xl font-bold">{user.email}</h1>
+          
+          {remainingInvites > 0 && (
+            <Button 
+              variant="outline"
+              onClick={() => setInviteModalOpen(true)}
+              className="w-full sm:w-auto"
+            >
+              Invite Friends ({remainingInvites} remaining)
+            </Button>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -112,6 +132,20 @@ export default function Profile() {
         </div>
       </main>
       <BottomBar />
+
+      <SendInviteModal
+        open={inviteModalOpen}
+        onOpenChange={setInviteModalOpen}
+        recipe={null}
+        remainingInvites={remainingInvites}
+        onInviteSent={() => {
+          setRemainingInvites(prev => Math.max(0, prev - 1));
+          toast({
+            title: "Invite sent successfully",
+            description: `You have ${remainingInvites - 1} invites remaining.`
+          });
+        }}
+      />
     </div>
   );
 }
