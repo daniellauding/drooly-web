@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
 import { BottomBar } from "@/components/BottomBar";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
@@ -13,9 +13,12 @@ import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
 import { useToast } from "@/components/ui/use-toast";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { Pencil } from "lucide-react";
+import { ProfileStats } from "@/components/profile/ProfileStats";
+import { ProfileActions } from "@/components/profile/ProfileActions";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { userId: profileUserId } = useParams();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -23,43 +26,66 @@ export default function Profile() {
   const { toast } = useToast();
   const [remainingInvites, setRemainingInvites] = useState(5);
   const [userData, setUserData] = useState({
+    id: "",
     name: "",
     username: "",
     birthday: "",
-    email: user?.email || "",
+    email: "",
     phone: "",
     bio: "",
     gender: "prefer-not-to-say",
     isPrivate: false,
     avatarUrl: "",
+    followers: [] as string[],
+    following: [] as string[],
+  });
+
+  const targetUserId = profileUserId || user?.uid;
+
+  const { data: recipes, isLoading: recipesLoading } = useQuery({
+    queryKey: ['userRecipes', targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return [];
+      console.log('Fetching recipes for user:', targetUserId);
+      const recipesRef = collection(db, 'recipes');
+      const q = query(recipesRef, where('creatorId', '==', targetUserId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
+    },
+    enabled: !!targetUserId
   });
 
   useEffect(() => {
-    if (!user) {
+    if (!targetUserId) {
       navigate('/login');
       return;
     }
 
     const fetchUserData = async () => {
       try {
-        console.log("Fetching user data");
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+        console.log("Fetching user data for:", targetUserId);
+        const userDoc = await getDoc(doc(db, "users", targetUserId));
         if (userDoc.exists()) {
           const data = userDoc.data();
           setIsAdmin(data.role === 'superadmin');
           setUserData(prev => ({
             ...prev,
+            id: userDoc.id,
             ...data,
-            email: user.email || "",
           }));
         }
         
-        // Get remaining invites count
-        const invitesRef = collection(db, "invites");
-        const q = query(invitesRef, where("createdBy", "==", user.uid));
-        const querySnapshot = await getDocs(q);
-        const usedInvites = querySnapshot.size;
-        setRemainingInvites(Math.max(0, 5 - usedInvites));
+        if (targetUserId === user?.uid) {
+          const invitesRef = collection(db, "invites");
+          const q = query(invitesRef, where("createdBy", "==", targetUserId));
+          const querySnapshot = await getDocs(q);
+          const usedInvites = querySnapshot.size;
+          setRemainingInvites(Math.max(0, 5 - usedInvites));
+        }
       } catch (error) {
         console.error("Error fetching user data:", error);
         toast({
@@ -71,37 +97,22 @@ export default function Profile() {
     };
 
     fetchUserData();
-  }, [user, navigate, toast]);
-
-  const { data: recipes, isLoading } = useQuery({
-    queryKey: ['userRecipes', user?.uid],
-    queryFn: async () => {
-      if (!user?.uid) return [];
-      console.log('Fetching recipes for user:', user.uid);
-      const recipesRef = collection(db, 'recipes');
-      const q = query(recipesRef, where('creatorId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Recipe[];
-    },
-    enabled: !!user?.uid
-  });
+  }, [targetUserId, user, navigate, toast]);
 
   const handleProfileUpdate = async () => {
-    const userDoc = await getDoc(doc(db, "users", user!.uid));
+    if (!targetUserId) return;
+    const userDoc = await getDoc(doc(db, "users", targetUserId));
     if (userDoc.exists()) {
       setUserData(prev => ({
         ...prev,
         ...userDoc.data(),
-        email: user!.email || "",
       }));
     }
   };
 
-  if (!user) return null;
+  const isOwnProfile = user?.uid === targetUserId;
+
+  if (!targetUserId) return null;
 
   return (
     <div className="min-h-screen pb-20">
@@ -113,24 +124,29 @@ export default function Profile() {
               {userData.avatarUrl ? (
                 <img
                   src={userData.avatarUrl}
-                  alt={userData.name || user.email || "Profile"}
+                  alt={userData.name || "Profile"}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-2xl">{(userData.name || user.email)?.[0]?.toUpperCase()}</span>
+                <span className="text-2xl">
+                  {(userData.name || userData.email)?.[0]?.toUpperCase()}
+                </span>
               )}
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute -bottom-2 -right-2 rounded-full"
-              onClick={() => setEditProfileOpen(true)}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
+            {isOwnProfile && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="absolute -bottom-2 -right-2 rounded-full"
+                onClick={() => setEditProfileOpen(true)}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
           </div>
+          
           <div className="space-y-1">
-            <h1 className="text-2xl font-bold">{userData.name || user.email}</h1>
+            <h1 className="text-2xl font-bold">{userData.name}</h1>
             {userData.username && (
               <p className="text-muted-foreground">@{userData.username}</p>
             )}
@@ -138,8 +154,22 @@ export default function Profile() {
               <p className="text-sm max-w-md mx-auto">{userData.bio}</p>
             )}
           </div>
+
+          {!isOwnProfile && (
+            <ProfileActions 
+              userId={targetUserId} 
+              isFollowing={userData.followers.includes(user?.uid || '')}
+            />
+          )}
+
+          <ProfileStats
+            userId={targetUserId}
+            recipesCount={recipes?.length || 0}
+            followersCount={userData.followers?.length || 0}
+            followingCount={userData.following?.length || 0}
+          />
           
-          {remainingInvites > 0 && (
+          {isOwnProfile && remainingInvites > 0 && (
             <Button 
               variant="outline"
               onClick={() => setInviteModalOpen(true)}
@@ -150,7 +180,7 @@ export default function Profile() {
           )}
         </div>
 
-        {isAdmin && (
+        {isOwnProfile && isAdmin && (
           <Button 
             variant="outline" 
             className="w-full"
@@ -161,8 +191,10 @@ export default function Profile() {
         )}
 
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">My Recipes</h2>
-          {isLoading ? (
+          <h2 className="text-xl font-semibold">
+            {isOwnProfile ? "My Recipes" : "Recipes"}
+          </h2>
+          {recipesLoading ? (
             <div>Loading recipes...</div>
           ) : recipes && recipes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -181,33 +213,37 @@ export default function Profile() {
             </div>
           ) : (
             <div className="text-center text-gray-500">
-              No recipes yet. Start creating!
+              No recipes yet
             </div>
           )}
         </div>
       </main>
       <BottomBar />
 
-      <EditProfileModal
-        open={editProfileOpen}
-        onOpenChange={setEditProfileOpen}
-        userData={userData}
-        onUpdate={handleProfileUpdate}
-      />
+      {isOwnProfile && (
+        <>
+          <EditProfileModal
+            open={editProfileOpen}
+            onOpenChange={setEditProfileOpen}
+            userData={userData}
+            onUpdate={handleProfileUpdate}
+          />
 
-      <SendInviteModal
-        open={inviteModalOpen}
-        onOpenChange={setInviteModalOpen}
-        recipe={null}
-        remainingInvites={remainingInvites}
-        onInviteSent={() => {
-          setRemainingInvites(prev => Math.max(0, prev - 1));
-          toast({
-            title: "Invite sent successfully",
-            description: `You have ${remainingInvites - 1} invites remaining.`
-          });
-        }}
-      />
+          <SendInviteModal
+            open={inviteModalOpen}
+            onOpenChange={setInviteModalOpen}
+            recipe={null}
+            remainingInvites={remainingInvites}
+            onInviteSent={() => {
+              setRemainingInvites(prev => Math.max(0, prev - 1));
+              toast({
+                title: "Invite sent successfully",
+                description: `You have ${remainingInvites - 1} invites remaining.`
+              });
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
