@@ -12,7 +12,9 @@ import { IngredientInput } from "@/components/IngredientInput";
 import { RecipeStepInput } from "@/components/RecipeStepInput";
 import { useToast } from "@/hooks/use-toast";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
-import { Recipe, validateRecipe } from "@/types/recipe";
+import { Recipe, validateRecipe, ValidationResult } from "@/types/recipe";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const initialRecipe: Recipe = {
   title: "",
@@ -53,20 +55,13 @@ const initialRecipe: Recipe = {
   occasion: "",
 };
 
-export interface RecipeStep {
-  title: string;
-  instructions: string;
-  duration: string;
-  ingredientGroup?: string;
-  media?: string[];
-}
-
 export default function CreateRecipe() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [recipe, setRecipe] = useState<Recipe>(initialRecipe);
+  const [validationResult, setValidationResult] = useState<ValidationResult>({ isValid: true, errors: [] });
 
   console.log("Recipe state updated:", recipe);
 
@@ -75,6 +70,12 @@ export default function CreateRecipe() {
       ...prev,
       ...importedRecipe
     }));
+  };
+
+  const validateAndShowErrors = () => {
+    const validation = validateRecipe(recipe);
+    setValidationResult(validation);
+    return validation.isValid;
   };
 
   const handleSave = async (isDraft = false) => {
@@ -87,20 +88,10 @@ export default function CreateRecipe() {
       return;
     }
 
-    const validation = validateRecipe(recipe);
-    if (!validation.isValid && !isDraft) {
+    if (!isDraft && !validateAndShowErrors()) {
       toast({
         title: "Validation Error",
-        description: (
-          <div className="space-y-2">
-            <p>Please fix the following errors:</p>
-            <ul className="list-disc pl-4">
-              {validation.errors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        ),
+        description: "Please fix the errors before publishing",
         variant: "destructive"
       });
       return;
@@ -136,6 +127,29 @@ export default function CreateRecipe() {
     }
   };
 
+  const getErrorsForField = (fieldName: string) => {
+    return validationResult.errors.filter(error => error.field === fieldName);
+  };
+
+  const renderFieldErrors = (fieldName: string) => {
+    const errors = getErrorsForField(fieldName);
+    if (errors.length === 0) return null;
+
+    return (
+      <Alert variant="destructive" className="mt-2">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Validation Error</AlertTitle>
+        <AlertDescription>
+          <ul className="list-disc pl-4">
+            {errors.map((error, index) => (
+              <li key={index}>{error.message}</li>
+            ))}
+          </ul>
+        </AlertDescription>
+      </Alert>
+    );
+  };
+
   const ingredientGroups = Array.from(new Set(recipe.ingredients.map(ing => ing.group)));
 
   return (
@@ -147,41 +161,55 @@ export default function CreateRecipe() {
 
           <RecipeCreationOptions onRecipeImported={handleRecipeImport} />
 
-          <RecipeBasicInfo 
-            recipe={recipe}
-            onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
-          />
+          <div>
+            <RecipeBasicInfo 
+              recipe={recipe}
+              onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+            />
+            {renderFieldErrors('title')}
+            {renderFieldErrors('description')}
+          </div>
 
-          <RecipeDetails
-            recipe={recipe}
-            onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
-          />
+          <div>
+            <RecipeDetails
+              recipe={recipe}
+              onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+            />
+            {renderFieldErrors('difficulty')}
+            {renderFieldErrors('servings')}
+            {renderFieldErrors('totalTime')}
+            {renderFieldErrors('categories')}
+            {renderFieldErrors('equipment')}
+          </div>
 
           <div>
             <IngredientInput
               ingredients={recipe.ingredients}
               onChange={(ingredients) => setRecipe(prev => ({ ...prev, ingredients }))}
             />
+            {renderFieldErrors('ingredients')}
           </div>
 
           <div className="space-y-4">
             {recipe.steps.map((step, index) => (
-              <RecipeStepInput
-                key={index}
-                step={step}
-                ingredientGroups={ingredientGroups}
-                onChange={(updatedStep) => {
-                  const newSteps = [...recipe.steps];
-                  newSteps[index] = updatedStep;
-                  setRecipe(prev => ({ ...prev, steps: newSteps }));
-                }}
-                onDelete={() => {
-                  if (recipe.steps.length > 1) {
-                    const newSteps = recipe.steps.filter((_, i) => i !== index);
+              <div key={index}>
+                <RecipeStepInput
+                  step={step}
+                  ingredientGroups={ingredientGroups}
+                  onChange={(updatedStep) => {
+                    const newSteps = [...recipe.steps];
+                    newSteps[index] = updatedStep;
                     setRecipe(prev => ({ ...prev, steps: newSteps }));
-                  }
-                }}
-              />
+                  }}
+                  onDelete={() => {
+                    if (recipe.steps.length > 1) {
+                      const newSteps = recipe.steps.filter((_, i) => i !== index);
+                      setRecipe(prev => ({ ...prev, steps: newSteps }));
+                    }
+                  }}
+                />
+                {renderFieldErrors(`steps.${index}`)}
+              </div>
             ))}
             <Button
               type="button"
