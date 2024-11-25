@@ -3,15 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Camera, X, Trash2, LogOut } from "lucide-react";
+import { Camera, X, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { deleteUser, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { ProfileBasicInfo } from "./ProfileBasicInfo";
 import { ProfilePrivacySettings } from "./ProfilePrivacySettings";
-import { ProfileSecuritySettings } from "./ProfileSecuritySettings";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface EditProfileModalProps {
   userData: {
@@ -144,8 +145,8 @@ export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: Edi
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Avatar Section */}
-          <div className="flex items-center gap-4">
+          {/* Top Section with Avatar and Key Info */}
+          <div className="flex flex-col sm:flex-row gap-6">
             <div className="relative">
               <img
                 src={formData.avatarUrl || "/placeholder.svg"}
@@ -182,49 +183,57 @@ export function EditProfileModal({ userData, onUpdate, open, onOpenChange }: Edi
                 onChange={handleImageUpload}
               />
             </div>
+            <div className="flex-1 space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={formData.username}
+                  onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  disabled
+                />
+              </div>
+            </div>
           </div>
 
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="privacy">Privacy</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
+              <TabsTrigger value="privacy">Privacy & Security</TabsTrigger>
             </TabsList>
 
             <TabsContent value="profile" className="space-y-4">
               <ProfileBasicInfo formData={formData} setFormData={setFormData} />
             </TabsContent>
 
-            <TabsContent value="privacy" className="space-y-4">
+            <TabsContent value="privacy" className="space-y-6">
               <ProfilePrivacySettings 
                 isPrivate={formData.isPrivate}
                 onPrivacyChange={(checked) => setFormData(prev => ({ ...prev, isPrivate: checked }))}
-              />
-            </TabsContent>
-
-            <TabsContent value="security" className="space-y-4">
-              <ProfileSecuritySettings
                 currentPassword={currentPassword}
                 newPassword={newPassword}
                 onCurrentPasswordChange={setCurrentPassword}
                 onNewPasswordChange={setNewPassword}
                 onPasswordUpdate={handlePasswordUpdate}
+                onDeleteAccount={() => setDeleteDialogOpen(true)}
               />
             </TabsContent>
           </Tabs>
 
           {/* Actions */}
           <div className="flex justify-between border-t pt-4">
-            <div className="space-x-2">
-              <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Account
-              </Button>
-              <Button variant="outline" onClick={() => logout()}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
+            <Button variant="outline" onClick={() => logout()}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
             <Button onClick={handleUpdateProfile}>Save Changes</Button>
           </div>
         </div>

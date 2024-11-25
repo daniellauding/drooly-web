@@ -7,9 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface ProfileBasicInfoProps {
   formData: {
     name: string;
-    username: string;
     birthday: string;
-    email: string;
     phone: string;
     bio: string;
     gender: string;
@@ -28,15 +26,6 @@ export function ProfileBasicInfo({ formData, setFormData }: ProfileBasicInfoProp
           onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
         />
       </div>
-      
-      <div className="grid gap-2">
-        <Label htmlFor="username">Username</Label>
-        <Input
-          id="username"
-          value={formData.username}
-          onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
-        />
-      </div>
 
       <div className="grid gap-2">
         <Label htmlFor="birthday">Birthday</Label>
@@ -45,16 +34,6 @@ export function ProfileBasicInfo({ formData, setFormData }: ProfileBasicInfoProp
           type="date"
           value={formData.birthday}
           onChange={e => setFormData(prev => ({ ...prev, birthday: e.target.value }))}
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          disabled
         />
       </div>
 
