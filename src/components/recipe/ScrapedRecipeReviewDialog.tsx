@@ -3,8 +3,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { X, Camera, Check } from "lucide-react";
 import { Recipe } from "@/types/recipe";
+import { MultiSelect } from "@/components/MultiSelect";
+import { COOKING_EQUIPMENT } from "@/types/recipe";
 
 interface ScrapedRecipeReviewDialogProps {
   open: boolean;
@@ -27,7 +31,7 @@ export function ScrapedRecipeReviewDialog({
     cookingMethods: [],
     equipment: [],
     servings: { amount: 4, unit: 'serving' },
-    ...scrapedRecipe
+    ...cleanScrapedRecipe(scrapedRecipe)
   });
 
   React.useEffect(() => {
@@ -39,7 +43,7 @@ export function ScrapedRecipeReviewDialog({
       cookingMethods: [],
       equipment: [],
       servings: { amount: 4, unit: 'serving' },
-      ...scrapedRecipe
+      ...cleanScrapedRecipe(scrapedRecipe)
     });
   }, [scrapedRecipe]);
 
@@ -49,123 +53,178 @@ export function ScrapedRecipeReviewDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Review Recipe Details</DialogTitle>
           <DialogDescription>
-            Please review and edit the information below if needed.
+            Please review and edit the scraped information below.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Recipe Title</Label>
-              <div className="relative">
+        <ScrollArea className="h-[600px] pr-4">
+          <div className="space-y-6 py-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Recipe Title</Label>
                 <Input
                   value={recipe.title || ''}
                   onChange={(e) => handleFieldChange('title', e.target.value)}
-                  className="pr-8"
                 />
-                {recipe.title && (
-                  <button
-                    onClick={() => handleFieldChange('title', '')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Cuisine Type</Label>
-              <div className="relative">
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  value={recipe.description || ''}
+                  onChange={(e) => handleFieldChange('description', e.target.value)}
+                  rows={4}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Cuisine Type</Label>
                 <Input
                   value={recipe.cuisine || ''}
                   onChange={(e) => handleFieldChange('cuisine', e.target.value)}
-                  className="pr-8"
                 />
-                {recipe.cuisine && (
-                  <button
-                    onClick={() => handleFieldChange('cuisine', '')}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Number of Servings</Label>
-              <div className="relative">
-                <Input
-                  type="number"
-                  value={recipe.servings?.amount || ''}
-                  onChange={(e) => handleFieldChange('servings', { 
-                    ...recipe.servings,
-                    amount: parseInt(e.target.value) || 0 
-                  })}
-                  className="pr-8"
-                  min="1"
-                />
-                {recipe.servings?.amount && (
-                  <button
-                    onClick={() => handleFieldChange('servings', { amount: '', unit: 'serving' })}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Servings Amount</Label>
+                  <Input
+                    type="number"
+                    value={recipe.servings?.amount || ''}
+                    onChange={(e) => handleFieldChange('servings', { 
+                      ...recipe.servings,
+                      amount: parseInt(e.target.value) || 0 
+                    })}
+                    min="1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Serving Unit</Label>
+                  <Input
+                    value={recipe.servings?.unit || ''}
+                    onChange={(e) => handleFieldChange('servings', {
+                      ...recipe.servings,
+                      unit: e.target.value
+                    })}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Cooking Methods</Label>
-              <div className="relative">
+              <div className="space-y-2">
+                <Label>Cooking Methods</Label>
                 <Input
                   value={recipe.cookingMethods?.join(', ') || ''}
                   onChange={(e) => handleFieldChange('cookingMethods', 
                     e.target.value.split(',').map(m => m.trim()).filter(Boolean)
                   )}
-                  className="pr-8"
-                  placeholder="e.g., wok, fry, bake"
+                  placeholder="e.g., fry, bake, steam"
                 />
-                {recipe.cookingMethods?.length > 0 && (
-                  <button
-                    onClick={() => handleFieldChange('cookingMethods', [])}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label>Required Equipment</Label>
-              <div className="relative">
-                <Input
-                  value={recipe.equipment?.join(', ') || ''}
-                  onChange={(e) => handleFieldChange('equipment', 
-                    e.target.value.split(',').map(eq => eq.trim()).filter(Boolean)
-                  )}
-                  className="pr-8"
-                  placeholder="e.g., wok, pan, oven"
+              <div className="space-y-2">
+                <Label>Required Equipment</Label>
+                <MultiSelect
+                  options={COOKING_EQUIPMENT}
+                  selected={recipe.equipment || []}
+                  onChange={(equipment) => handleFieldChange('equipment', equipment)}
+                  placeholder="Select required equipment"
                 />
-                {recipe.equipment?.length > 0 && (
-                  <button
-                    onClick={() => handleFieldChange('equipment', [])}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Ingredients</Label>
+                <div className="border rounded-md p-4 space-y-2">
+                  {recipe.ingredients?.map((ingredient, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={ingredient.name}
+                        onChange={(e) => {
+                          const newIngredients = [...(recipe.ingredients || [])];
+                          newIngredients[index] = { ...ingredient, name: e.target.value };
+                          handleFieldChange('ingredients', newIngredients);
+                        }}
+                        className="flex-1"
+                      />
+                      <Input
+                        value={ingredient.amount}
+                        onChange={(e) => {
+                          const newIngredients = [...(recipe.ingredients || [])];
+                          newIngredients[index] = { ...ingredient, amount: e.target.value };
+                          handleFieldChange('ingredients', newIngredients);
+                        }}
+                        className="w-20"
+                        placeholder="Amount"
+                      />
+                      <Input
+                        value={ingredient.unit}
+                        onChange={(e) => {
+                          const newIngredients = [...(recipe.ingredients || [])];
+                          newIngredients[index] = { ...ingredient, unit: e.target.value };
+                          handleFieldChange('ingredients', newIngredients);
+                        }}
+                        className="w-20"
+                        placeholder="Unit"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const newIngredients = recipe.ingredients?.filter((_, i) => i !== index);
+                          handleFieldChange('ingredients', newIngredients);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Instructions</Label>
+                <div className="border rounded-md p-4 space-y-2">
+                  {recipe.steps?.map((step, index) => (
+                    <div key={index} className="space-y-2">
+                      <Input
+                        value={step.title}
+                        onChange={(e) => {
+                          const newSteps = [...(recipe.steps || [])];
+                          newSteps[index] = { ...step, title: e.target.value };
+                          handleFieldChange('steps', newSteps);
+                        }}
+                        placeholder="Step title"
+                      />
+                      <Textarea
+                        value={step.instructions}
+                        onChange={(e) => {
+                          const newSteps = [...(recipe.steps || [])];
+                          newSteps[index] = { ...step, instructions: e.target.value };
+                          handleFieldChange('steps', newSteps);
+                        }}
+                        placeholder="Step instructions"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const newSteps = recipe.steps?.filter((_, i) => i !== index);
+                          handleFieldChange('steps', newSteps);
+                        }}
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Remove Step
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ScrollArea>
 
         <div className="flex justify-between gap-4 mt-6">
           <Button
@@ -187,4 +246,37 @@ export function ScrapedRecipeReviewDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function cleanScrapedRecipe(recipe: Partial<Recipe>): Partial<Recipe> {
+  if (!recipe) return {};
+
+  // Remove duplicate ingredients
+  const uniqueIngredients = recipe.ingredients ? 
+    Array.from(new Set(recipe.ingredients.map(i => JSON.stringify(i))))
+      .map(str => JSON.parse(str))
+      .filter(ing => ing.name && !ing.name.includes("Ingredienser") && !ing.name.includes("instructions")) : [];
+
+  // Clean up steps
+  const cleanedSteps = recipe.steps ? 
+    recipe.steps
+      .filter(step => 
+        step.instructions && 
+        !step.instructions.includes("Ingredienser") &&
+        !step.instructions.includes("curry currysås") &&
+        step.instructions.length > 10
+      )
+      .map(step => ({
+        ...step,
+        instructions: step.instructions.trim()
+      }))
+      .filter((step, index, self) => 
+        self.findIndex(s => s.instructions === step.instructions) === index
+      ) : [];
+
+  return {
+    ...recipe,
+    ingredients: uniqueIngredients,
+    steps: cleanedSteps
+  };
 }
