@@ -70,9 +70,8 @@ export function BackofficeUsers({ searchQuery }: BackofficeUsersProps) {
         </TableHeader>
         <TableBody>
           {users.map((user) => (
-            <>
+            <React.Fragment key={user.id}>
               <UserTableRow
-                key={user.id}
                 user={user}
                 editingId={editingId}
                 editName={editName}
@@ -96,9 +95,9 @@ export function BackofficeUsers({ searchQuery }: BackofficeUsersProps) {
                 isExpanded={expandedUsers.includes(user.id)}
               />
               {expandedUsers.includes(user.id) && (
-                <UserRecipesList userId={user.id} recipes={user.recipes} />
+                <UserRecipesList key={`recipes-${user.id}`} userId={user.id} recipes={user.recipes} />
               )}
-            </>
+            </React.Fragment>
           ))}
         </TableBody>
       </Table>
@@ -119,6 +118,7 @@ export function BackofficeUsers({ searchQuery }: BackofficeUsersProps) {
       <InviteUsersModal
         open={inviteModalOpen}
         onOpenChange={setInviteModalOpen}
+        recipe={null}
       />
     </div>
   );
