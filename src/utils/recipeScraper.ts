@@ -1,33 +1,53 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import { Recipe } from "@/types/recipe";
+import { Recipe } from '@/types/recipe';
 
 export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
-  console.log("Attempting to scrape recipe from URL:", url);
+  console.log('Starting recipe scrape for URL:', url);
   
   try {
-    const domain = new URL(url).hostname;
-    console.log("Scraping from domain:", domain);
-
     const corsProxy = 'https://corsproxy.io/?';
     const response = await axios.get(`${corsProxy}${encodeURIComponent(url)}`);
     const html = response.data;
     const $ = cheerio.load(html);
     
-    // Try JSON-LD schema first
+    // Try to find JSON-LD schema first (most reliable)
     const jsonLd = $('script[type="application/ld+json"]').text();
-    let scrapedData: any = {};
+    let scrapedData: Partial<Recipe> = {};
     
     if (jsonLd) {
       try {
         const schemas = JSON.parse(jsonLd);
         const recipeSchema = Array.isArray(schemas) 
-          ? schemas.find((s: any) => s['@type'] === 'Recipe')
+          ? schemas.find(s => s['@type'] === 'Recipe')
           : schemas['@type'] === 'Recipe' ? schemas : null;
         
         if (recipeSchema) {
           console.log('Found recipe schema:', recipeSchema);
-          scrapedData = extractFromSchema(recipeSchema);
+          scrapedData = {
+            title: recipeSchema.name,
+            description: recipeSchema.description,
+            ingredients: recipeSchema.recipeIngredient?.map((ing: string) => ({
+              name: ing,
+              amount: "",
+              unit: "",
+              group: "Main Ingredients"
+            })),
+            steps: recipeSchema.recipeInstructions?.map((instruction: any) => ({
+              title: "Step",
+              instructions: typeof instruction === 'string' ? instruction : instruction.text,
+              duration: "",
+              media: []
+            })),
+            totalTime: recipeSchema.totalTime || recipeSchema.cookTime,
+            servings: {
+              amount: parseInt(recipeSchema.recipeYield) || 4,
+              unit: 'serving'
+            },
+            images: recipeSchema.image ? (Array.isArray(recipeSchema.image) ? recipeSchema.image : [recipeSchema.image]) : [],
+            source: 'scrape',
+            sourceUrl: url
+          };
         }
       } catch (error) {
         console.error('Error parsing JSON-LD:', error);
@@ -35,7 +55,7 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
     }
 
     // If no schema or missing data, try HTML scraping
-    if (!scrapedData.title || !scrapedData.ingredients?.length) {
+    if (!scrapedData.title) {
       console.log('Falling back to HTML pattern matching');
       
       // Title
@@ -53,7 +73,7 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
           name: ing,
           amount: "",
           unit: "",
-          group: "main"
+          group: "Main Ingredients"
         }));
       }
       
@@ -79,14 +99,14 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
       if (tags.length > 0) {
         scrapedData.tags = tags;
       }
+
+      scrapedData.source = 'scrape';
+      scrapedData.sourceUrl = url;
     }
 
     if (!scrapedData.title) {
       throw new Error("Could not extract recipe details");
     }
-
-    // Add source URL
-    scrapedData.sourceUrl = url;
 
     console.log("Successfully scraped recipe:", scrapedData);
     return scrapedData;
@@ -98,27 +118,20 @@ export async function scrapeRecipe(url: string): Promise<Partial<Recipe>> {
   }
 }
 
-function extractFromSchema(schema: any): Partial<Recipe> {
-  return {
-    title: schema.name,
-    description: schema.description,
-    ingredients: schema.recipeIngredient?.map((ing: string) => ({
-      name: ing,
-      amount: "",
-      unit: "",
-      group: "main"
-    })),
-    steps: schema.recipeInstructions?.map((instruction: any) => ({
-      title: "Step",
-      instructions: typeof instruction === 'string' ? instruction : instruction.text,
-      duration: "",
-      media: []
-    })),
-    totalTime: schema.totalTime || schema.cookTime,
-    servings: {
-      amount: parseInt(schema.recipeYield) || 4,
-      unit: 'serving'
-    },
-    images: schema.image ? (Array.isArray(schema.image) ? schema.image : [schema.image]) : []
-  };
+export async function importFromTrello(cardId: string): Promise<Partial<Recipe>> {
+  console.log("Importing recipe from Trello card:", cardId);
+  
+  try {
+    // This would integrate with Trello's API
+    // For now, we'll return a mock response
+    return {
+      title: "Recipe from Trello",
+      description: "Imported from Trello card",
+      tags: ["trello-import"],
+      source: "trello"
+    };
+  } catch (error) {
+    console.error("Error importing from Trello:", error);
+    throw error;
+  }
 }

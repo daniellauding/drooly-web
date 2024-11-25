@@ -47,7 +47,8 @@ export interface Recipe {
   chef?: string;
   date?: string;
   cookTime?: string;
-  source?: 'image' | 'scrape' | 'ai' | 'manual';
+  source?: 'image' | 'scrape' | 'ai' | 'manual' | 'trello';
+  sourceUrl?: string;
   stats?: {
     views: number;
     likes: string[];

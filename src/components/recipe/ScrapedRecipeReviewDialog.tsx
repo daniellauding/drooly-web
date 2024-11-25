@@ -1,3 +1,4 @@
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +41,7 @@ export function ScrapedRecipeReviewDialog({
 
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-6">
-            {recipe.sourceUrl && (
+            {recipe.source === 'scrape' && recipe.sourceUrl && (
               <div className="text-sm text-muted-foreground">
                 Scraped from: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">{recipe.sourceUrl}</a>
               </div>
