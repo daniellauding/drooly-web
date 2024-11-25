@@ -42,11 +42,28 @@ service cloud.firestore {
     }
 
     match /invites/{inviteId} {
+      // Allow reading invites
       allow read: if true;
+      
+      // Allow creating invites if user is authenticated and has admin/superadmin role
       allow create: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
+      
+      // Allow updating own invites
+      allow update: if request.auth != null && 
+        (resource.data.createdBy == request.auth.uid ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']);
+      
+      // Allow deleting invites
       allow delete: if request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+        (resource.data.createdBy == request.auth.uid ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']);
+        
+      // Validate required fields
+      allow create: if request.resource.data.keys().hasAll([
+        'email', 'role', 'status', 'createdAt', 'createdBy', 'expiresAt'
+      ]);
     }
   }
 }
