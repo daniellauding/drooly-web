@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Image, Trash2, Video } from "lucide-react";
-import { RecipeStep } from "@/pages/CreateRecipe";
+import { RecipeStep } from "@/types/recipe";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ImageUpload } from "./ImageUpload";
 import { useState } from "react";
