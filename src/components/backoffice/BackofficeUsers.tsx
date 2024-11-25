@@ -20,6 +20,9 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import { CustomRoleModal } from "./CustomRoleModal";
+import { UserMessageModal } from "./UserMessageModal";
+import { ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
 
 interface User {
   id: string;
@@ -27,22 +30,48 @@ interface User {
   name: string;
   role: string;
   createdAt: { seconds: number };
+  recipes?: any[];
 }
 
 export function BackofficeUsers() {
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [customRoleModalOpen, setCustomRoleModalOpen] = useState(false);
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string>("");
+  const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([
+    "user",
+    "admin",
+    "superadmin"
+  ]);
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => {
+      console.log("Fetching users data...");
       const usersRef = collection(db, 'users');
       const snapshot = await getDocs(usersRef);
-      return snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as User[];
+      
+      // Fetch recipes count for each user
+      const usersData = await Promise.all(snapshot.docs.map(async (doc) => {
+        const recipesRef = collection(db, 'recipes');
+        const recipesSnapshot = await getDocs(query(recipesRef, where('creatorId', '==', doc.id)));
+        
+        return {
+          id: doc.id,
+          ...doc.data(),
+          recipes: recipesSnapshot.docs.map(recipeDoc => ({
+            id: recipeDoc.id,
+            ...recipeDoc.data()
+          }))
+        };
+      }));
+
+      console.log("Fetched users data:", usersData);
+      return usersData as User[];
     }
   });
 
@@ -109,77 +138,175 @@ export function BackofficeUsers() {
     }
   };
 
+  const handleAddCustomRole = (role: string) => {
+    setAvailableRoles(prev => [...prev, role]);
+    toast({
+      title: "Role added",
+      description: `The role "${role}" has been added to the available roles.`
+    });
+  };
+
+  const toggleUserExpansion = (userId: string) => {
+    setExpandedUsers(prev => 
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+    );
+  };
+
   if (isLoading) return <div>Loading...</div>;
 
   return (
     <div className="space-y-4">
+      <Button 
+        variant="outline" 
+        onClick={() => setCustomRoleModalOpen(true)}
+      >
+        Add Custom Role
+      </Button>
+
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>ID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Created</TableHead>
+            <TableHead>Recipes</TableHead>
             <TableHead>Actions</TableHead>
+            <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {users?.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                {editingId === user.id ? (
-                  <div className="flex gap-2">
-                    <Input
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      className="w-full"
-                    />
-                    <Button size="sm" onClick={() => handleEdit(user.id)}>Save</Button>
-                    <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
-                  </div>
-                ) : (
-                  <span 
-                    className="cursor-pointer hover:underline"
-                    onClick={() => {
-                      setEditingId(user.id);
-                      setEditName(user.name);
-                    }}
+            <>
+              <TableRow key={user.id}>
+                <TableCell className="font-mono text-xs text-muted-foreground">
+                  {user.id}
+                </TableCell>
+                <TableCell>
+                  {editingId === user.id ? (
+                    <div className="flex gap-2">
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full"
+                      />
+                      <Button size="sm" onClick={() => handleEdit(user.id)}>Save</Button>
+                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+                    </div>
+                  ) : (
+                    <span 
+                      className="cursor-pointer hover:underline"
+                      onClick={() => {
+                        setEditingId(user.id);
+                        setEditName(user.name);
+                      }}
+                    >
+                      {user.name}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Select
+                    value={user.role}
+                    onValueChange={(value) => handleRoleChange(user.id, value)}
                   >
-                    {user.name}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Select
-                  value={user.role}
-                  onValueChange={(value) => handleRoleChange(user.id, value)}
-                >
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </TableCell>
-              <TableCell>
-                {user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
-              </TableCell>
-              <TableCell>
-                <Button 
-                  size="sm" 
-                  variant="destructive"
-                  onClick={() => handleDelete(user.id)}
-                >
-                  Delete
-                </Button>
-              </TableCell>
-            </TableRow>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRoles.map((role) => (
+                        <SelectItem key={role} value={role}>{role}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  {user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
+                </TableCell>
+                <TableCell>{user.recipes?.length || 0} recipes</TableCell>
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedUserId(user.id);
+                        setSelectedUserEmail(user.email);
+                        setMessageModalOpen(true);
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="destructive"
+                      onClick={() => handleDelete(user.id)}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleUserExpansion(user.id)}
+                  >
+                    {expandedUsers.includes(user.id) ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TableCell>
+              </TableRow>
+              {expandedUsers.includes(user.id) && (
+                <TableRow>
+                  <TableCell colSpan={8} className="bg-muted/30 p-4">
+                    <div className="space-y-4">
+                      <h3 className="font-semibold">User's Recipes</h3>
+                      {user.recipes && user.recipes.length > 0 ? (
+                        <div className="grid gap-4">
+                          {user.recipes.map((recipe: any) => (
+                            <div key={recipe.id} className="p-4 bg-background rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <h4 className="font-medium">{recipe.title}</h4>
+                                <span className="text-sm text-muted-foreground">
+                                  {new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {recipe.description || 'No description'}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No recipes created yet</p>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </>
           ))}
         </TableBody>
       </Table>
+
+      <CustomRoleModal
+        open={customRoleModalOpen}
+        onOpenChange={setCustomRoleModalOpen}
+        onSave={handleAddCustomRole}
+      />
+
+      <UserMessageModal
+        open={messageModalOpen}
+        onOpenChange={setMessageModalOpen}
+        userId={selectedUserId}
+        userEmail={selectedUserEmail}
+      />
     </div>
   );
 }
