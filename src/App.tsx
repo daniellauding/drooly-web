@@ -6,7 +6,8 @@ import { Toaster } from "./components/ui/toaster";
 import { Routes, Route } from "react-router-dom";
 import CreateRecipe from "./pages/CreateRecipe";
 import RecipeDetail from "./pages/RecipeDetail";
-import Home from "./pages/Index"; // Import Home component from Index.tsx
+import Home from "./pages/Index";
+import Create from "./pages/Create";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/create" element={<Create />} />
             <Route path="/create-recipe" element={<CreateRecipe />} />
             <Route path="/recipe/:id" element={<RecipeDetail />} />
           </Routes>

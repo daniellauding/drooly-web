@@ -10,7 +10,7 @@ const Create = () => {
       title: "Create & Share",
       description: "Keep all your recipes in one place and share them with friends.",
       icon: Edit3,
-      path: "/create/recipe"
+      path: "/create-recipe"  // Updated to match the route in App.tsx
     },
     {
       title: "Plan Together",
