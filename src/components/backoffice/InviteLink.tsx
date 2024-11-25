@@ -13,7 +13,10 @@ export function InviteLink({ email, role }: InviteLinkProps) {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  const inviteUrl = `${window.location.origin}/register?invite=${btoa(email)}&role=${role}`;
+  // Use window.location.protocol to ensure correct http/https
+  // Use VITE_CUSTOM_DOMAIN env var if set, otherwise use current domain
+  const domain = import.meta.env.VITE_CUSTOM_DOMAIN || window.location.host;
+  const inviteUrl = `${window.location.protocol}//${domain}/register?invite=${btoa(email)}&role=${role}`;
 
   const copyToClipboard = async () => {
     try {
