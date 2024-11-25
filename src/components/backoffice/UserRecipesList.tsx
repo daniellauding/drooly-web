@@ -1,27 +1,61 @@
 import { TableCell, TableRow } from "@/components/ui/table";
+import { useQuery } from "@tanstack/react-query";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Recipe } from "@/types/recipe";
+import { formatRecipeData } from "@/utils/recipeFormatters";
 
 interface UserRecipesListProps {
-  recipes: any[];
+  userId: string;
 }
 
-export function UserRecipesList({ recipes }: UserRecipesListProps) {
+export function UserRecipesList({ userId }: UserRecipesListProps) {
+  const { data: recipes, isLoading } = useQuery({
+    queryKey: ['user-recipes', userId],
+    queryFn: async () => {
+      console.log('Fetching recipes for user:', userId);
+      const recipesRef = collection(db, 'recipes');
+      const q = query(recipesRef, where('creatorId', '==', userId));
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        console.log('No recipes found for user');
+        return [];
+      }
+
+      const userRecipes = snapshot.docs.map(formatRecipeData);
+      console.log('Found recipes:', userRecipes);
+      return userRecipes;
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <TableRow>
+        <TableCell colSpan={8} className="h-24 text-center">
+          Loading recipes...
+        </TableCell>
+      </TableRow>
+    );
+  }
+
   return (
     <TableRow>
       <TableCell colSpan={8} className="bg-muted/30 p-4">
         <div className="space-y-4">
-          <h3 className="font-semibold">User's Recipes</h3>
+          <h3 className="font-semibold">User's Recipes ({recipes?.length || 0})</h3>
           {recipes && recipes.length > 0 ? (
             <div className="grid gap-4">
-              {recipes.map((recipe: any) => (
+              {recipes.map((recipe: Recipe) => (
                 <div key={recipe.id} className="p-4 bg-background rounded-lg">
                   <div className="flex justify-between items-center">
-                    <h4 className="font-medium">{recipe.title || recipe.name}</h4>
+                    <h4 className="font-medium">{recipe.title}</h4>
                     <span className="text-sm text-muted-foreground">
-                      {new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
+                      {recipe.date}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {recipe.description || 'No description'}
+                    {recipe.description}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {recipe.tags?.map((tag: string) => (
