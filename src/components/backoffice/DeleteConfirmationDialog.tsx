@@ -15,6 +15,8 @@ interface DeleteConfirmationDialogProps {
   onConfirm: () => void;
   title?: string;
   description?: string;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 export function DeleteConfirmationDialog({
@@ -23,6 +25,8 @@ export function DeleteConfirmationDialog({
   onConfirm,
   title = "Are you sure?",
   description = "This action cannot be undone.",
+  confirmText = "Confirm",
+  cancelText = "Cancel"
 }: DeleteConfirmationDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -32,8 +36,8 @@ export function DeleteConfirmationDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
+          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm}>{confirmText}</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
