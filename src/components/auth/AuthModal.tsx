@@ -53,7 +53,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
               Don't have an account?{' '}
               <button 
                 onClick={() => setIsLogin(false)}
-                className="text-[#4ECDC4] hover:underline font-medium"
+                className="text-primary hover:underline font-medium"
               >
                 Sign up
               </button>
@@ -66,7 +66,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
               Already have an account?{' '}
               <button 
                 onClick={() => setIsLogin(true)}
-                className="text-[#4ECDC4] hover:underline font-medium"
+                className="text-primary hover:underline font-medium"
               >
                 Sign in
               </button>
