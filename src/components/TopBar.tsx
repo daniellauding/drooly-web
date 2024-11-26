@@ -23,14 +23,19 @@ export function TopBar() {
     queryKey: ['unreadMessages', user?.uid],
     queryFn: async () => {
       if (!user) return 0;
-      const messagesRef = collection(db, "messages");
-      const q = query(
-        messagesRef,
-        where("recipientId", "==", user.uid),
-        where("read", "==", false)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.size;
+      try {
+        const messagesRef = collection(db, "messages");
+        const q = query(
+          messagesRef,
+          where("recipientId", "==", user.uid),
+          where("read", "==", false)
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.size;
+      } catch (error) {
+        console.error("Error fetching unread messages:", error);
+        return 0;
+      }
     },
     enabled: !!user,
   });
@@ -40,14 +45,19 @@ export function TopBar() {
     queryKey: ['unreadNotifications', user?.uid],
     queryFn: async () => {
       if (!user) return 0;
-      const notificationsRef = collection(db, "notifications");
-      const q = query(
-        notificationsRef,
-        where("userId", "==", user.uid),
-        where("read", "==", false)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.size;
+      try {
+        const notificationsRef = collection(db, "notifications");
+        const q = query(
+          notificationsRef,
+          where("userId", "==", user.uid),
+          where("read", "==", false)
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.size;
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        return 0;
+      }
     },
     enabled: !!user,
   });
@@ -80,43 +90,48 @@ export function TopBar() {
             className="pl-9 bg-[#F7F9FC] border-none rounded-2xl" 
             placeholder="Search recipes, users, events..." 
             onClick={() => setSearchOpen(true)}
+            readOnly
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={handleNotificationsClick}
-          >
-            <Bell className="h-5 w-5" />
-            {unreadNotificationsCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
-                {unreadNotificationsCount}
-              </Badge>
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={() => navigate('/messages')}
-          >
-            <MessageSquare className="h-5 w-5" />
-            {unreadMessagesCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
-                {unreadMessagesCount}
-              </Badge>
-            )}
-          </Button>
-          <Button
-            variant="default"
-            className="gap-2"
-            onClick={() => navigate('/create')}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create
-          </Button>
+          {user && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={handleNotificationsClick}
+              >
+                <Bell className="h-5 w-5" />
+                {unreadNotificationsCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
+                    {unreadNotificationsCount}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={() => navigate('/messages')}
+              >
+                <MessageSquare className="h-5 w-5" />
+                {unreadMessagesCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
+                    {unreadMessagesCount}
+                  </Badge>
+                )}
+              </Button>
+              <Button
+                variant="default"
+                className="gap-2"
+                onClick={() => navigate('/create')}
+              >
+                <PlusCircle className="h-4 w-4" />
+                Create
+              </Button>
+            </>
+          )}
           <ProfileDropdown />
         </div>
       </div>
