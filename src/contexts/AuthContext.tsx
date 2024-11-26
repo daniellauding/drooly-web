@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface AuthUser extends User {
   role?: string;
+  manuallyVerified?: boolean;
 }
 
 interface AuthContextType {
@@ -45,10 +46,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({ 
           ...user, 
           role: userData?.role,
+          manuallyVerified: userData?.manuallyVerified,
           photoURL: userData?.avatarUrl || user.photoURL
         });
 
-        if (!user.emailVerified) {
+        // Only show verification toast if user is not verified through either method
+        if (!user.emailVerified && !userData?.manuallyVerified) {
           toast({
             title: "Email verification required",
             description: "Please check your inbox and verify your email to access all features.",
@@ -64,56 +67,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [toast]);
 
-  const verifyEmail = async (code: string) => {
-    try {
-      await applyActionCode(auth, code);
-      toast({
-        title: "Email verified",
-        description: "Your email has been verified successfully. Please log in.",
-      });
-      
-      // Log out and redirect to login page
-      await logout();
-      window.location.href = 'https://droo.ly/login';
-    } catch (error) {
-      console.error("Error verifying email:", error);
-      toast({
-        variant: "destructive",
-        title: "Verification failed",
-        description: "Could not verify your email. Please try again.",
-      });
-      throw error;
-    }
-  };
-
-  const sendVerificationEmail = async () => {
-    if (auth.currentUser && !auth.currentUser.emailVerified) {
-      try {
-        console.log("Sending verification email to:", auth.currentUser.email);
-        await sendEmailVerification(auth.currentUser);
-        toast({
-          title: "Verification email sent",
-          description: "Please check your inbox and verify your email address.",
-          duration: 5000,
-        });
-      } catch (error) {
-        console.error("Error sending verification email:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to send verification email. Please try again.",
-        });
-        throw error;
-      }
-    }
-  };
-
   const login = async (email: string, password: string) => {
     try {
       console.log("Attempting login for:", email);
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       
-      if (!user.emailVerified) {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.data();
+
+      // Allow login if either emailVerified or manuallyVerified is true
+      if (!user.emailVerified && !userData?.manuallyVerified) {
         toast({
           variant: "destructive",
           title: "Email not verified",
@@ -124,9 +87,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const userData = userDoc.data();
-      setUser({ ...user, role: userData?.role });
+      setUser({ 
+        ...user, 
+        role: userData?.role,
+        manuallyVerified: userData?.manuallyVerified 
+      });
 
       toast({
         title: "Welcome back!",
@@ -194,6 +159,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: "Failed to log out. Please try again.",
       });
       throw error;
+    }
+  };
+
+  const verifyEmail = async (code: string) => {
+    try {
+      await applyActionCode(auth, code);
+      toast({
+        title: "Email verified",
+        description: "Your email has been verified successfully. Please log in.",
+      });
+      
+      // Log out and redirect to login page
+      await logout();
+      window.location.href = 'https://droo.ly/login';
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      toast({
+        variant: "destructive",
+        title: "Verification failed",
+        description: "Could not verify your email. Please try again.",
+      });
+      throw error;
+    }
+  };
+
+  const sendVerificationEmail = async () => {
+    if (auth.currentUser && !auth.currentUser.emailVerified) {
+      try {
+        console.log("Sending verification email to:", auth.currentUser.email);
+        await sendEmailVerification(auth.currentUser);
+        toast({
+          title: "Verification email sent",
+          description: "Please check your inbox and verify your email address.",
+          duration: 5000,
+        });
+      } catch (error) {
+        console.error("Error sending verification email:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to send verification email. Please try again.",
+        });
+        throw error;
+      }
     }
   };
 
