@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,9 +26,23 @@ export function ProfileDropdown() {
     }
   };
 
-  if (!user) return null;
-
-  console.log("Current user photoURL:", user.photoURL);
+  // If user is not logged in, show a simple avatar that redirects to login
+  if (!user) {
+    return (
+      <div 
+        onClick={() => navigate('/login')} 
+        className="cursor-pointer flex items-center gap-2"
+        title="Login or Register"
+      >
+        <Avatar className="h-8 w-8">
+          <AvatarFallback>
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+      </div>
+    );
+  }
 
   // Default user data structure for the edit modal
   const defaultUserData = {
@@ -49,10 +63,6 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer">
             <Avatar className="h-8 w-8">
-              <AvatarImage 
-                src={user.photoURL || ""} 
-                alt={user.displayName || user.email || "User avatar"}
-              />
               <AvatarFallback>
                 {(user.displayName || user.email || "U")[0].toUpperCase()}
               </AvatarFallback>
