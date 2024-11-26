@@ -1,5 +1,4 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +15,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
   const { login, register } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(defaultTab === "login");
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -45,19 +45,34 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
-          </TabsList>
-          <TabsContent value="login">
+      <DialogContent className="sm:max-w-md p-0">
+        {isLogin ? (
+          <>
             <LoginForm onSubmit={handleLogin} loading={loading} />
-          </TabsContent>
-          <TabsContent value="register">
+            <p className="text-center pb-6 text-sm text-gray-600">
+              Don't have an account?{' '}
+              <button 
+                onClick={() => setIsLogin(false)}
+                className="text-[#4ECDC4] hover:underline font-medium"
+              >
+                Sign up
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
             <RegisterForm onSubmit={handleRegister} loading={loading} />
-          </TabsContent>
-        </Tabs>
+            <p className="text-center pb-6 text-sm text-gray-600">
+              Already have an account?{' '}
+              <button 
+                onClick={() => setIsLogin(true)}
+                className="text-[#4ECDC4] hover:underline font-medium"
+              >
+                Sign in
+              </button>
+            </p>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );
