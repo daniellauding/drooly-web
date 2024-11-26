@@ -63,7 +63,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const hasResults = searchResults.users.length > 0 || searchResults.recipes.length > 0;
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange} className="max-w-2xl">
+    <CommandDialog open={open} onOpenChange={onOpenChange}>
       <CommandInput 
         placeholder="Search recipes, users..." 
         value={searchQuery}

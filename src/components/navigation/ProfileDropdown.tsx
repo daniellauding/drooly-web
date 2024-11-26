@@ -88,14 +88,9 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
         open={editProfileOpen}
         onOpenChange={setEditProfileOpen}
         userData={{
+          id: user.uid,
           name: user.displayName || "",
-          username: "",
-          birthday: "",
           email: user.email || "",
-          phone: "",
-          bio: "",
-          gender: "prefer-not-to-say",
-          isPrivate: false,
           avatarUrl: user.photoURL || "",
         }}
         onUpdate={() => {
