@@ -98,7 +98,6 @@ export function TopBar() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
-      <EmailVerificationBanner />
       <div className="flex items-center gap-4 px-6 py-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <img src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" alt="Recipe App" className="h-8 w-8" />
@@ -171,6 +170,7 @@ export function TopBar() {
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <EmailVerificationBanner />
     </div>
   );
 }

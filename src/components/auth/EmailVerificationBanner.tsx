@@ -1,5 +1,4 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { useState } from "react";
@@ -39,21 +38,25 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <Alert className="mb-4 border-amber-200 bg-amber-50/50 text-amber-800">
-      <Mail className="h-4 w-4 text-amber-600" />
-      <AlertTitle className="text-amber-800 font-medium">Email verification required</AlertTitle>
-      <AlertDescription className="flex items-center gap-4 text-amber-700">
-        <span>Please verify your email address to access all features.</span>
+    <div className="fixed bottom-4 left-4 max-w-md bg-white rounded-lg shadow-lg border border-amber-200 p-6 z-50">
+      <div className="flex items-center gap-2 text-amber-800 mb-4">
+        <Mail className="h-5 w-5 text-amber-600" />
+        <h3 className="font-semibold">Email verification required</h3>
+      </div>
+      <p className="text-amber-700 mb-6">
+        Please verify your email address to access all features.
+      </p>
+      <div className="flex justify-end">
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleResend}
           disabled={sending}
-          className="border-amber-200 hover:bg-amber-100 hover:text-amber-900"
+          className="border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 hover:text-amber-900"
         >
           {sending ? "Sending..." : "Resend verification email"}
         </Button>
-      </AlertDescription>
-    </Alert>
+      </div>
+    </div>
   );
 }
