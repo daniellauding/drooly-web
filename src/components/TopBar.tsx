@@ -69,6 +69,14 @@ export function TopBar() {
     });
   };
 
+  const handleCreateClick = () => {
+    if (!user) {
+      navigate('/login');
+    } else {
+      navigate('/create');
+    }
+  };
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
       <div className="flex items-center gap-4 px-6 py-4 max-w-7xl mx-auto">
@@ -122,16 +130,16 @@ export function TopBar() {
                   </Badge>
                 )}
               </Button>
-              <Button
-                variant="default"
-                className="gap-2"
-                onClick={() => navigate('/create')}
-              >
-                <PlusCircle className="h-4 w-4" />
-                Create
-              </Button>
             </>
           )}
+          <Button
+            variant="default"
+            className="gap-2"
+            onClick={handleCreateClick}
+          >
+            <PlusCircle className="h-4 w-4" />
+            Create
+          </Button>
           <ProfileDropdown />
         </div>
       </div>
