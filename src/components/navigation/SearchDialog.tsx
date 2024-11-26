@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,11 +15,11 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: searchResults = { users: [], recipes: [], events: [] }, isLoading: searchLoading } = useQuery({
+  const { data: searchResults = { users: [], recipes: [] }, isLoading } = useQuery({
     queryKey: ['search', searchQuery],
     queryFn: async () => {
       if (!searchQuery || searchQuery.length < 2) {
-        return { users: [], recipes: [], events: [] };
+        return { users: [], recipes: [] };
       }
 
       console.log('Searching for:', searchQuery);
@@ -33,8 +33,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           const data = doc.data();
           return (
             data.email?.toLowerCase().includes(lowerQuery) ||
-            data.name?.toLowerCase().includes(lowerQuery) ||
-            data.username?.toLowerCase().includes(lowerQuery)
+            data.name?.toLowerCase().includes(lowerQuery)
           );
         })
         .map(doc => ({ id: doc.id, ...doc.data() }));
@@ -45,22 +44,16 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       const recipes = recipesSnapshot.docs
         .filter(doc => {
           const data = doc.data();
-          return data.title?.toLowerCase().includes(lowerQuery);
+          return (
+            data.title?.toLowerCase().includes(lowerQuery) ||
+            data.description?.toLowerCase().includes(lowerQuery) ||
+            data.tags?.some((tag: string) => tag.toLowerCase().includes(lowerQuery))
+          );
         })
         .map(doc => ({ id: doc.id, ...doc.data() }));
 
-      // Search events
-      const eventsRef = collection(db, "events");
-      const eventsSnapshot = await getDocs(eventsRef);
-      const events = eventsSnapshot.docs
-        .filter(doc => {
-          const data = doc.data();
-          return data.title?.toLowerCase().includes(lowerQuery);
-        })
-        .map(doc => ({ id: doc.id, ...doc.data() }));
-
-      console.log('Search results:', { users, recipes, events });
-      return { users, recipes, events };
+      console.log('Search results:', { users, recipes });
+      return { users, recipes };
     },
     enabled: searchQuery.length >= 2,
   });
@@ -74,7 +67,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
       />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
-        {searchLoading ? (
+        {isLoading ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
             Searching...
           </div>
@@ -97,7 +90,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                     <div>
                       <p className="font-medium">{user.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {user.username ? `@${user.username}` : user.email}
+                        {user.email}
                       </p>
                     </div>
                   </CommandItem>
@@ -124,30 +117,6 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       <p className="font-medium">{recipe.title}</p>
                       <p className="text-sm text-muted-foreground">
                         by {recipe.creatorName}
-                      </p>
-                    </div>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            )}
-
-            {searchResults.events.length > 0 && (
-              <CommandGroup heading="Events">
-                {searchResults.events.map((event: any) => (
-                  <CommandItem
-                    key={event.id}
-                    onSelect={() => {
-                      navigate(`/event/${event.id}`);
-                      onOpenChange(false);
-                    }}
-                  >
-                    <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center mr-2">
-                      🎉
-                    </div>
-                    <div>
-                      <p className="font-medium">{event.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(event.date).toLocaleDateString()}
                       </p>
                     </div>
                   </CommandItem>
