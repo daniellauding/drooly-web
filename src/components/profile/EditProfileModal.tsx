@@ -12,6 +12,7 @@ import { ProfilePrivacySettings } from "./ProfilePrivacySettings";
 import { ProfileSecuritySection } from "./ProfileSecuritySection";
 import { updateUserProfile } from "./ProfileUpdateService";
 import { AvatarUpload } from "./AvatarUpload";
+import { useNavigate } from "react-router-dom";
 
 interface EditProfileModalProps {
   userData: {
@@ -28,12 +29,20 @@ interface EditProfileModalProps {
   onUpdate: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isAdmin?: boolean;
 }
 
-export function EditProfileModal({ userData: initialUserData, onUpdate, open, onOpenChange }: EditProfileModalProps) {
+export function EditProfileModal({ 
+  userData: initialUserData, 
+  onUpdate, 
+  open, 
+  onOpenChange,
+  isAdmin 
+}: EditProfileModalProps) {
   const [formData, setFormData] = useState(initialUserData);
   const { user, logout } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -126,10 +135,20 @@ export function EditProfileModal({ userData: initialUserData, onUpdate, open, on
           </Tabs>
 
           <div className="flex justify-between border-t pt-4">
-            <Button variant="outline" onClick={() => logout()}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => logout()}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/backoffice')}
+                >
+                  Access Backoffice
+                </Button>
+              )}
+            </div>
             <Button onClick={handleUpdateProfile}>Save Changes</Button>
           </div>
         </div>

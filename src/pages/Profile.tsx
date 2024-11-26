@@ -182,16 +182,6 @@ export default function Profile() {
           )}
         </div>
 
-        {isOwnProfile && isAdmin && (
-          <Button 
-            variant="outline" 
-            className="w-full"
-            onClick={() => navigate('/backoffice')}
-          >
-            Access Backoffice
-          </Button>
-        )}
-
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">
             {isOwnProfile ? "My Recipes" : "Recipes"}
@@ -229,6 +219,7 @@ export default function Profile() {
             onOpenChange={setEditProfileOpen}
             userData={userData}
             onUpdate={handleProfileUpdate}
+            isAdmin={isAdmin}
           />
 
           <SendInviteModal

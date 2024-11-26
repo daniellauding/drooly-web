@@ -19,6 +19,9 @@ import { EditRoleModal } from "./EditRoleModal";
 import { DeleteConfirmationDialog } from "./DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
 import { UserInviteStatus } from "./UserInviteStatus";
+import { format } from "date-fns";
+import { CheckCircle2, XCircle, RotateCw } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserTableRowProps {
   user: User;
@@ -37,27 +40,80 @@ interface UserTableRowProps {
   isExpanded: boolean;
 }
 
-// Since this file is too long (210 lines), let's split it into smaller components
-// We'll create a separate component for the table cells to make the code more maintainable
-const UserTableCells = ({ 
-  user, 
-  editingId, 
-  editName, 
-  onEditNameChange, 
+// Split into smaller components for better maintainability
+const VerificationStatus = ({ user, onResendVerification }: { user: User, onResendVerification: () => void }) => {
+  return (
+    <div className="flex items-center gap-2">
+      {user.emailVerified ? (
+        <div className="flex items-center text-green-600">
+          <CheckCircle2 className="h-4 w-4 mr-1" />
+          <span>Verified</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2">
+          <div className="flex items-center text-red-600">
+            <XCircle className="h-4 w-4 mr-1" />
+            <span>Not verified</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={onResendVerification}
+          >
+            <RotateCw className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export function UserTableRow({
+  user,
+  editingId,
+  editName,
+  availableRoles,
   onEdit,
+  onEditNameChange,
   onEditSave,
-  onEditCancel 
-}: Pick<UserTableRowProps, 'user' | 'editingId' | 'editName' | 'onEditNameChange' | 'onEdit' | 'onEditSave' | 'onEditCancel'>) => {
-  const isEditing = editingId === user.id;
-  const createdDate = user.createdAt ? new Date(user.createdAt.seconds * 1000) : null;
+  onEditCancel,
+  onRoleChange,
+  onDelete,
+  onMessageOpen,
+  onToggleExpand,
+  onAddCustomRole,
+  isExpanded,
+}: UserTableRowProps) {
+  const { sendVerificationEmail } = useAuth();
+  const { toast } = useToast();
+  const [editRoleModalOpen, setEditRoleModalOpen] = useState(false);
+  const [selectedRoleToEdit, setSelectedRoleToEdit] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const handleResendVerification = async () => {
+    try {
+      await sendVerificationEmail();
+      toast({
+        title: "Verification email sent",
+        description: "A new verification email has been sent to the user.",
+      });
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to send verification email.",
+      });
+    }
+  };
 
   return (
-    <>
+    <TableRow>
       <TableCell className="font-mono text-xs text-muted-foreground">
         {user.id}
       </TableCell>
       <TableCell>
-        {isEditing ? (
+        {editingId === user.id ? (
           <div className="flex gap-2">
             <Input
               value={editName}
@@ -77,130 +133,49 @@ const UserTableCells = ({
         )}
       </TableCell>
       <TableCell>{user.email}</TableCell>
-    </>
-  );
-};
-
-// Separate component for role selection
-const RoleSelector = ({
-  user,
-  availableRoles,
-  onRoleChange,
-  onAddCustomRole
-}: Pick<UserTableRowProps, 'user' | 'availableRoles' | 'onRoleChange' | 'onAddCustomRole'>) => (
-  <TableCell>
-    <div className="flex flex-col gap-2">
-      <Select
-        value={user.role}
-        onValueChange={(value) => {
-          if (value === "add-custom-role") {
-            onAddCustomRole();
-          } else {
-            onRoleChange(user.id, value);
-          }
-        }}
-      >
-        <SelectTrigger className="w-32">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {availableRoles.map((role) => (
-            <SelectItem key={role} value={role}>
-              {role}
-            </SelectItem>
-          ))}
-          <SelectSeparator />
-          <SelectItem value="add-custom-role" className="text-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Custom Role
-          </SelectItem>
-        </SelectContent>
-      </Select>
-      <UserInviteStatus invites={user.invites} />
-    </div>
-  </TableCell>
-);
-
-export function UserTableRow({
-  user,
-  editingId,
-  editName,
-  availableRoles,
-  onEdit,
-  onEditNameChange,
-  onEditSave,
-  onEditCancel,
-  onRoleChange,
-  onDelete,
-  onMessageOpen,
-  onToggleExpand,
-  onAddCustomRole,
-  isExpanded,
-}: UserTableRowProps) {
-  const [editRoleModalOpen, setEditRoleModalOpen] = useState(false);
-  const [selectedRoleToEdit, setSelectedRoleToEdit] = useState("");
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const { toast } = useToast();
-
-  const handleEditRole = (role: string) => {
-    setSelectedRoleToEdit(role);
-    setEditRoleModalOpen(true);
-  };
-
-  const handleRoleUpdate = (oldRole: string, newRole: string) => {
-    if (user.role === oldRole) {
-      onRoleChange(user.id, newRole);
-    }
-  };
-
-  const handleDelete = () => {
-    setDeleteDialogOpen(false);
-    const deletedUser = { ...user };
-    
-    onDelete(user.id);
-    
-    toast({
-      title: "User deleted",
-      description: "The user has been successfully deleted.",
-      action: (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            console.log("Undo delete for user:", deletedUser);
-            toast({
-              title: "Delete undone",
-              description: "The user has been restored.",
-            });
+      <TableCell>
+        <Select
+          value={user.role}
+          onValueChange={(value) => {
+            if (value === "add-custom-role") {
+              onAddCustomRole();
+            } else {
+              onRoleChange(user.id, value);
+            }
           }}
         >
-          Undo
-        </Button>
-      ),
-      duration: 5000,
-    });
-  };
-
-  return (
-    <TableRow>
-      <UserTableCells 
-        user={user}
-        editingId={editingId}
-        editName={editName}
-        onEditNameChange={onEditNameChange}
-        onEdit={onEdit}
-        onEditSave={onEditSave}
-        onEditCancel={onEditCancel}
-      />
-      <RoleSelector
-        user={user}
-        availableRoles={availableRoles}
-        onRoleChange={onRoleChange}
-        onAddCustomRole={onAddCustomRole}
-      />
-      <TableCell>
-        {user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}
+          <SelectTrigger className="w-32">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {availableRoles.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+            <SelectSeparator />
+            <SelectItem value="add-custom-role" className="text-primary">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Custom Role
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <UserInviteStatus invites={user.invites} />
       </TableCell>
+      <TableCell>
+        <VerificationStatus 
+          user={user} 
+          onResendVerification={handleResendVerification} 
+        />
+      </TableCell>
+      <TableCell>
+        {user.lastLoginAt ? (
+          format(new Date(user.lastLoginAt), 'PPp')
+        ) : (
+          'Never'
+        )}
+      </TableCell>
+      <TableCell>{user.createdAt ? new Date(user.createdAt.seconds * 1000).toLocaleDateString() : 'Unknown'}</TableCell>
       <TableCell>{user.recipes?.length || 0} recipes</TableCell>
       <TableCell>
         <div className="flex gap-2">

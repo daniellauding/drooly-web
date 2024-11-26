@@ -62,6 +62,8 @@ export function BackofficeUsers({ searchQuery }: BackofficeUsersProps) {
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>Verification</TableHead>
+            <TableHead>Last Login</TableHead>
             <TableHead>Created</TableHead>
             <TableHead>Recipes</TableHead>
             <TableHead>Actions</TableHead>
