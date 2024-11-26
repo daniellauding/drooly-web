@@ -5,6 +5,8 @@ import { collection, query, where, getDocs, orderBy, limit } from "firebase/fire
 import { db } from "@/lib/firebase";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RecipeCard } from "@/components/RecipeCard";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface SearchDialogProps {
   open: boolean;
@@ -58,23 +60,28 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     enabled: searchQuery.length >= 2,
   });
 
+  const hasResults = searchResults.users.length > 0 || searchResults.recipes.length > 0;
+
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange}>
+    <CommandDialog open={open} onOpenChange={onOpenChange} className="max-w-2xl">
       <CommandInput 
-        placeholder="Type to search..." 
+        placeholder="Search recipes, users..." 
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
         {isLoading ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
             Searching...
           </div>
+        ) : !hasResults ? (
+          <CommandEmpty className="py-6 text-center text-sm">
+            No results found for "{searchQuery}"
+          </CommandEmpty>
         ) : (
-          <>
+          <ScrollArea className="h-[400px]">
             {searchResults.users.length > 0 && (
-              <CommandGroup heading="Users">
+              <CommandGroup heading="Users" className="p-2">
                 {searchResults.users.map((user: any) => (
                   <CommandItem
                     key={user.id}
@@ -82,13 +89,14 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
                       navigate(`/profile/${user.id}`);
                       onOpenChange(false);
                     }}
+                    className="flex items-center gap-3 p-2 cursor-pointer hover:bg-accent rounded-lg"
                   >
-                    <Avatar className="h-8 w-8 mr-2">
+                    <Avatar className="h-10 w-10">
                       <AvatarImage src={user.avatarUrl} />
-                      <AvatarFallback>{user.name?.[0]}</AvatarFallback>
+                      <AvatarFallback>{user.name?.[0] || user.email?.[0]}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-medium">{user.name}</p>
+                      <p className="font-medium">{user.name || 'Anonymous'}</p>
                       <p className="text-sm text-muted-foreground">
                         {user.email}
                       </p>
@@ -99,31 +107,32 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
             )}
 
             {searchResults.recipes.length > 0 && (
-              <CommandGroup heading="Recipes">
-                {searchResults.recipes.map((recipe: any) => (
-                  <CommandItem
-                    key={recipe.id}
-                    onSelect={() => {
-                      navigate(`/recipe/${recipe.id}`);
-                      onOpenChange(false);
-                    }}
-                  >
-                    <img
-                      src={recipe.images?.[0] || "/placeholder.svg"}
-                      alt={recipe.title}
-                      className="h-8 w-8 rounded-md object-cover mr-2"
-                    />
-                    <div>
-                      <p className="font-medium">{recipe.title}</p>
-                      <p className="text-sm text-muted-foreground">
-                        by {recipe.creatorName}
-                      </p>
-                    </div>
-                  </CommandItem>
-                ))}
+              <CommandGroup heading="Recipes" className="p-2">
+                <div className="grid gap-4 p-2">
+                  {searchResults.recipes.map((recipe: any) => (
+                    <CommandItem
+                      key={recipe.id}
+                      onSelect={() => {
+                        navigate(`/recipe/${recipe.id}`);
+                        onOpenChange(false);
+                      }}
+                      className="flex flex-col p-0 cursor-pointer hover:bg-accent rounded-lg overflow-hidden"
+                    >
+                      <RecipeCard
+                        id={recipe.id}
+                        title={recipe.title}
+                        image={recipe.images?.[recipe.featuredImageIndex || 0]}
+                        cookTime={recipe.totalTime}
+                        difficulty={recipe.difficulty}
+                        chef={recipe.creatorName}
+                        date={recipe.createdAt ? new Date(recipe.createdAt.seconds * 1000).toLocaleDateString() : undefined}
+                      />
+                    </CommandItem>
+                  ))}
+                </div>
               </CommandGroup>
             )}
-          </>
+          </ScrollArea>
         )}
       </CommandList>
     </CommandDialog>
