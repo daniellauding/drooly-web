@@ -20,12 +20,18 @@ export function EmailVerificationBanner() {
         title: "Verification email sent",
         description: "Please check your inbox and verify your email address.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending verification email:", error);
+      let errorMessage = "Failed to send verification email. Please try again.";
+      
+      if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many attempts. Please try again later.";
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to send verification email. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setSending(false);
@@ -33,7 +39,7 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <Alert variant="warning" className="mb-4">
+    <Alert variant="destructive" className="mb-4">
       <Mail className="h-4 w-4" />
       <AlertTitle>Email verification required</AlertTitle>
       <AlertDescription className="flex items-center gap-4">

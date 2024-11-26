@@ -6,6 +6,8 @@ export interface User {
   createdAt: { seconds: number };
   recipes?: any[];
   invites?: UserInvite[];
+  emailVerified?: boolean;
+  lastLoginAt?: string | null;
 }
 
 export interface UserInvite {
