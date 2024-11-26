@@ -20,6 +20,11 @@ service cloud.firestore {
       allow update: if request.auth != null && 
                    (request.auth.uid == userId ||
                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
+
+      // Allow superadmin to update verification status
+      allow update: if request.auth != null &&
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin' &&
+                   request.resource.data.diff(resource.data).affectedKeys().hasOnly(['manuallyVerified', 'verifiedAt']);
     }
 
     match /notifications/{notificationId} {

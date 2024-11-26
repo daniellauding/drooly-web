@@ -7,6 +7,8 @@ export interface User {
   recipes?: any[];
   invites?: UserInvite[];
   emailVerified?: boolean;
+  manuallyVerified?: boolean;
+  awaitingVerification?: boolean;
   lastLoginAt?: string | null;
 }
 

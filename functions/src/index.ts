@@ -18,6 +18,7 @@ export const onEmailVerificationChange = functions.auth.user().onEmailVerified(a
   try {
     await db.collection('users').doc(user.uid).update({
       emailVerified: true,
+      manuallyVerified: true,
       verifiedAt: admin.firestore.FieldValue.serverTimestamp()
     });
     
@@ -38,6 +39,8 @@ export const processSignUp = functions.auth.user().onCreate(async (user) => {
         name: user.displayName || "",
         role: "user",
         emailVerified: user.emailVerified,
+        manuallyVerified: false,
+        awaitingVerification: true,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     }
