@@ -11,7 +11,8 @@ export function EmailVerificationBanner() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  if (!user || user.emailVerified) return null;
+  // Don't show banner for verified users, superadmins, or non-logged in users
+  if (!user || user.emailVerified || user.role === 'superadmin') return null;
 
   const handleResend = async () => {
     try {

@@ -21,7 +21,8 @@ export function TopBar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  const isVerified = user?.emailVerified;
+  // Check if user is verified or superadmin
+  const isVerifiedOrSuperadmin = user?.emailVerified || user?.role === 'superadmin';
 
   const { data: unreadMessagesCount = 0 } = useQuery({
     queryKey: ['unreadMessages', user?.uid],
@@ -66,7 +67,7 @@ export function TopBar() {
   });
 
   const handleRestrictedAction = () => {
-    if (!isVerified) {
+    if (!isVerifiedOrSuperadmin) {
       toast({
         title: "Email verification required",
         description: "Please verify your email to access this feature.",
@@ -152,7 +153,7 @@ export function TopBar() {
                   </Badge>
                 )}
               </Button>
-              {isVerified && (
+              {isVerifiedOrSuperadmin && (
                 <Button
                   variant="default"
                   className="gap-2"
