@@ -69,8 +69,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await applyActionCode(auth, code);
       toast({
         title: "Email verified",
-        description: "Your email has been verified successfully.",
+        description: "Your email has been verified successfully. Please log in.",
       });
+      
+      // Log out and redirect to login page
+      await logout();
+      window.location.href = 'https://droo.ly/login';
     } catch (error) {
       console.error("Error verifying email:", error);
       toast({
