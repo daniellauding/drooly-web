@@ -2,8 +2,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { LoginForm } from "@/components/LoginForm";
 import { RegisterForm } from "@/components/RegisterForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface AuthModalProps {
   open: boolean;
@@ -13,7 +13,7 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModalProps) {
   const { login, register } = useAuth();
-  const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [isLogin, setIsLogin] = useState(defaultTab === "login");
 
@@ -22,7 +22,6 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
       setLoading(true);
       await login(email, password);
       onOpenChange(false);
-      navigate('/create');
     } catch (error) {
       console.error('Login error:', error);
     } finally {
@@ -34,8 +33,11 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     try {
       setLoading(true);
       await register(email, password, name);
-      onOpenChange(false);
-      navigate('/create');
+      toast({
+        title: "Registration successful",
+        description: "Please check your email to verify your account before logging in.",
+      });
+      setIsLogin(true);
     } catch (error) {
       console.error('Registration error:', error);
     } finally {

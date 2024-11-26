@@ -6,7 +6,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  sendEmailVerification
+  sendEmailVerification,
+  applyActionCode
 } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,6 +22,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => Promise<void>;
+  verifyEmail: (code: string) => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
 }
 
@@ -36,15 +38,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        console.log("Auth state changed - User:", user.email, "PhotoURL:", user.photoURL);
+        console.log("Auth state changed - User:", user.email);
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const userData = userDoc.data();
         
-        // Update user with both Firebase Auth and Firestore data
         setUser({ 
           ...user, 
           role: userData?.role,
-          photoURL: userData?.avatarUrl || user.photoURL // Prioritize Firestore avatarUrl
+          photoURL: userData?.avatarUrl || user.photoURL
         });
 
         if (!user.emailVerified) {
@@ -63,6 +64,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, [toast]);
 
+  const verifyEmail = async (code: string) => {
+    try {
+      await applyActionCode(auth, code);
+      toast({
+        title: "Email verified",
+        description: "Your email has been verified successfully.",
+      });
+    } catch (error) {
+      console.error("Error verifying email:", error);
+      toast({
+        variant: "destructive",
+        title: "Verification failed",
+        description: "Could not verify your email. Please try again.",
+      });
+      throw error;
+    }
+  };
+
   const sendVerificationEmail = async () => {
     if (auth.currentUser && !auth.currentUser.emailVerified) {
       try {
@@ -80,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Error",
           description: "Failed to send verification email. Please try again.",
         });
+        throw error;
       }
     }
   };
@@ -88,15 +108,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log("Attempting login for:", email);
       const { user } = await signInWithEmailAndPassword(auth, email, password);
+      
+      if (!user.emailVerified) {
+        toast({
+          variant: "destructive",
+          title: "Email not verified",
+          description: "Please verify your email before logging in.",
+        });
+        await sendVerificationEmail();
+        await logout();
+        return;
+      }
+
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
       setUser({ ...user, role: userData?.role });
 
-      if (!user.emailVerified) {
-        await sendVerificationEmail();
-      }
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
     } catch (error) {
       console.error("Login error:", error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "Invalid email or password.",
+      });
       throw error;
     }
   };
@@ -117,15 +155,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date(),
       });
       
-      setUser({ ...user, role: "user" });
-      
       toast({
         title: "Account created successfully",
-        description: "Please check your inbox and verify your email address to access all features.",
+        description: "Please check your inbox and verify your email address to continue.",
         duration: 10000,
       });
+
+      // Sign out the user until they verify their email
+      await logout();
     } catch (error) {
       console.error("Registration error:", error);
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: "Could not create your account. Please try again.",
+      });
       throw error;
     }
   };
@@ -134,8 +178,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await signOut(auth);
       setUser(null);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
     } catch (error) {
       console.error("Logout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+      });
       throw error;
     }
   };
@@ -146,6 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     login,
     register,
     logout,
+    verifyEmail,
     sendVerificationEmail,
   };
 
