@@ -11,14 +11,15 @@ import { useToast } from "./ui/use-toast";
 import { useState } from "react";
 import { SearchDialog } from "./navigation/SearchDialog";
 import { ProfileDropdown } from "./navigation/ProfileDropdown";
+import { AuthModal } from "./auth/AuthModal";
 
 export function TopBar() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  // Fetch unread messages count
   const { data: unreadMessagesCount = 0 } = useQuery({
     queryKey: ['unreadMessages', user?.uid],
     queryFn: async () => {
@@ -71,7 +72,7 @@ export function TopBar() {
 
   const handleCreateClick = () => {
     if (!user) {
-      navigate('/login');
+      setAuthModalOpen(true);
     } else {
       navigate('/create');
     }
@@ -145,6 +146,7 @@ export function TopBar() {
       </div>
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
   );
 }
