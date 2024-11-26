@@ -21,8 +21,8 @@ export function TopBar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
-  // Check if user is verified or superadmin
-  const isVerifiedOrSuperadmin = user?.emailVerified || user?.role === 'superadmin';
+  // Check if user is verified through either method or is superadmin
+  const isVerifiedOrSuperadmin = user?.emailVerified || user?.manuallyVerified || user?.role === 'superadmin';
 
   const { data: unreadMessagesCount = 0 } = useQuery({
     queryKey: ['unreadMessages', user?.uid],
