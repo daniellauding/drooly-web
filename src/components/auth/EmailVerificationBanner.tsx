@@ -41,7 +41,7 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 max-w-md bg-white rounded-lg shadow-lg border p-6 z-50">
+    <div className="fixed bottom-16 right-4 max-w-md bg-white rounded-lg shadow-lg border p-6 z-50">
       <div className="space-y-4">
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Email verification required</h3>
