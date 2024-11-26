@@ -39,16 +39,17 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <Alert variant="destructive" className="mb-4">
-      <Mail className="h-4 w-4" />
-      <AlertTitle>Email verification required</AlertTitle>
-      <AlertDescription className="flex items-center gap-4">
+    <Alert className="mb-4 border-amber-200 bg-amber-50/50 text-amber-800">
+      <Mail className="h-4 w-4 text-amber-600" />
+      <AlertTitle className="text-amber-800 font-medium">Email verification required</AlertTitle>
+      <AlertDescription className="flex items-center gap-4 text-amber-700">
         <span>Please verify your email address to access all features.</span>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={handleResend}
           disabled={sending}
+          className="border-amber-200 hover:bg-amber-100 hover:text-amber-900"
         >
           {sending ? "Sending..." : "Resend verification email"}
         </Button>
