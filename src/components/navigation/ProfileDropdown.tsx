@@ -12,7 +12,11 @@ import { Settings, LogOut, User, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 
-export function ProfileDropdown() {
+interface ProfileDropdownProps {
+  onAuthModalOpen: () => void;
+}
+
+export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
@@ -20,17 +24,17 @@ export function ProfileDropdown() {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error('Error logging out:', error);
     }
   };
 
-  // If user is not logged in, show a simple avatar that redirects to login
+  // If user is not logged in, show a simple avatar that opens auth modal
   if (!user) {
     return (
       <div 
-        onClick={() => navigate('/login')} 
+        onClick={onAuthModalOpen}
         className="cursor-pointer flex items-center gap-2"
         title="Login or Register"
       >
@@ -43,19 +47,6 @@ export function ProfileDropdown() {
       </div>
     );
   }
-
-  // Default user data structure for the edit modal
-  const defaultUserData = {
-    name: user.displayName || "",
-    username: "",
-    birthday: "",
-    email: user.email || "",
-    phone: "",
-    bio: "",
-    gender: "prefer-not-to-say",
-    isPrivate: false,
-    avatarUrl: user.photoURL || "",
-  };
 
   return (
     <>
@@ -96,7 +87,17 @@ export function ProfileDropdown() {
       <EditProfileModal
         open={editProfileOpen}
         onOpenChange={setEditProfileOpen}
-        userData={defaultUserData}
+        userData={{
+          name: user.displayName || "",
+          username: "",
+          birthday: "",
+          email: user.email || "",
+          phone: "",
+          bio: "",
+          gender: "prefer-not-to-say",
+          isPrivate: false,
+          avatarUrl: user.photoURL || "",
+        }}
         onUpdate={() => {
           console.log("Profile updated");
           setEditProfileOpen(false);

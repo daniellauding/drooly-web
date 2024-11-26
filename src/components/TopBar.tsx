@@ -41,7 +41,6 @@ export function TopBar() {
     enabled: !!user,
   });
 
-  // Fetch notifications count
   const { data: unreadNotificationsCount = 0 } = useQuery({
     queryKey: ['unreadNotifications', user?.uid],
     queryFn: async () => {
@@ -131,17 +130,17 @@ export function TopBar() {
                   </Badge>
                 )}
               </Button>
+              <Button
+                variant="default"
+                className="gap-2"
+                onClick={handleCreateClick}
+              >
+                <PlusCircle className="h-4 w-4" />
+                Create
+              </Button>
             </>
           )}
-          <Button
-            variant="default"
-            className="gap-2"
-            onClick={handleCreateClick}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create
-          </Button>
-          <ProfileDropdown />
+          <ProfileDropdown onAuthModalOpen={() => setAuthModalOpen(true)} />
         </div>
       </div>
 
