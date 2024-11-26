@@ -93,6 +93,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
           email: user.email || "",
           avatarUrl: user.photoURL || "",
         }}
+        isAdmin={user?.role === 'superadmin'}
         onUpdate={() => {
           console.log("Profile updated");
           setEditProfileOpen(false);

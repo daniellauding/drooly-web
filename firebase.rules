@@ -16,8 +16,10 @@ service cloud.firestore {
                  (request.auth.uid == userId || 
                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
                   
+      // Allow updating if user is owner or superadmin
       allow update: if request.auth != null && 
-                   request.auth.uid == userId;
+                   (request.auth.uid == userId ||
+                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
     }
 
     match /notifications/{notificationId} {

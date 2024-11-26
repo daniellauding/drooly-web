@@ -18,7 +18,7 @@ interface EditProfileModalProps {
     avatarUrl: string;
   };
   onUpdate: () => void;
-  isAdmin: boolean;
+  isAdmin?: boolean;
 }
 
 export function EditProfileModal({
@@ -26,7 +26,7 @@ export function EditProfileModal({
   onOpenChange,
   userData,
   onUpdate,
-  isAdmin,
+  isAdmin = false,
 }: EditProfileModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({

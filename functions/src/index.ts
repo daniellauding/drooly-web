@@ -5,7 +5,6 @@ import { getFirestore } from "firebase-admin/firestore";
 import { onRequest } from "firebase-functions/v2/https";
 import { onCall } from "firebase-functions/v2/https";
 import { setGlobalOptions } from "firebase-functions/v2";
-import { defineString } from "firebase-functions/params";
 
 setGlobalOptions({ maxInstances: 10 });
 
@@ -13,30 +12,48 @@ admin.initializeApp();
 const auth = getAuth();
 const db = getFirestore();
 
-export const createUser = onCall(async (request) => {
-  const { email, password, name } = request.data;
-
+// Listen for user email verification changes
+export const onEmailVerificationChange = functions.auth.user().onEmailVerified(async (user) => {
+  console.log('Email verified for user:', user.uid);
   try {
-    const userRecord = await auth.createUser({
-      email,
-      password,
-      displayName: name,
+    await db.collection('users').doc(user.uid).update({
+      emailVerified: true,
+      verifiedAt: admin.firestore.FieldValue.serverTimestamp()
     });
-
-    await db.collection("users").doc(userRecord.uid).set({
-      email,
-      name,
-      role: "user",
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    return { userId: userRecord.uid };
+    
+    console.log('User document updated with verification status');
   } catch (error) {
-    console.error("Error creating user:", error);
-    throw new functions.https.HttpsError(
-      "internal",
-      "Error creating user account"
-    );
+    console.error('Error updating user verification status:', error);
+  }
+});
+
+export const processSignUp = functions.auth.user().onCreate(async (user) => {
+  try {
+    if (!user.email) return;
+
+    const userDoc = await db.collection("users").doc(user.uid).get();
+    if (!userDoc.exists) {
+      await db.collection("users").doc(user.uid).set({
+        email: user.email,
+        name: user.displayName || "",
+        role: "user",
+        emailVerified: user.emailVerified,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    // Send welcome email
+    await db.collection("mail").add({
+      to: user.email,
+      template: {
+        name: "welcome",
+        data: {
+          userName: user.displayName || user.email
+        }
+      }
+    });
+  } catch (error) {
+    console.error("Error in processSignUp:", error);
   }
 });
 
@@ -101,35 +118,6 @@ export const resendVerificationEmail = onCall(async (request) => {
       "internal",
       "Error resending verification email"
     );
-  }
-});
-
-export const processSignUp = functions.auth.user().onCreate(async (user) => {
-  try {
-    if (!user.email) return;
-
-    const userDoc = await db.collection("users").doc(user.uid).get();
-    if (!userDoc.exists) {
-      await db.collection("users").doc(user.uid).set({
-        email: user.email,
-        name: user.displayName || "",
-        role: "user",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-
-    // Send welcome email
-    await db.collection("mail").add({
-      to: user.email,
-      template: {
-        name: "welcome",
-        data: {
-          userName: user.displayName || user.email
-        }
-      }
-    });
-  } catch (error) {
-    console.error("Error in processSignUp:", error);
   }
 });
 
