@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,8 +35,8 @@ export function ProfileDropdown() {
         title="Login or Register"
       >
         <Avatar className="h-8 w-8">
-          <AvatarFallback>
-            <User className="h-4 w-4" />
+          <AvatarFallback className="bg-gray-100">
+            <User className="h-4 w-4 text-gray-500" />
           </AvatarFallback>
         </Avatar>
         <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -63,6 +63,12 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer">
             <Avatar className="h-8 w-8">
+              {user.photoURL && (
+                <AvatarImage 
+                  src={user.photoURL} 
+                  alt={user.displayName || user.email || "User avatar"}
+                />
+              )}
               <AvatarFallback>
                 {(user.displayName || user.email || "U")[0].toUpperCase()}
               </AvatarFallback>
