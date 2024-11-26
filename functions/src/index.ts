@@ -31,9 +31,12 @@ export const onEmailVerificationChange = functions.auth.user().onEmailVerified(a
 export const processSignUp = functions.auth.user().onCreate(async (user) => {
   try {
     if (!user.email) return;
+    
+    console.log("Processing signup for user:", user.email);
 
     const userDoc = await db.collection("users").doc(user.uid).get();
     if (!userDoc.exists) {
+      console.log("Creating new user document for:", user.email);
       await db.collection("users").doc(user.uid).set({
         email: user.email,
         name: user.displayName || "",
@@ -45,18 +48,30 @@ export const processSignUp = functions.auth.user().onCreate(async (user) => {
       });
     }
 
-    // Send welcome email
-    await db.collection("mail").add({
-      to: user.email,
-      template: {
-        name: "welcome",
-        data: {
-          userName: user.displayName || user.email
+    // Send welcome email with detailed logging
+    console.log("Attempting to send welcome email to:", user.email);
+    try {
+      await db.collection("mail").add({
+        to: user.email,
+        template: {
+          name: "welcome",
+          data: {
+            userName: user.displayName || user.email
+          }
         }
-      }
-    });
+      });
+      console.log("Welcome email queued successfully for:", user.email);
+    } catch (emailError) {
+      console.error("Error sending welcome email:", emailError);
+      console.error("Email details:", {
+        recipient: user.email,
+        template: "welcome",
+        userName: user.displayName || user.email
+      });
+    }
   } catch (error) {
     console.error("Error in processSignUp:", error);
+    throw error;
   }
 });
 
