@@ -72,15 +72,14 @@ export function TopBar() {
         description: "Please verify your email to access this feature.",
         variant: "destructive"
       });
-      return;
+      return true;
     }
+    return false;
   };
 
   const handleNotificationsClick = () => {
-    if (!isVerified) {
-      handleRestrictedAction();
-      return;
-    }
+    if (handleRestrictedAction()) return;
+    
     toast({
       title: "Coming Soon",
       description: "Notifications feature will be available soon!",
@@ -92,10 +91,8 @@ export function TopBar() {
       setAuthModalOpen(true);
       return;
     }
-    if (!isVerified) {
-      handleRestrictedAction();
-      return;
-    }
+    if (handleRestrictedAction()) return;
+    
     navigate('/create');
   };
 
@@ -144,7 +141,10 @@ export function TopBar() {
                 variant="ghost"
                 size="icon"
                 className="relative"
-                onClick={() => navigate('/messages')}
+                onClick={() => {
+                  if (handleRestrictedAction()) return;
+                  navigate('/messages');
+                }}
               >
                 <MessageSquare className="h-5 w-5" />
                 {unreadMessagesCount > 0 && (
@@ -153,14 +153,16 @@ export function TopBar() {
                   </Badge>
                 )}
               </Button>
-              <Button
-                variant="default"
-                className="gap-2"
-                onClick={handleCreateClick}
-              >
-                <PlusCircle className="h-4 w-4" />
-                Create
-              </Button>
+              {isVerified && (
+                <Button
+                  variant="default"
+                  className="gap-2"
+                  onClick={handleCreateClick}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Create
+                </Button>
+              )}
             </>
           )}
           <ProfileDropdown onAuthModalOpen={() => setAuthModalOpen(true)} />
