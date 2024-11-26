@@ -34,19 +34,24 @@ export function CookieConsent() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 shadow-lg z-50">
-      <div className="container max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
-          We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
-        </p>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDecline}>
-            Decline
-          </Button>
-          <Button onClick={handleAccept}>
-            Accept
-          </Button>
-        </div>
+    <div className="fixed bottom-4 right-4 max-w-md bg-white rounded-lg shadow-lg border border-gray-200 p-6 z-50">
+      <p className="text-gray-600 text-base mb-6">
+        We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.
+      </p>
+      <div className="flex justify-end gap-3">
+        <Button 
+          variant="outline" 
+          onClick={handleDecline}
+          className="text-gray-600 hover:text-gray-800"
+        >
+          Decline
+        </Button>
+        <Button 
+          onClick={handleAccept}
+          className="bg-[#E91E63] hover:bg-[#D81B60] text-white"
+        >
+          Accept
+        </Button>
       </div>
     </div>
   );
