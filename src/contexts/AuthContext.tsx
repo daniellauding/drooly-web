@@ -20,6 +20,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("Auth state changed - User:", user.email);
         try {
           const userData = await authService.getUserData(user);
+          console.log("User data from Firestore:", userData);
+          
+          // Check both Firebase Auth and Firestore verification status
+          const isVerified = user.emailVerified || userData?.manuallyVerified;
           
           setUser({ 
             ...user, 
@@ -28,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             photoURL: userData?.avatarUrl || user.photoURL
           });
 
-          if (!user.emailVerified && !userData?.manuallyVerified) {
+          if (!isVerified) {
             toast({
               title: "Email verification required",
               description: "Please check your inbox and verify your email to access all features.",
@@ -52,16 +56,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const user = await authService.loginUser(email, password);
       const userData = await authService.getUserData(user);
-
-      // Allow login if either emailVerified or manuallyVerified is true
-      if (!user.emailVerified && !userData?.manuallyVerified) {
+      
+      // Check both verification methods
+      const isVerified = user.emailVerified || userData?.manuallyVerified;
+      
+      if (!isVerified) {
+        try {
+          await sendVerificationEmail();
+        } catch (error: any) {
+          if (error.message.includes("Please wait")) {
+            toast({
+              variant: "destructive",
+              title: "Rate limit",
+              description: error.message,
+            });
+          }
+        }
+        await logout();
         toast({
           variant: "destructive",
           title: "Email not verified",
           description: "Please verify your email before logging in.",
         });
-        await sendVerificationEmail();
-        await logout();
         return;
       }
 
@@ -79,8 +95,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error("Login error:", error);
       let errorMessage = "Invalid email or password.";
       
-      if (error.code === "auth/user-not-found") {
-        errorMessage = "No account found with this email.";
+      if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many attempts. Please try again in a few minutes.";
       }
       
       toast({
