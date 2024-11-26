@@ -41,25 +41,22 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <div className="fixed bottom-16 right-4 max-w-md bg-white rounded-lg shadow-lg border p-6 z-50">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Email verification required</h3>
-          <p className="text-muted-foreground">
-            Please check your inbox and verify your email to access all features.
-          </p>
-        </div>
-        <div className="flex justify-end">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setDialogOpen(true)}
-            className="min-w-[200px]"
-          >
-            <Mail className="h-4 w-4 mr-2" />
-            Resend verification email
-          </Button>
-        </div>
+    <div className="fixed bottom-24 right-4 w-[400px] bg-white rounded-xl shadow-lg border p-4 z-50">
+      <div className="space-y-3">
+        <h3 className="text-xl font-semibold">Email verification required</h3>
+        <p className="text-gray-600">
+          Please check your inbox and verify your email to access all features.
+        </p>
+        <Button 
+          variant="default"
+          size="sm"
+          onClick={() => setDialogOpen(true)}
+          className="w-full"
+          disabled={sending}
+        >
+          <Mail className="h-4 w-4 mr-2" />
+          Resend verification email
+        </Button>
       </div>
 
       <DeleteConfirmationDialog
