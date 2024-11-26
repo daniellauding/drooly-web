@@ -12,6 +12,7 @@ import { useState } from "react";
 import { SearchDialog } from "./navigation/SearchDialog";
 import { ProfileDropdown } from "./navigation/ProfileDropdown";
 import { AuthModal } from "./auth/AuthModal";
+import { EmailVerificationBanner } from "./auth/EmailVerificationBanner";
 
 export function TopBar() {
   const navigate = useNavigate();
@@ -19,6 +20,8 @@ export function TopBar() {
   const { toast } = useToast();
   const [searchOpen, setSearchOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  const isVerified = user?.emailVerified;
 
   const { data: unreadMessagesCount = 0 } = useQuery({
     queryKey: ['unreadMessages', user?.uid],
@@ -62,7 +65,22 @@ export function TopBar() {
     enabled: !!user,
   });
 
+  const handleRestrictedAction = () => {
+    if (!isVerified) {
+      toast({
+        title: "Email verification required",
+        description: "Please verify your email to access this feature.",
+        variant: "destructive"
+      });
+      return;
+    }
+  };
+
   const handleNotificationsClick = () => {
+    if (!isVerified) {
+      handleRestrictedAction();
+      return;
+    }
     toast({
       title: "Coming Soon",
       description: "Notifications feature will be available soon!",
@@ -72,13 +90,18 @@ export function TopBar() {
   const handleCreateClick = () => {
     if (!user) {
       setAuthModalOpen(true);
-    } else {
-      navigate('/create');
+      return;
     }
+    if (!isVerified) {
+      handleRestrictedAction();
+      return;
+    }
+    navigate('/create');
   };
 
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
+      <EmailVerificationBanner />
       <div className="flex items-center gap-4 px-6 py-4 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <img src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" alt="Recipe App" className="h-8 w-8" />
