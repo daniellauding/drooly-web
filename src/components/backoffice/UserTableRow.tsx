@@ -21,8 +21,7 @@ import { UserInviteStatus } from "./UserInviteStatus";
 import { UserVerificationStatus } from "./UserVerificationStatus";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { auth } from "@/lib/firebase";
-import { sendEmailVerification } from "firebase/auth";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 interface UserTableRowProps {
   user: User;
@@ -60,17 +59,13 @@ export function UserTableRow({
   const { toast } = useToast();
   const [editRoleModalOpen, setEditRoleModalOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const functions = getFunctions();
 
   const handleResendVerification = async () => {
     try {
-      // Get the user from Firebase Auth
-      const firebaseUser = await auth.getUser(user.id);
-      if (!firebaseUser) {
-        throw new Error("User not found");
-      }
-
-      // Send verification email
-      await sendEmailVerification(firebaseUser);
+      console.log("Attempting to resend verification email for user:", user.id);
+      const resendVerification = httpsCallable(functions, 'resendVerificationEmail');
+      await resendVerification({ userId: user.id });
       
       toast({
         title: "Verification email sent",
@@ -80,7 +75,7 @@ export function UserTableRow({
       console.error("Error sending verification email:", error);
       
       let errorMessage = "Failed to send verification email.";
-      if (error.code === "auth/too-many-requests") {
+      if (error.code === "functions/too-many-requests") {
         errorMessage = "Too many attempts. Please try again later.";
       }
       
