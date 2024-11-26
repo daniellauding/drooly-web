@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { auth } from "@/lib/firebase";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from "firebase/auth";
@@ -16,8 +17,10 @@ interface ProfileSecuritySectionProps {
 
 export function ProfileSecuritySection({ userId }: ProfileSecuritySectionProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reAuthDialogOpen, setReAuthDialogOpen] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
   const { toast } = useToast();
 
   const handlePasswordUpdate = async () => {
@@ -46,6 +49,25 @@ export function ProfileSecuritySection({ userId }: ProfileSecuritySectionProps) 
     }
   };
 
+  const handleReAuthenticate = async () => {
+    if (!auth.currentUser?.email) return;
+
+    try {
+      console.log("Re-authenticating user");
+      const credential = EmailAuthProvider.credential(auth.currentUser.email, deletePassword);
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await handleDeleteAccount();
+      setReAuthDialogOpen(false);
+    } catch (error) {
+      console.error("Error re-authenticating:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid password. Please try again.",
+      });
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (!auth.currentUser || !userId) return;
     
@@ -58,8 +80,14 @@ export function ProfileSecuritySection({ userId }: ProfileSecuritySectionProps) 
         title: "Account deleted",
         description: "Your account has been permanently deleted.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting account:", error);
+      
+      if (error.code === "auth/requires-recent-login") {
+        setReAuthDialogOpen(true);
+        return;
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
@@ -119,6 +147,36 @@ export function ProfileSecuritySection({ userId }: ProfileSecuritySectionProps) 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={reAuthDialogOpen} onOpenChange={setReAuthDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm your password</DialogTitle>
+            <DialogDescription>
+              For security reasons, please enter your password to continue with account deletion.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="delete-password">Password</Label>
+              <Input
+                id="delete-password"
+                type="password"
+                value={deletePassword}
+                onChange={e => setDeletePassword(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-4">
+            <Button variant="outline" onClick={() => setReAuthDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleReAuthenticate}>
+              Confirm Deletion
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
