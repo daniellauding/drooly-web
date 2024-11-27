@@ -21,6 +21,7 @@ export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showPlanModal, setShowPlanModal] = React.useState(false);
 
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: ['recipe', id],
@@ -29,6 +30,10 @@ export default function RecipeDetail() {
   });
 
   console.log("Rendering recipe detail for ID:", id, "Recipe:", recipe);
+
+  const handleEdit = () => {
+    navigate(`/recipe/edit/${id}`);
+  };
 
   if (error) {
     return (
@@ -60,12 +65,6 @@ export default function RecipeDetail() {
   const validImages = (recipe.images || []).filter(img => !img.startsWith('blob:')) || [];
   const ingredients = recipe.ingredientSections?.[0]?.ingredients || [];
   const instructions = recipe.steps?.map(step => step.instructions).filter(Boolean) || [];
-  
-  const [showPlanModal, setShowPlanModal] = React.useState(false);
-
-  const handleEdit = () => {
-    navigate(`/recipe/edit/${id}`);
-  };
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
@@ -158,7 +157,6 @@ export default function RecipeDetail() {
           </Button>
         </div>
 
-        {/* Add the modal */}
         <AddToWeeklyPlanModal
           open={showPlanModal}
           onOpenChange={setShowPlanModal}
