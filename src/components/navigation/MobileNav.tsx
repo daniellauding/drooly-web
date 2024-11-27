@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Home, MessageSquare, User, Plus } from "lucide-react";
+import { Home, User, Plus } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -34,8 +34,8 @@ export function MobileNav() {
           onClick={handleCreateClick}
           className={`nav-item ${location.pathname === "/create" ? "active" : ""}`}
         >
-          <div className="p-2 rounded-full bg-[#4ECDC4] hover:bg-[#45b8b0] transition-colors">
-            <Plus className="h-6 w-6 text-white" />
+          <div className="p-2 rounded-full bg-primary hover:bg-primary/90 transition-colors">
+            <Plus className="h-6 w-6 text-primary-foreground" />
           </div>
         </Link>
         <Link to="/profile" className={`nav-item ${location.pathname === "/profile" ? "active" : ""}`}>

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Home, MessageSquare, Bell, Calendar, PlusCircle } from "lucide-react";
+import { Home, MessageSquare, Bell, Calendar, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfileDropdown } from "./ProfileDropdown";
@@ -69,11 +69,10 @@ export function DesktopNav({
         {isVerifiedOrSuperadmin && (
           <Button
             variant="default"
-            className="gap-2"
+            size="icon"
             onClick={handleCreateClick}
           >
-            <PlusCircle className="h-4 w-4" />
-            Create
+            <Plus className="h-4 w-4" />
           </Button>
         )}
 
