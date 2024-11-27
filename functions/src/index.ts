@@ -30,10 +30,14 @@ export const onEmailVerificationChange = functions.auth.user().onEmailVerified(a
 
 export const processSignUp = functions.auth.user().onCreate(async (user) => {
   try {
-    if (!user.email) return;
+    if (!user.email) {
+      console.error("No email provided for user:", user.uid);
+      return;
+    }
     
     console.log("Processing signup for user:", user.email);
 
+    // Create user document
     const userDoc = await db.collection("users").doc(user.uid).get();
     if (!userDoc.exists) {
       console.log("Creating new user document for:", user.email);
@@ -48,27 +52,33 @@ export const processSignUp = functions.auth.user().onCreate(async (user) => {
       });
     }
 
-    // Send welcome email with detailed logging
-    console.log("Attempting to send welcome email to:", user.email);
+    // Generate verification link
+    console.log("Generating verification link for:", user.email);
+    const verificationLink = await auth.generateEmailVerificationLink(user.email);
+    console.log("Verification link generated successfully");
+
+    // Send welcome email with verification link
     try {
+      console.log("Queueing welcome email for:", user.email);
       await db.collection("mail").add({
         to: user.email,
         template: {
           name: "welcome",
           data: {
             userName: user.displayName || user.email,
-            verificationLink: await auth.generateEmailVerificationLink(user.email)
+            verificationLink: verificationLink
           }
-        }
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: 'pending'
       });
       console.log("Welcome email queued successfully for:", user.email);
     } catch (emailError) {
-      console.error("Error sending welcome email:", emailError);
-      console.error("Email details:", {
-        recipient: user.email,
-        template: "welcome",
-        userName: user.displayName || user.email
-      });
+      console.error("Error queueing welcome email:", emailError);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to queue welcome email"
+      );
     }
   } catch (error) {
     console.error("Error in processSignUp:", error);
@@ -97,7 +107,7 @@ export const resendVerificationEmail = onCall(async (request) => {
 
     const verificationLink = await auth.generateEmailVerificationLink(user.email);
     
-    // Send verification email using the mail collection
+    // Queue verification email
     await db.collection("mail").add({
       to: user.email,
       template: {
@@ -106,10 +116,12 @@ export const resendVerificationEmail = onCall(async (request) => {
           verificationLink,
           userName: user.displayName || user.email
         }
-      }
+      },
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      status: 'pending'
     });
     
-    console.log("Verification email sent successfully to:", user.email);
+    console.log("Verification email queued successfully for:", user.email);
     return { success: true };
   } catch (error) {
     console.error("Error resending verification email:", error);

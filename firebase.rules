@@ -52,10 +52,12 @@ service cloud.firestore {
       // Allow creating mail documents if authenticated
       allow create: if request.auth != null;
       
-      // Only allow reading own mail documents
+      // Allow reading own mail documents
       allow read: if request.auth != null && 
-                 resource.data.to == request.auth.token.email;
+                 (
+                   resource.data.to == request.auth.token.email ||
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin'
+                 );
     }
-
   }
 }
