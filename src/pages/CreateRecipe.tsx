@@ -1,15 +1,15 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecipeById } from "@/services/firebaseRecipes";
+import { fetchRecipeById } from "@/services/recipeService";
 import { Recipe, validateRecipe } from "@/types/recipe";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
 import { RecipeBasicInfo } from "@/components/recipe/RecipeBasicInfo";
 import { RecipeStepInput } from "@/components/RecipeStepInput";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { doc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, updateDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -20,13 +20,7 @@ export default function CreateRecipe() {
   const { user } = useAuth();
   const isEditing = !!id;
 
-  const { data: existingRecipe, isLoading } = useQuery({
-    queryKey: ['recipe', id],
-    queryFn: () => fetchRecipeById(id!),
-    enabled: !!id,
-  });
-
-  const [recipe, setRecipe] = useState<Recipe>(() => existingRecipe || {
+  const [recipe, setRecipe] = useState<Recipe>({
     title: "",
     description: "",
     difficulty: "Medium",
@@ -57,6 +51,19 @@ export default function CreateRecipe() {
     status: "draft"
   });
 
+  const { data: existingRecipe, isLoading } = useQuery({
+    queryKey: ['recipe', id],
+    queryFn: () => fetchRecipeById(id!),
+    enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (existingRecipe) {
+      console.log("Setting existing recipe data:", existingRecipe);
+      setRecipe(existingRecipe);
+    }
+  }, [existingRecipe]);
+
   if (isEditing && isLoading) {
     return <div>Loading recipe...</div>;
   }
@@ -82,19 +89,24 @@ export default function CreateRecipe() {
     }
 
     try {
+      console.log("Saving recipe:", recipe);
       const recipeData = {
         ...recipe,
         creatorId: user.uid,
         creatorName: user.displayName || "Anonymous Chef",
         updatedAt: serverTimestamp(),
-        ...(isEditing ? {} : { createdAt: serverTimestamp() })
       };
 
       if (isEditing && id) {
-        await updateDoc(doc(db, "recipes", id), recipeData);
+        const recipeRef = doc(db, "recipes", id);
+        await updateDoc(recipeRef, recipeData);
       } else {
-        const newRecipeRef = doc(collection(db, "recipes"));
-        await setDoc(newRecipeRef, recipeData);
+        const recipesRef = collection(db, "recipes");
+        const newRecipeRef = doc(recipesRef);
+        await setDoc(newRecipeRef, {
+          ...recipeData,
+          createdAt: serverTimestamp(),
+        });
       }
 
       toast({
