@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, LogOut, User, ChevronDown } from "lucide-react";
+import { Settings, LogOut, User, ChevronDown, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 
@@ -72,6 +72,12 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
             <User className="mr-2 h-4 w-4" />
             <span>Profile</span>
           </DropdownMenuItem>
+          {user.role === 'superadmin' && (
+            <DropdownMenuItem onClick={() => navigate('/backoffice')}>
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <span>Backoffice</span>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => setEditProfileOpen(true)}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>
