@@ -88,8 +88,22 @@ export function TopBar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-6">
           <Logo />
+          <div className="hidden md:flex items-center gap-6">
+            <DesktopNav
+              unreadNotifications={unreadNotificationsCount}
+              unreadMessages={unreadMessagesCount}
+              isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
+              handleNotificationsClick={handleNotificationsClick}
+              handleCreateClick={handleCreateClick}
+              onAuthModalOpen={() => setAuthModalOpen(true)}
+              onSearchClick={() => setSearchOpen(true)}
+            />
+          </div>
+        </div>
+
+        <div className="md:hidden">
           <MobileMenu 
             onAuthModalOpen={() => setAuthModalOpen(true)}
             onEditProfileOpen={() => setEditProfileOpen(true)}
@@ -100,21 +114,6 @@ export function TopBar() {
             handleNotificationsClick={handleNotificationsClick}
             handleCreateClick={handleCreateClick}
           />
-        </div>
-
-        <div className="hidden md:flex items-center gap-4 flex-1">
-          <DesktopNav
-            unreadNotifications={unreadNotificationsCount}
-            unreadMessages={unreadMessagesCount}
-            isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
-            handleNotificationsClick={handleNotificationsClick}
-            handleCreateClick={handleCreateClick}
-            onAuthModalOpen={() => setAuthModalOpen(true)}
-            onSearchClick={() => setSearchOpen(true)}
-          />
-          <div className="flex-1 mx-4">
-            <SearchBar onSearchClick={() => setSearchOpen(true)} />
-          </div>
         </div>
       </div>
 

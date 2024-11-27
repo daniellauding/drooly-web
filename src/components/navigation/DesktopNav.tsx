@@ -25,10 +25,14 @@ export function DesktopNav({
   onAuthModalOpen,
 }: DesktopNavProps) {
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-6">
       <Link to="/" className="text-gray-600 hover:text-gray-900">
         <Home className="h-5 w-5" />
       </Link>
+
+      <div className="w-[320px]">
+        <SearchBar onSearchClick={() => onSearchClick()} />
+      </div>
 
       <div className="flex items-center gap-2">
         <Button
