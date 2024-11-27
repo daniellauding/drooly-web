@@ -17,7 +17,7 @@ interface ProfileDropdownProps {
 }
 
 export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
@@ -48,21 +48,22 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
     );
   }
 
+  const userInitial = (user.displayName || user.email || "U")[0].toUpperCase();
+
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer">
             <Avatar className="h-8 w-8">
-              {user.photoURL && (
+              {user.photoURL ? (
                 <AvatarImage 
                   src={user.photoURL} 
                   alt={user.displayName || user.email || "User avatar"}
                 />
+              ) : (
+                <AvatarFallback>{userInitial}</AvatarFallback>
               )}
-              <AvatarFallback>
-                {(user.displayName || user.email || "U")[0].toUpperCase()}
-              </AvatarFallback>
             </Avatar>
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </div>
