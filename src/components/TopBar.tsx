@@ -24,6 +24,8 @@ export function TopBar() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
+  console.log("User data in TopBar:", user); // Debug log
+
   const isVerifiedOrSuperadmin = user?.emailVerified || user?.manuallyVerified || user?.role === 'superadmin';
 
   const { data: unreadMessagesCount = 0 } = useQuery({

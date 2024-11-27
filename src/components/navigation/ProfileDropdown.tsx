@@ -21,7 +21,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
   const navigate = useNavigate();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  console.log("Current user photo URL:", user?.photoURL); // Debug log
+  console.log("User data in ProfileDropdown:", user); // Debug log
 
   const handleLogout = async () => {
     try {
@@ -32,7 +32,6 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
     }
   };
 
-  // If user is not logged in, show a simple avatar that opens auth modal
   if (!user) {
     return (
       <div 
@@ -58,9 +57,9 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer">
             <Avatar className="h-8 w-8">
-              {user.photoURL ? (
+              {user.photoURL || user.avatarUrl ? (
                 <AvatarImage 
-                  src={user.photoURL} 
+                  src={user.photoURL || user.avatarUrl} 
                   alt={user.displayName || user.email || "User avatar"}
                   className="object-cover w-full h-full"
                 />
@@ -101,7 +100,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
           id: user.uid,
           name: user.displayName || "",
           email: user.email || "",
-          avatarUrl: user.photoURL || "",
+          avatarUrl: user.photoURL || user.avatarUrl || "",
         }}
         isAdmin={user?.role === 'superadmin'}
         onUpdate={() => {
