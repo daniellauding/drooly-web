@@ -11,10 +11,11 @@ import { IngredientInput } from "@/components/IngredientInput";
 import { RecipeStepInput } from "@/components/RecipeStepInput";
 import { useToast } from "@/hooks/use-toast";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
-import { Recipe, validateRecipe, ValidationResult } from "@/types/recipe";
+import { Recipe, validateRecipe } from "@/types/recipe";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Accordion,
   AccordionContent,
@@ -67,7 +68,8 @@ export default function CreateRecipe() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [recipe, setRecipe] = useState<Recipe>(initialRecipe);
-  const [validationResult, setValidationResult] = useState<ValidationResult>({ isValid: true, errors: [] });
+  const [enableSteps, setEnableSteps] = useState(false);
+  const [openSections, setOpenSections] = useState<string[]>([]);
 
   console.log("Recipe state updated:", recipe);
 
@@ -80,7 +82,19 @@ export default function CreateRecipe() {
 
   const validateAndShowErrors = () => {
     const validation = validateRecipe(recipe);
-    setValidationResult(validation);
+    
+    const sectionsWithErrors = new Set<string>();
+    validation.errors.forEach(error => {
+      if (error.field.startsWith('title') || error.field.startsWith('description')) {
+        sectionsWithErrors.add('basic-info');
+      } else if (error.field.startsWith('difficulty') || error.field.startsWith('servings')) {
+        sectionsWithErrors.add('details');
+      } else if (error.field.startsWith('ingredients')) {
+        sectionsWithErrors.add('ingredients');
+      }
+    });
+    
+    setOpenSections(Array.from(sectionsWithErrors));
     return validation.isValid;
   };
 
@@ -109,7 +123,8 @@ export default function CreateRecipe() {
         ...recipe,
         creatorId: user.uid,
         createdAt: new Date(),
-        status: isDraft ? "draft" : "published"
+        status: isDraft ? "draft" : "published",
+        hasSteps: enableSteps
       };
 
       const docRef = await addDoc(collection(db, "recipes"), recipeData);
@@ -133,31 +148,6 @@ export default function CreateRecipe() {
     }
   };
 
-  const getErrorsForField = (fieldName: string) => {
-    return validationResult.errors.filter(error => error.field === fieldName);
-  };
-
-  const renderFieldErrors = (fieldName: string) => {
-    const errors = getErrorsForField(fieldName);
-    if (errors.length === 0) return null;
-
-    return (
-      <Alert variant="destructive" className="mt-2">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Validation Error</AlertTitle>
-        <AlertDescription>
-          <ul className="list-disc pl-4">
-            {errors.map((error, index) => (
-              <li key={index}>{error.message}</li>
-            ))}
-          </ul>
-        </AlertDescription>
-      </Alert>
-    );
-  };
-
-  const ingredientGroups = Array.from(new Set(recipe.ingredients.map(ing => ing.group)));
-
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F9FC]">
       <TopBar />
@@ -167,7 +157,23 @@ export default function CreateRecipe() {
 
           <RecipeCreationOptions onRecipeImported={handleRecipeImport} />
 
-          <Accordion type="single" collapsible className="w-full space-y-4">
+          <div className="flex items-center space-x-2 mb-4">
+            <Switch
+              checked={enableSteps}
+              onCheckedChange={setEnableSteps}
+              id="steps-mode"
+            />
+            <label htmlFor="steps-mode" className="text-sm">
+              Enable Step-by-Step Recipe Mode
+            </label>
+          </div>
+
+          <Accordion 
+            type="multiple" 
+            value={openSections}
+            onValueChange={setOpenSections}
+            className="w-full space-y-4"
+          >
             <AccordionItem value="basic-info" className="border rounded-lg bg-white">
               <AccordionTrigger className="px-4">Basic Information</AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
@@ -175,8 +181,6 @@ export default function CreateRecipe() {
                   recipe={recipe}
                   onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
                 />
-                {renderFieldErrors('title')}
-                {renderFieldErrors('description')}
               </AccordionContent>
             </AccordionItem>
 
@@ -187,11 +191,6 @@ export default function CreateRecipe() {
                   recipe={recipe}
                   onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
                 />
-                {renderFieldErrors('difficulty')}
-                {renderFieldErrors('servings')}
-                {renderFieldErrors('totalTime')}
-                {renderFieldErrors('categories')}
-                {renderFieldErrors('equipment')}
               </AccordionContent>
             </AccordionItem>
 
@@ -202,19 +201,19 @@ export default function CreateRecipe() {
                   ingredients={recipe.ingredients}
                   onChange={(ingredients) => setRecipe(prev => ({ ...prev, ingredients }))}
                 />
-                {renderFieldErrors('ingredients')}
               </AccordionContent>
             </AccordionItem>
 
-            <AccordionItem value="steps" className="border rounded-lg bg-white">
-              <AccordionTrigger className="px-4">Steps</AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <div className="space-y-4">
-                  {recipe.steps.map((step, index) => (
-                    <div key={index}>
+            {enableSteps && (
+              <AccordionItem value="steps" className="border rounded-lg bg-white">
+                <AccordionTrigger className="px-4">Steps</AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  <div className="space-y-4">
+                    {recipe.steps.map((step, index) => (
                       <RecipeStepInput
+                        key={index}
                         step={step}
-                        ingredientGroups={ingredientGroups}
+                        ingredientGroups={Array.from(new Set(recipe.ingredients.map(ing => ing.group)))}
                         onChange={(updatedStep) => {
                           const newSteps = [...recipe.steps];
                           newSteps[index] = updatedStep;
@@ -227,23 +226,22 @@ export default function CreateRecipe() {
                           }
                         }}
                       />
-                      {renderFieldErrors(`steps.${index}`)}
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setRecipe(prev => ({
-                      ...prev,
-                      steps: [...prev.steps, { title: "", instructions: "", duration: "", media: [] }]
-                    }))}
-                    className="w-full sm:w-auto"
-                  >
-                    Add Step
-                  </Button>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setRecipe(prev => ({
+                        ...prev,
+                        steps: [...prev.steps, { title: "", instructions: "", duration: "", media: [] }]
+                      }))}
+                      className="w-full sm:w-auto"
+                    >
+                      Add Step
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            )}
           </Accordion>
 
           <Card className="p-4">

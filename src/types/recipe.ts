@@ -106,39 +106,6 @@ export const validateRecipe = (recipe: Recipe): ValidationResult => {
       field: 'ingredients',
       message: 'At least one ingredient is required'
     });
-  } else {
-    recipe.ingredients.forEach((ingredient, index) => {
-      if (!ingredient.name?.trim()) {
-        errors.push({
-          field: 'ingredients',
-          message: `Ingredient ${index + 1} requires a name`
-        });
-      }
-      // Set default values for amount and unit if not provided
-      if (!ingredient.amount?.trim()) {
-        ingredient.amount = '1';
-      }
-      if (!ingredient.unit?.trim()) {
-        ingredient.unit = 'piece';
-      }
-    });
-  }
-
-  // Steps validation
-  if (recipe.steps.length === 0) {
-    errors.push({
-      field: 'steps',
-      message: 'At least one step is required'
-    });
-  } else {
-    recipe.steps.forEach((step, index) => {
-      if (!step.instructions?.trim()) {
-        errors.push({
-          field: `steps.${index}`,
-          message: `Step ${index + 1} requires instructions`
-        });
-      }
-    });
   }
 
   // Servings validation - only if provided

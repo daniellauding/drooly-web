@@ -12,12 +12,16 @@ export interface RecipeCardProps {
   isFavorite?: boolean;
   chef?: string;
   date?: string;
+  images?: string[];
+  featuredImageIndex?: number;
 }
 
 export function RecipeCard({ 
   id,
   title, 
-  image, 
+  image,
+  images,
+  featuredImageIndex = 0,
   cookTime, 
   difficulty, 
   isFavorite = false,
@@ -36,6 +40,16 @@ export function RecipeCard({
     console.log('Toggle favorite for recipe:', id);
   };
 
+  // Get the featured image URL
+  const getFeaturedImage = () => {
+    if (images && images.length > 0) {
+      const featuredImage = images[featuredImageIndex];
+      // Check if it's a blob URL and return placeholder if it is
+      return featuredImage?.startsWith('blob:') ? '/placeholder.svg' : featuredImage;
+    }
+    return image || '/placeholder.svg';
+  };
+
   return (
     <Card 
       className="overflow-hidden bg-white border rounded-3xl transition-all duration-300 hover:shadow-lg cursor-pointer"
@@ -43,7 +57,7 @@ export function RecipeCard({
     >
       <div className="relative">
         <img 
-          src={image || '/placeholder.svg'} 
+          src={getFeaturedImage()} 
           alt={title} 
           className="h-48 w-full object-cover" 
         />
