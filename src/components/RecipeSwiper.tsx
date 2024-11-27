@@ -1,6 +1,7 @@
-import { Heart, X, Clock } from "lucide-react";
+import { Heart, X, Clock, Edit } from "lucide-react";
 import { Card } from "./ui/card";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Carousel,
   CarouselContent,
@@ -9,6 +10,7 @@ import {
   CarouselPrevious,
 } from "./ui/carousel";
 import { Recipe } from "@/services/recipeService";
+import { Button } from "./ui/button";
 
 interface RecipeSwiperProps {
   recipes: Recipe[];
@@ -16,6 +18,7 @@ interface RecipeSwiperProps {
 
 export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const handleLike = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -27,9 +30,20 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
     console.log('Disliked recipe:', id);
   };
 
+  const handleEdit = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    navigate(`/recipe/edit/${id}`);
+  };
+
   const handleRecipeClick = (id: string) => {
     console.log('Navigating to recipe:', id);
     navigate(`/recipe/${id}`);
+  };
+
+  const getValidImageUrl = (recipe: Recipe) => {
+    const imageUrl = recipe.images?.[recipe.featuredImageIndex || 0];
+    if (!imageUrl) return '/placeholder.svg';
+    return imageUrl.startsWith('blob:') ? '/placeholder.svg' : imageUrl;
   };
 
   return (
@@ -42,7 +56,7 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
               onClick={() => handleRecipeClick(recipe.id)}
             >
               <img
-                src={recipe.image}
+                src={getValidImageUrl(recipe)}
                 alt={recipe.title}
                 className="absolute inset-0 w-full h-full object-cover"
               />
@@ -72,6 +86,14 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
                 >
                   <Heart className="w-6 h-6 text-white" />
                 </button>
+                {user && recipe.creatorId === user.uid && (
+                  <button
+                    onClick={(e) => handleEdit(e, recipe.id)}
+                    className="p-3 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                  >
+                    <Edit className="w-6 h-6 text-white" />
+                  </button>
+                )}
               </div>
             </Card>
           </CarouselItem>

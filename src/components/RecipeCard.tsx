@@ -1,6 +1,7 @@
-import { Heart, Clock, ChefHat } from "lucide-react";
+import { Heart, Clock, ChefHat, Edit } from "lucide-react";
 import { Card } from "./ui/card";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types/recipe";
 
 export interface RecipeCardProps {
@@ -14,6 +15,7 @@ export interface RecipeCardProps {
   date?: string;
   images?: string[];
   featuredImageIndex?: number;
+  creatorId?: string;
 }
 
 export function RecipeCard({ 
@@ -26,9 +28,11 @@ export function RecipeCard({
   difficulty, 
   isFavorite = false,
   chef,
-  date 
+  date,
+  creatorId
 }: RecipeCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleClick = () => {
     console.log('Navigating to recipe:', id);
@@ -38,6 +42,11 @@ export function RecipeCard({
   const handleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Toggle favorite for recipe:', id);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/recipe/edit/${id}`);
   };
 
   // Get the featured image URL
@@ -61,12 +70,22 @@ export function RecipeCard({
           alt={title} 
           className="h-48 w-full object-cover" 
         />
-        <button 
-          className="absolute top-3 right-3 h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
-          onClick={handleFavorite}
-        >
-          <Heart className={`h-5 w-5 ${isFavorite ? "fill-[#FF6B6B] text-[#FF6B6B]" : "text-gray-600"}`} />
-        </button>
+        <div className="absolute top-3 right-3 flex gap-2">
+          {user && creatorId === user.uid && (
+            <button 
+              className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
+              onClick={handleEdit}
+            >
+              <Edit className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
+          <button 
+            className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
+            onClick={handleFavorite}
+          >
+            <Heart className={`h-5 w-5 ${isFavorite ? "fill-[#FF6B6B] text-[#FF6B6B]" : "text-gray-600"}`} />
+          </button>
+        </div>
       </div>
       <div className="p-5">
         <h3 className="font-semibold text-lg mb-3 text-[#2C3E50]">{title}</h3>
