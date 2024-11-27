@@ -31,10 +31,17 @@ export function MultiSelect({
   placeholder = "Select items..." 
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
   
   // Ensure we always have arrays, even if undefined is passed
   const safeOptions = Array.isArray(options) ? options : [];
   const safeSelected = Array.isArray(selected) ? selected : [];
+
+  const filteredOptions = React.useMemo(() => {
+    return safeOptions.filter((option) =>
+      option.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [safeOptions, searchQuery]);
 
   const handleSelect = React.useCallback((option: string) => {
     const newSelected = safeSelected.includes(option)
@@ -71,16 +78,19 @@ export function MultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-        <Command className="w-full" shouldFilter={false}>
-          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder={`Search ${placeholder.toLowerCase()}...`}
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandList>
             <CommandEmpty>No item found.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
-              {safeOptions.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option}
                   onSelect={() => handleSelect(option)}
-                  value={option}
                 >
                   <Check
                     className={cn(
