@@ -22,7 +22,6 @@ export function TopBar() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  // Check if user is verified through either method or is superadmin
   const isVerifiedOrSuperadmin = user?.emailVerified || user?.manuallyVerified || user?.role === 'superadmin';
 
   const { data: unreadMessagesCount = 0 } = useQuery({
@@ -89,7 +88,7 @@ export function TopBar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2 lg:w-auto w-full">
+        <div className="flex items-center gap-2 w-full">
           <div className="flex items-center gap-2">
             <Logo />
             <MobileMenu 
@@ -103,20 +102,22 @@ export function TopBar() {
               handleCreateClick={handleCreateClick}
             />
           </div>
-          <div className="flex-1 mx-4 lg:hidden">
+          <div className="flex-1 mx-4">
             <SearchBar onSearchClick={() => setSearchOpen(true)} />
           </div>
         </div>
 
-        <DesktopNav
-          unreadNotifications={unreadNotificationsCount}
-          unreadMessages={unreadMessagesCount}
-          isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
-          handleNotificationsClick={handleNotificationsClick}
-          handleCreateClick={handleCreateClick}
-          onAuthModalOpen={() => setAuthModalOpen(true)}
-          onSearchClick={() => setSearchOpen(true)}
-        />
+        <div className="hidden md:block">
+          <DesktopNav
+            unreadNotifications={unreadNotificationsCount}
+            unreadMessages={unreadMessagesCount}
+            isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
+            handleNotificationsClick={handleNotificationsClick}
+            handleCreateClick={handleCreateClick}
+            onAuthModalOpen={() => setAuthModalOpen(true)}
+            onSearchClick={() => setSearchOpen(true)}
+          />
+        </div>
       </div>
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
