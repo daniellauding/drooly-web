@@ -66,6 +66,7 @@ export interface RecipeStep {
   duration: string;
   ingredientGroup?: string;
   media?: string[];
+  ingredients?: Ingredient[];
 }
 
 export interface ValidationResult {

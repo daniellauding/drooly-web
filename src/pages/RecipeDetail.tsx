@@ -6,6 +6,13 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchRecipeById } from "@/services/recipeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -20,7 +27,6 @@ export default function RecipeDetail() {
   console.log("Rendering recipe detail for ID:", id, "Recipe:", recipe);
 
   if (error) {
-    console.error("Error loading recipe:", error);
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-lg text-muted-foreground">Error loading recipe</p>
@@ -47,7 +53,7 @@ export default function RecipeDetail() {
     );
   }
 
-  // Ensure ingredients and instructions exist with default values
+  const validImages = recipe.images?.filter(img => !img.startsWith('blob:')) || [];
   const ingredients = recipe.ingredientSections?.[0]?.ingredients || [];
   const instructions = recipe.steps?.map(step => step.instructions).filter(Boolean) || [];
 
@@ -63,11 +69,33 @@ export default function RecipeDetail() {
       </Button>
 
       <div className="relative h-[40vh] sm:h-[50vh] w-full">
-        <img
-          src={recipe.images?.[recipe.featuredImageIndex || 0] || '/placeholder.svg'}
-          alt={recipe.title}
-          className="w-full h-full object-cover"
-        />
+        {validImages.length > 0 ? (
+          <Carousel className="w-full h-full">
+            <CarouselContent>
+              {validImages.map((image, index) => (
+                <CarouselItem key={index}>
+                  <img
+                    src={image}
+                    alt={`${recipe.title} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {validImages.length > 1 && (
+              <>
+                <CarouselPrevious className="left-4" />
+                <CarouselNext className="right-4" />
+              </>
+            )}
+          </Carousel>
+        ) : (
+          <img
+            src="/placeholder.svg"
+            alt={recipe.title}
+            className="w-full h-full object-cover"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">
           <h1 className="text-2xl sm:text-4xl font-bold mb-2">{recipe.title}</h1>
