@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Home, User, Plus } from "lucide-react";
+import { Home, User, Plus, Edit2, Users as UsersIcon, Camera } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
@@ -99,13 +99,13 @@ const createOptions = [
   {
     title: "Create & Share",
     description: "Keep all your recipes in one place and share them with friends.",
-    icon: Edit3,
+    icon: Edit2,
     path: "/create-recipe"
   },
   {
     title: "Plan Together",
     description: "Create meal plans and organize food events with loved ones.",
-    icon: Users,
+    icon: UsersIcon,
     path: "/plan"
   },
   {
