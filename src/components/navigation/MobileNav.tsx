@@ -1,15 +1,18 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Home, User, Plus } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { CreateOptions } from "../create/CreateOptions";
+import { useState } from "react";
 
 export function MobileNav() {
   const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   
   const handleCreateClick = (e: React.MouseEvent) => {
     if (!user) {
@@ -20,6 +23,11 @@ export function MobileNav() {
         variant: "destructive"
       });
     }
+  };
+
+  const handleOptionSelect = (path: string) => {
+    setOpen(false);
+    navigate(path);
   };
 
   return (
@@ -33,7 +41,7 @@ export function MobileNav() {
         </Link>
         
         {user ? (
-          <Drawer>
+          <Drawer open={open} onOpenChange={setOpen}>
             <DrawerTrigger asChild>
               <button className="nav-item">
                 <div className="p-2 rounded-full bg-primary hover:bg-primary/90 transition-colors">
@@ -44,7 +52,23 @@ export function MobileNav() {
             <DrawerContent>
               <div className="p-4">
                 <h2 className="text-lg font-semibold mb-4">Create</h2>
-                <CreateOptions />
+                <div className="space-y-4">
+                  {createOptions.map((option) => (
+                    <button
+                      key={option.title}
+                      className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                      onClick={() => handleOptionSelect(option.path)}
+                    >
+                      <div className="p-2 rounded-full bg-purple-100">
+                        <option.icon className="w-6 h-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold">{option.title}</h3>
+                        <p className="text-sm text-gray-600">{option.description}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </DrawerContent>
           </Drawer>
@@ -70,3 +94,24 @@ export function MobileNav() {
     </nav>
   );
 }
+
+const createOptions = [
+  {
+    title: "Create & Share",
+    description: "Keep all your recipes in one place and share them with friends.",
+    icon: Edit3,
+    path: "/create-recipe"
+  },
+  {
+    title: "Plan Together",
+    description: "Create meal plans and organize food events with loved ones.",
+    icon: Users,
+    path: "/plan"
+  },
+  {
+    title: "Share Stories",
+    description: "Share your weekly food adventures and inspire others.",
+    icon: Camera,
+    path: "/stories/create"
+  }
+];

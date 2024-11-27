@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Backoffice from "./pages/Backoffice";
+import PlanTogether from "./pages/PlanTogether";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/backoffice" element={<Backoffice />} />
+            <Route path="/plan" element={<PlanTogether />} />
           </Routes>
           <MobileNav />
         </Router>
