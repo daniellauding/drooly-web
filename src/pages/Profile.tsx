@@ -11,6 +11,7 @@ import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
 import { useToast } from "@/hooks/use-toast";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileStats } from "@/components/profile/ProfileStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Profile() {
@@ -141,11 +142,17 @@ export default function Profile() {
       <main className="container py-6 px-4 max-w-4xl mx-auto space-y-6">
         <ProfileHeader 
           userData={userData}
-          recipesCount={recipes.length}
           isOwnProfile={isOwnProfile}
           remainingInvites={remainingInvites}
           onEditProfile={() => setEditProfileOpen(true)}
           onInvite={() => setInviteModalOpen(true)}
+        />
+
+        <ProfileStats 
+          userId={targetUserId}
+          recipesCount={recipes?.length || 0}
+          followersCount={userData.followers.length}
+          followingCount={userData.following.length}
         />
 
         <Tabs defaultValue="recipes" className="w-full">

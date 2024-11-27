@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { List, Users, Heart } from "lucide-react";
+import { List, Users, Heart, Bookmark } from "lucide-react";
 import { FollowersDialog } from "./FollowersDialog";
 import { FollowingDialog } from "./FollowingDialog";
 import { useQuery } from "@tanstack/react-query";
@@ -22,8 +22,22 @@ export function ProfileStats({ userId, recipesCount, followersCount, followingCo
     queryKey: ['favorites', userId],
     queryFn: async () => {
       console.log('Fetching favorites for user:', userId);
-      const favoritesRef = collection(db, "favorites");
-      const q = query(favoritesRef, where("userId", "==", userId));
+      const favoritesRef = collection(db, "recipes");
+      const q = query(favoritesRef, where("stats.saves", "array-contains", userId));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }
+  });
+
+  const { data: likes = [] } = useQuery({
+    queryKey: ['likes', userId],
+    queryFn: async () => {
+      console.log('Fetching likes for user:', userId);
+      const likesRef = collection(db, "recipes");
+      const q = query(likesRef, where("stats.likes", "array-contains", userId));
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -68,10 +82,18 @@ export function ProfileStats({ userId, recipesCount, followersCount, followingCo
 
       <div className="flex flex-col items-center gap-1">
         <div className="flex items-center gap-2 text-lg font-semibold">
-          <Heart className="h-5 w-5 text-muted-foreground" />
+          <Bookmark className="h-5 w-5 text-muted-foreground" />
           <span>{favorites.length}</span>
         </div>
-        <span className="text-sm text-muted-foreground">Favorites</span>
+        <span className="text-sm text-muted-foreground">Saved</span>
+      </div>
+
+      <div className="flex flex-col items-center gap-1">
+        <div className="flex items-center gap-2 text-lg font-semibold">
+          <Heart className="h-5 w-5 text-muted-foreground" />
+          <span>{likes.length}</span>
+        </div>
+        <span className="text-sm text-muted-foreground">Liked</span>
       </div>
 
       <FollowersDialog
