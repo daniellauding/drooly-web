@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
-import { Home, MessageSquare, Bell, Calendar, Plus } from "lucide-react";
+import { MessageSquare, Bell, Calendar, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfileDropdown } from "./ProfileDropdown";
 import { SearchBar } from "./SearchBar";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { CreateOptions } from "../create/CreateOptions";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DesktopNavProps {
   unreadNotifications: number;
@@ -26,17 +28,15 @@ export function DesktopNav({
   onAuthModalOpen,
   onSearchClick,
 }: DesktopNavProps) {
+  const { user } = useAuth();
+
   return (
     <div className="flex items-center gap-6 w-full">
-      <Link to="/" className="text-gray-600 hover:text-gray-900">
-        <Home className="h-5 w-5" />
-      </Link>
-
-      <div className="flex-1">
+      <div className="flex-1 max-w-xl mx-auto">
         <SearchBar onSearchClick={onSearchClick} />
       </div>
 
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
@@ -71,7 +71,7 @@ export function DesktopNav({
         {isVerifiedOrSuperadmin && (
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="default" size="icon">
+              <Button variant="default" size="icon" className="bg-red-500 hover:bg-red-600">
                 <Plus className="h-4 w-4" />
               </Button>
             </DialogTrigger>

@@ -12,7 +12,9 @@ import { EditProfileModal } from "./profile/EditProfileModal";
 import { MobileMenu } from "./navigation/MobileMenu";
 import { Logo } from "./navigation/Logo";
 import { DesktopNav } from "./navigation/DesktopNav";
-import { SearchBar } from "./navigation/SearchBar";
+import { Home } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
 
 export function TopBar() {
   const navigate = useNavigate();
@@ -90,17 +92,23 @@ export function TopBar() {
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
         <div className="flex items-center gap-6">
           <Logo />
-          <div className="hidden md:flex items-center gap-6">
-            <DesktopNav
-              unreadNotifications={unreadNotificationsCount}
-              unreadMessages={unreadMessagesCount}
-              isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
-              handleNotificationsClick={handleNotificationsClick}
-              handleCreateClick={handleCreateClick}
-              onAuthModalOpen={() => setAuthModalOpen(true)}
-              onSearchClick={() => setSearchOpen(true)}
-            />
-          </div>
+          <Link to="/">
+            <Button variant="ghost" size="icon">
+              <Home className="h-5 w-5 text-gray-600 hover:text-gray-900" />
+            </Button>
+          </Link>
+        </div>
+
+        <div className="hidden md:block flex-1 max-w-4xl mx-auto px-6">
+          <DesktopNav
+            unreadNotifications={unreadNotificationsCount}
+            unreadMessages={unreadMessagesCount}
+            isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
+            handleNotificationsClick={handleNotificationsClick}
+            handleCreateClick={handleCreateClick}
+            onAuthModalOpen={() => setAuthModalOpen(true)}
+            onSearchClick={() => setSearchOpen(true)}
+          />
         </div>
 
         <div className="md:hidden">
