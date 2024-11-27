@@ -66,14 +66,14 @@ export function PhoneInput({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[200px] p-0">
-          <Command shouldFilter={false}>
+          <Command>
             <CommandInput 
               placeholder="Search code..."
               value={searchQuery}
               onValueChange={setSearchQuery}
             />
             <CommandEmpty>No code found.</CommandEmpty>
-            <CommandGroup className="max-h-[300px] overflow-auto">
+            <CommandGroup>
               {filteredCodes.map((code) => (
                 <CommandItem
                   key={code}

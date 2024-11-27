@@ -60,14 +60,14 @@ export function CountrySelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-        <Command shouldFilter={false}>
+        <Command>
           <CommandInput 
             placeholder="Search country..." 
             value={searchQuery}
             onValueChange={setSearchQuery}
           />
           <CommandEmpty>No country found.</CommandEmpty>
-          <CommandGroup className="max-h-[300px] overflow-auto">
+          <CommandGroup>
             {filteredCountries.map((country) => (
               <CommandItem
                 key={country}
