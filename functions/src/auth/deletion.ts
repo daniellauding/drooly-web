@@ -19,10 +19,6 @@ export const deleteUserAccount = functions.https.onCall(async (data, context) =>
   console.log('Starting cleanup process for user:', uid);
 
   try {
-    // Delete from Firebase Auth first
-    await auth.deleteUser(uid);
-    console.log('User deleted from Firebase Auth');
-
     const batch = db.batch();
 
     // Delete user document
@@ -65,8 +61,13 @@ export const deleteUserAccount = functions.https.onCall(async (data, context) =>
       batch.delete(doc.ref);
     });
 
+    // Execute batch delete first
     await batch.commit();
     console.log('Successfully deleted all user data from Firestore');
+
+    // Then delete from Auth
+    await auth.deleteUser(uid);
+    console.log('Successfully deleted user from Firebase Auth');
 
     return { success: true };
   } catch (error) {
