@@ -36,7 +36,7 @@ export function DesktopNav({
         <SearchBar onSearchClick={onSearchClick} />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-auto">
         <Button
           variant="ghost"
           size="icon"
