@@ -46,14 +46,13 @@ export function RecipeCard({
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log('Navigating to edit recipe:', id);
     navigate(`/recipe/edit/${id}`);
   };
 
-  // Get the featured image URL
   const getFeaturedImage = () => {
     if (images && images.length > 0) {
-      const featuredImage = images[featuredImageIndex];
-      // Check if it's a blob URL and return placeholder if it is
+      const featuredImage = images[featuredImageIndex] || images[0];
       return featuredImage?.startsWith('blob:') ? '/placeholder.svg' : featuredImage;
     }
     return image || '/placeholder.svg';

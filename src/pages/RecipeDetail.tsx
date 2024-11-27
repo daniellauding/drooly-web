@@ -1,11 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft } from "lucide-react";
+import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipeById } from "@/services/recipeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Carousel,
   CarouselContent,
@@ -17,6 +18,7 @@ import {
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: ['recipe', id],
@@ -53,20 +55,36 @@ export default function RecipeDetail() {
     );
   }
 
-  const validImages = recipe.images?.filter(img => !img.startsWith('blob:')) || [];
+  const validImages = (recipe.images || []).filter(img => !img.startsWith('blob:')) || [];
   const ingredients = recipe.ingredientSections?.[0]?.ingredients || [];
   const instructions = recipe.steps?.map(step => step.instructions).filter(Boolean) || [];
 
+  const handleEdit = () => {
+    navigate(`/recipe/edit/${id}`);
+  };
+
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-10 bg-white/80 backdrop-blur-sm hover:bg-white/90"
-        onClick={() => navigate(-1)}
-      >
-        <ArrowLeft className="h-5 w-5" />
-      </Button>
+      <div className="fixed top-4 left-4 right-4 z-10 flex justify-between">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="bg-white/80 backdrop-blur-sm hover:bg-white/90"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        {user && recipe.creatorId === user.uid && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="bg-white/80 backdrop-blur-sm hover:bg-white/90"
+            onClick={handleEdit}
+          >
+            <Edit className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
 
       <div className="relative h-[40vh] sm:h-[50vh] w-full">
         {validImages.length > 0 ? (
