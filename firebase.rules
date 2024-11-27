@@ -67,10 +67,10 @@ service cloud.firestore {
       // Allow reading invites if authenticated
       allow read: if request.auth != null;
       
-      // Allow creating invites if user is authenticated and verified
+      // Allow creating invites if user is authenticated and either verified or superadmin
       allow create: if request.auth != null && 
                    (request.auth.token.email_verified || 
-                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.manuallyVerified ||
+                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.manuallyVerified == true ||
                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
       
       // Allow updating own invites
