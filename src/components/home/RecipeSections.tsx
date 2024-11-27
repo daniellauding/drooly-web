@@ -56,11 +56,12 @@ export function RecipeSections({ isLoading, error, recipes }: RecipeSectionsProp
                 key={recipe.id}
                 id={recipe.id}
                 title={recipe.title}
-                image={recipe.image}
+                images={recipe.images}
                 cookTime={recipe.cookTime}
                 difficulty={recipe.difficulty}
                 chef={recipe.chef}
                 date={recipe.date}
+                stats={recipe.stats}
               />
             ))}
           </div>

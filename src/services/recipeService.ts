@@ -4,34 +4,51 @@ import { db } from '@/lib/firebase';
 export interface Recipe {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   chef?: string;
   date?: string;
   cookTime?: string;
-  difficulty?: string;
+  difficulty: string;
+  cookingMethods: string[];
+  cuisine: string;
+  dishTypes: string[];
   images?: string[];
-  featuredImageIndex?: number;
-  creatorId?: string;
-  creatorName?: string;
-  stats?: {
-    views: number;
-    likes: string[];
-    comments: number;
-    saves?: string[];
+  featuredImageIndex: number;
+  ingredients: any[];
+  servings: {
+    amount: number;
+    unit: string;
   };
-  steps?: {
+  steps: {
     title: string;
     instructions: string;
     duration: string;
     media?: string[];
     ingredients?: string[];
   }[];
+  tags: string[];
+  totalTime: string;
+  worksWith: string[];
+  serveWith: string[];
+  categories: string[];
+  estimatedCost: string;
+  equipment: string[];
+  season?: string;
+  occasion?: string;
+  creatorId?: string;
+  creatorName?: string;
+  status?: string;
+  createdAt?: { seconds: number };
+  stats?: {
+    views: number;
+    likes: string[];
+    comments: number;
+    saves?: string[];
+  };
   ingredientSections?: {
     title: string;
     ingredients: string[];
   }[];
-  status?: string;
-  createdAt?: { seconds: number };
 }
 
 export const fetchRecipeById = async (id: string): Promise<Recipe> => {
