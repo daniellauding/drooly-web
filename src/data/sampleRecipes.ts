@@ -1,11 +1,14 @@
 import { Recipe } from "@/types/recipe";
+import { Timestamp } from "firebase/firestore";
+
+const now = Timestamp.now();
 
 export const SAMPLE_RECIPES: Recipe[] = [
   {
     id: '1',
     title: 'Homemade Pizza',
     description: 'Classic Italian pizza with fresh toppings',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38',
+    images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38'],
     chef: 'Mario Chef',
     date: '2024-02-20',
     cookTime: '45 min',
@@ -13,8 +16,8 @@ export const SAMPLE_RECIPES: Recipe[] = [
     cookingMethods: ['baking'],
     cuisine: 'Italian',
     dishTypes: ['main'],
-    images: ['https://images.unsplash.com/photo-1565299624946-b28f40a0ae38'],
     ingredients: [],
+    instructions: [],
     steps: [],
     totalTime: '45',
     servings: { amount: 4, unit: 'servings' },
@@ -33,13 +36,15 @@ export const SAMPLE_RECIPES: Recipe[] = [
     serveWith: [],
     estimatedCost: 'Under $5',
     season: 'Year Round',
-    occasion: ''
+    occasion: '',
+    createdAt: now,
+    updatedAt: now
   },
   {
     id: '2',
     title: 'Fresh Sushi Roll',
     description: 'Traditional Japanese sushi rolls',
-    image: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c',
+    images: ['https://images.unsplash.com/photo-1579871494447-9811cf80d66c'],
     chef: 'Yuki Chef',
     date: '2024-02-21',
     cookTime: '30 min',
@@ -47,8 +52,8 @@ export const SAMPLE_RECIPES: Recipe[] = [
     cookingMethods: ['rolling'],
     cuisine: 'Japanese',
     dishTypes: ['main'],
-    images: ['https://images.unsplash.com/photo-1579871494447-9811cf80d66c'],
     ingredients: [],
+    instructions: [],
     steps: [],
     totalTime: '30',
     servings: { amount: 2, unit: 'servings' },
@@ -67,13 +72,15 @@ export const SAMPLE_RECIPES: Recipe[] = [
     serveWith: [],
     estimatedCost: 'Under $5',
     season: 'Year Round',
-    occasion: ''
+    occasion: '',
+    createdAt: now,
+    updatedAt: now
   },
   {
     id: '3',
     title: 'Healthy Buddha Bowl',
     description: 'Nutritious and colorful vegetarian bowl',
-    image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c',
+    images: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c'],
     chef: 'Sarah Wellness',
     date: '2024-02-22',
     cookTime: '20 min',
@@ -81,8 +88,8 @@ export const SAMPLE_RECIPES: Recipe[] = [
     cookingMethods: ['assembly'],
     cuisine: 'International',
     dishTypes: ['main'],
-    images: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c'],
     ingredients: [],
+    instructions: [],
     steps: [],
     totalTime: '20',
     servings: { amount: 1, unit: 'serving' },
@@ -101,6 +108,8 @@ export const SAMPLE_RECIPES: Recipe[] = [
     serveWith: [],
     estimatedCost: 'Under $5',
     season: 'Year Round',
-    occasion: ''
+    occasion: '',
+    createdAt: now,
+    updatedAt: now
   }
 ];

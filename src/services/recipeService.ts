@@ -1,5 +1,20 @@
-import { collection, doc, getDoc, getDocs, query, orderBy, where, Timestamp } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+
+export interface Ingredient {
+  name: string;
+  amount: string;
+  unit: string;
+  group: string;
+}
+
+export interface RecipeStep {
+  title: string;
+  instructions: string;
+  duration: string;
+  media?: string[];
+  ingredients?: Ingredient[];
+}
 
 export interface Recipe {
   id: string;
@@ -14,19 +29,13 @@ export interface Recipe {
   dishTypes?: string[];
   images: string[];
   featuredImageIndex?: number;
-  ingredients: string[];
+  ingredients: Ingredient[];
   instructions: string[];
-  servings?: {
+  servings: {
     amount: number;
     unit: string;
   };
-  steps?: {
-    title: string;
-    instructions: string;
-    duration: string;
-    media?: string[];
-    ingredients?: string[];
-  }[];
+  steps?: RecipeStep[];
   tags?: string[];
   totalTime?: string;
   worksWith?: string[];
@@ -51,10 +60,19 @@ export interface Recipe {
     title: string;
     ingredients: string[];
   }[];
+  source?: string;
+  sourceUrl?: string;
+  privacy?: 'public' | 'private';
+  dietaryInfo?: {
+    isVegetarian: boolean;
+    isVegan: boolean;
+    isGlutenFree: boolean;
+    isDairyFree: boolean;
+    containsNuts: boolean;
+  };
 }
 
 export const fetchRecipeById = async (id: string): Promise<Recipe> => {
-  console.log('Fetching recipe by ID:', id);
   const recipeRef = doc(db, 'recipes', id);
   const recipeDoc = await getDoc(recipeRef);
   
@@ -72,14 +90,13 @@ export const fetchRecipeById = async (id: string): Promise<Recipe> => {
 };
 
 export const fetchRecipes = async (): Promise<Recipe[]> => {
-  console.log('Fetching all recipes');
   const recipesRef = collection(db, 'recipes');
   const q = query(
     recipesRef,
     where('status', '==', 'published'),
     orderBy('createdAt', 'desc')
   );
-  
+
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => ({
     id: doc.id,

@@ -1,8 +1,10 @@
-import { Recipe as ServiceRecipe } from '@/services/recipeService';
+import { Recipe as ServiceRecipe, Ingredient, RecipeStep } from '@/services/recipeService';
 
-// Re-export the Recipe type from the service
+// Re-export the types
 export type Recipe = ServiceRecipe;
+export type { Ingredient, RecipeStep };
 
+// Constants
 export const CUISINES = [
   "American", "Italian", "Japanese", "Mexican", "Indian", "French", "Thai", 
   "Mediterranean", "Chinese", "Korean", "Vietnamese", "Greek", "Spanish", 
@@ -72,7 +74,7 @@ export const COST_CATEGORIES = [
   "$30+"
 ];
 
-export const validateRecipe = (recipe: Recipe): ValidationResult => {
+export const validateRecipe = (recipe: Partial<Recipe>): ValidationResult => {
   const errors: { field: string; message: string }[] = [];
 
   // Title validation
@@ -97,7 +99,7 @@ export const validateRecipe = (recipe: Recipe): ValidationResult => {
   }
 
   // Ingredients validation
-  if (recipe.ingredients.length === 0) {
+  if (!recipe.ingredients?.length) {
     errors.push({
       field: 'ingredients',
       message: 'At least one ingredient is required'
@@ -105,7 +107,7 @@ export const validateRecipe = (recipe: Recipe): ValidationResult => {
   }
 
   // Servings validation - only if provided
-  if (recipe.servings.amount && !recipe.servings.unit) {
+  if (recipe.servings?.amount && !recipe.servings.unit) {
     errors.push({
       field: 'servings',
       message: 'Servings unit is required when amount is specified'
