@@ -1,7 +1,8 @@
-import { Heart, X, Clock, Edit } from "lucide-react";
+import { Heart, X, Clock, Edit, Bookmark } from "lucide-react";
 import { Card } from "./ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import {
   Carousel,
   CarouselContent,
@@ -10,7 +11,8 @@ import {
   CarouselPrevious,
 } from "./ui/carousel";
 import { Recipe } from "@/services/recipeService";
-import { Button } from "./ui/button";
+import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface RecipeSwiperProps {
   recipes: Recipe[];
@@ -19,10 +21,70 @@ interface RecipeSwiperProps {
 export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   
-  const handleLike = (e: React.MouseEvent, id: string) => {
+  const handleLike = async (e: React.MouseEvent, recipe: Recipe) => {
     e.stopPropagation();
-    console.log('Liked recipe:', id);
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to like recipes",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const isLiked = recipe.stats?.likes?.includes(user.uid);
+    try {
+      const recipeRef = doc(db, "recipes", recipe.id);
+      await updateDoc(recipeRef, {
+        "stats.likes": isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
+      });
+      
+      toast({
+        title: isLiked ? "Recipe unliked" : "Recipe liked",
+        description: isLiked ? "Removed from your liked recipes" : "Added to your liked recipes"
+      });
+    } catch (error) {
+      console.error("Error updating like:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update like status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSave = async (e: React.MouseEvent, recipe: Recipe) => {
+    e.stopPropagation();
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save recipes",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const isSaved = recipe.stats?.saves?.includes(user.uid);
+    try {
+      const recipeRef = doc(db, "recipes", recipe.id);
+      await updateDoc(recipeRef, {
+        "stats.saves": isSaved ? arrayRemove(user.uid) : arrayUnion(user.uid)
+      });
+      
+      toast({
+        title: isSaved ? "Recipe removed" : "Recipe saved",
+        description: isSaved ? "Removed from saved recipes" : "Added to saved recipes"
+      });
+    } catch (error) {
+      console.error("Error updating save status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update save status",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDislike = (e: React.MouseEvent, id: string) => {
@@ -73,25 +135,31 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
                   <span className="text-sm opacity-80">{recipe.cookTime}</span>
                 </div>
               </div>
-              <div className="absolute bottom-6 right-6 flex gap-4">
+              <div className="absolute top-4 right-4 flex gap-2">
                 <button
                   onClick={(e) => handleDislike(e, recipe.id)}
-                  className="p-3 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                  className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
                 >
-                  <X className="w-6 h-6 text-white" />
+                  <X className="w-5 h-5 text-white" />
                 </button>
                 <button
-                  onClick={(e) => handleLike(e, recipe.id)}
-                  className="p-3 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                  onClick={(e) => handleLike(e, recipe)}
+                  className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
                 >
-                  <Heart className="w-6 h-6 text-white" />
+                  <Heart className={`w-5 h-5 ${recipe.stats?.likes?.includes(user?.uid || '') ? 'fill-red-500 text-red-500' : 'text-white'}`} />
+                </button>
+                <button
+                  onClick={(e) => handleSave(e, recipe)}
+                  className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                >
+                  <Bookmark className={`w-5 h-5 ${recipe.stats?.saves?.includes(user?.uid || '') ? 'fill-white text-white' : 'text-white'}`} />
                 </button>
                 {user && recipe.creatorId === user.uid && (
                   <button
                     onClick={(e) => handleEdit(e, recipe.id)}
-                    className="p-3 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
+                    className="p-2 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white/20 transition-colors"
                   >
-                    <Edit className="w-6 h-6 text-white" />
+                    <Edit className="w-5 h-5 text-white" />
                   </button>
                 )}
               </div>
