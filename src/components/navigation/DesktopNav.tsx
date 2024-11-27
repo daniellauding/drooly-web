@@ -24,7 +24,6 @@ export function DesktopNav({
   handleNotificationsClick,
   handleCreateClick,
   onAuthModalOpen,
-  onSearchClick,
 }: DesktopNavProps) {
   return (
     <div className="flex items-center gap-6 w-full">
@@ -32,8 +31,8 @@ export function DesktopNav({
         <Home className="h-5 w-5" />
       </Link>
 
-      <div className="flex-1 max-w-2xl">
-        <SearchBar onSearchClick={onSearchClick} />
+      <div className="flex-1">
+        <SearchBar />
       </div>
 
       <div className="flex items-center gap-2">
