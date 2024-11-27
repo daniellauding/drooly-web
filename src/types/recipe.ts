@@ -1,127 +1,7 @@
-export interface Ingredient {
-  name: string;
-  amount: string;
-  unit: string;
-  group: string;
-}
+import { Recipe as ServiceRecipe } from '@/services/recipeService';
 
-export interface Recipe {
-  id?: string;
-  title: string;
-  description: string;
-  difficulty: string;
-  cookingMethods: string[];
-  cuisine: string;
-  dishTypes: string[];
-  images: string[];
-  featuredImageIndex: number;
-  ingredients: any[];
-  servings: {
-    amount: number;
-    unit: string;
-  };
-  steps: RecipeStep[];
-  tags: string[];
-  totalTime: string;
-  worksWith: string[];
-  serveWith: string[];
-  dietaryInfo?: {
-    isVegetarian: boolean;
-    isVegan: boolean;
-    isGlutenFree: boolean;
-    isDairyFree: boolean;
-    containsNuts: boolean;
-  };
-  categories: string[];
-  estimatedCost: string;
-  equipment: string[];
-  season?: string;
-  occasion?: string;
-  createdAt?: { seconds: number };
-  updatedAt?: { seconds: number };
-  creatorId?: string;
-  creatorName?: string;
-  status?: string;
-  image?: string;
-  chef?: string;
-  date?: string;
-  cookTime?: string;
-  source?: 'image' | 'scrape' | 'ai' | 'manual' | 'trello';
-  sourceUrl?: string;
-  privacy?: 'public' | 'private' | 'unlisted';
-  stats?: {
-    views: number;
-    likes: string[];
-    comments: number;
-  };
-  ingredientSections?: {
-    title: string;
-    ingredients: string[];
-  }[];
-}
-
-export interface RecipeStep {
-  title: string;
-  instructions: string;
-  duration: string;
-  ingredientGroup?: string;
-  media?: string[];
-  ingredients?: Ingredient[];
-}
-
-export interface ValidationResult {
-  isValid: boolean;
-  errors: {
-    field: string;
-    message: string;
-  }[];
-}
-
-export const validateRecipe = (recipe: Recipe): ValidationResult => {
-  const errors: { field: string; message: string }[] = [];
-
-  // Title validation
-  if (!recipe.title?.trim()) {
-    errors.push({
-      field: 'title',
-      message: 'Recipe title is required'
-    });
-  } else if (recipe.title.length < 3) {
-    errors.push({
-      field: 'title',
-      message: 'Title must be at least 3 characters long'
-    });
-  }
-
-  // Description validation
-  if (!recipe.description?.trim()) {
-    errors.push({
-      field: 'description',
-      message: 'Recipe description is required'
-    });
-  }
-
-  // Ingredients validation
-  if (recipe.ingredients.length === 0) {
-    errors.push({
-      field: 'ingredients',
-      message: 'At least one ingredient is required'
-    });
-  }
-
-  // Servings validation - only if provided
-  if (recipe.servings.amount && !recipe.servings.unit) {
-    errors.push({
-      field: 'servings',
-      message: 'Servings unit is required when amount is specified'
-    });
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
+// Re-export the Recipe type from the service
+export type Recipe = ServiceRecipe;
 
 export const CUISINES = [
   "American", "Italian", "Japanese", "Mexican", "Indian", "French", "Thai", 
@@ -191,3 +71,57 @@ export const COST_CATEGORIES = [
   "$20-$30",
   "$30+"
 ];
+
+export const validateRecipe = (recipe: Recipe): ValidationResult => {
+  const errors: { field: string; message: string }[] = [];
+
+  // Title validation
+  if (!recipe.title?.trim()) {
+    errors.push({
+      field: 'title',
+      message: 'Recipe title is required'
+    });
+  } else if (recipe.title.length < 3) {
+    errors.push({
+      field: 'title',
+      message: 'Title must be at least 3 characters long'
+    });
+  }
+
+  // Description validation
+  if (!recipe.description?.trim()) {
+    errors.push({
+      field: 'description',
+      message: 'Recipe description is required'
+    });
+  }
+
+  // Ingredients validation
+  if (recipe.ingredients.length === 0) {
+    errors.push({
+      field: 'ingredients',
+      message: 'At least one ingredient is required'
+    });
+  }
+
+  // Servings validation - only if provided
+  if (recipe.servings.amount && !recipe.servings.unit) {
+    errors.push({
+      field: 'servings',
+      message: 'Servings unit is required when amount is specified'
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: {
+    field: string;
+    message: string;
+  }[];
+}
