@@ -9,6 +9,31 @@ import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { AvatarUpload } from "./AvatarUpload";
 
+// Country codes list
+const countryCodes = [
+  { code: "+1", country: "USA/Canada" },
+  { code: "+44", country: "UK" },
+  { code: "+33", country: "France" },
+  { code: "+49", country: "Germany" },
+  { code: "+81", country: "Japan" },
+  { code: "+86", country: "China" },
+  { code: "+91", country: "India" },
+  { code: "+61", country: "Australia" },
+  { code: "+55", country: "Brazil" },
+  { code: "+52", country: "Mexico" },
+  { code: "+34", country: "Spain" },
+  { code: "+39", country: "Italy" },
+  { code: "+7", country: "Russia" },
+  { code: "+82", country: "South Korea" },
+  { code: "+31", country: "Netherlands" },
+  { code: "+46", country: "Sweden" },
+  { code: "+47", country: "Norway" },
+  { code: "+45", country: "Denmark" },
+  { code: "+358", country: "Finland" },
+  { code: "+48", country: "Poland" },
+  // Add more country codes as needed
+].sort((a, b) => a.country.localeCompare(b.country));
+
 interface ProfileBasicInfoProps {
   userData: {
     id: string;
@@ -31,6 +56,10 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
     gender: "prefer-not-to-say",
     avatarUrl: userData.avatarUrl || "",
   });
+
+  const handleAvatarClick = () => {
+    document.getElementById('avatar-upload')?.click();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +90,7 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <div className="flex justify-center">
+        <div className="flex justify-center cursor-pointer" onClick={handleAvatarClick}>
           <AvatarUpload
             currentAvatar={formData.avatarUrl}
             onAvatarChange={(url) => setFormData(prev => ({ ...prev, avatarUrl: url }))}
@@ -74,6 +103,17 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
             id="name"
             value={formData.name}
             onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={userData.email}
+            disabled
+            className="bg-muted"
           />
         </div>
 
@@ -94,14 +134,15 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
               value={formData.countryCode}
               onValueChange={value => setFormData(prev => ({ ...prev, countryCode: value }))}
             >
-              <SelectTrigger className="w-[100px]">
+              <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Code" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="+1">+1</SelectItem>
-                <SelectItem value="+44">+44</SelectItem>
-                <SelectItem value="+81">+81</SelectItem>
-                <SelectItem value="+86">+86</SelectItem>
+              <SelectContent className="max-h-[300px]">
+                {countryCodes.map(({ code, country }) => (
+                  <SelectItem key={code} value={code}>
+                    {code} {country}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Input
