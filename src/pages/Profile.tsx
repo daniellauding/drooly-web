@@ -74,6 +74,23 @@ export default function Profile() {
     enabled: !!targetUserId
   });
 
+  const { data: likedRecipes = [], isLoading: likedRecipesLoading } = useQuery({
+    queryKey: ['likedRecipes', targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return [];
+      console.log('Fetching liked recipes for user:', targetUserId);
+      const recipesRef = collection(db, 'recipes');
+      const q = query(recipesRef, where('stats.likes', 'array-contains', targetUserId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
+    },
+    enabled: !!targetUserId
+  });
+
   useEffect(() => {
     if (!targetUserId) {
       navigate('/login');
@@ -156,9 +173,10 @@ export default function Profile() {
         />
 
         <Tabs defaultValue="recipes" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="recipes">My Recipes</TabsTrigger>
             <TabsTrigger value="saved">Saved Recipes</TabsTrigger>
+            <TabsTrigger value="liked">Liked Recipes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="recipes" className="mt-6">
@@ -214,6 +232,35 @@ export default function Profile() {
               ) : (
                 <div className="text-center text-gray-500">
                   No saved recipes yet
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="liked" className="mt-6">
+            <div className="space-y-4">
+              {likedRecipesLoading ? (
+                <div>Loading liked recipes...</div>
+              ) : likedRecipes && likedRecipes.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {likedRecipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      id={recipe.id}
+                      title={recipe.title}
+                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
+                      cookTime={recipe.totalTime}
+                      difficulty={recipe.difficulty}
+                      chef={recipe.creatorName}
+                      date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
+                      stats={recipe.stats}
+                      creatorId={recipe.creatorId}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500">
+                  No liked recipes yet
                 </div>
               )}
             </div>

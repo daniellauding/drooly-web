@@ -26,7 +26,11 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
   const [dismissedRecipes, setDismissedRecipes] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  const visibleRecipes = recipes.filter(recipe => !dismissedRecipes.includes(recipe.id));
+  // Filter out recipes that the user has already liked
+  const visibleRecipes = recipes.filter(recipe => 
+    !dismissedRecipes.includes(recipe.id) && 
+    !recipe.stats?.likes?.includes(user?.uid || '')
+  );
   
   const handleLike = async (e: React.MouseEvent, recipe: Recipe) => {
     e.stopPropagation();
@@ -39,18 +43,19 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
       return;
     }
 
-    const isLiked = recipe.stats?.likes?.includes(user.uid);
     try {
       const recipeRef = doc(db, "recipes", recipe.id);
       await updateDoc(recipeRef, {
-        "stats.likes": isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
+        "stats.likes": arrayUnion(user.uid)
       });
       
       toast({
-        title: isLiked ? "Recipe unliked" : "Recipe liked",
-        description: isLiked ? "Removed from your liked recipes" : "Added to your liked recipes"
+        title: "Recipe liked",
+        description: "Added to your liked recipes"
       });
       
+      // Hide the recipe after liking
+      setDismissedRecipes(prev => [...prev, recipe.id]);
       handleNext();
     } catch (error) {
       console.error("Error updating like:", error);
