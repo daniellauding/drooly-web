@@ -21,16 +21,31 @@ interface CountrySelectProps {
   countries: string[];
 }
 
-export function CountrySelect({ value, onValueChange, countries }: CountrySelectProps) {
+export function CountrySelect({ value, onValueChange, countries = [] }: CountrySelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
+  // Ensure we have a valid array of countries
+  const safeCountries = React.useMemo(() => {
+    return Array.isArray(countries) ? countries : [];
+  }, [countries]);
+
+  // Filter countries based on search query
   const filteredCountries = React.useMemo(() => {
-    if (!searchQuery) return countries;
-    return countries.filter((country) =>
+    if (!searchQuery.trim()) return safeCountries;
+    return safeCountries.filter((country) =>
       country.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [countries, searchQuery]);
+  }, [safeCountries, searchQuery]);
+
+  // Reset search when popover closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+    }
+  }, [open]);
+
+  console.log('CountrySelect render:', { value, filteredCountries, searchQuery });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -41,7 +56,7 @@ export function CountrySelect({ value, onValueChange, countries }: CountrySelect
           aria-expanded={open}
           className="justify-between"
         >
-          {value}
+          {value || "Select country..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -62,6 +77,7 @@ export function CountrySelect({ value, onValueChange, countries }: CountrySelect
                   setOpen(false);
                   setSearchQuery("");
                 }}
+                className="cursor-pointer"
               >
                 <Check
                   className={cn(

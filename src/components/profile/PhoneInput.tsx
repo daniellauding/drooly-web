@@ -29,17 +29,32 @@ export function PhoneInput({
   phone,
   onCountryCodeChange,
   onPhoneChange,
-  countryCodes,
+  countryCodes = [],
 }: PhoneInputProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
+  // Ensure we have a valid array of country codes
+  const safeCountryCodes = React.useMemo(() => {
+    return Array.isArray(countryCodes) ? countryCodes : [];
+  }, [countryCodes]);
+
+  // Filter country codes based on search query
   const filteredCodes = React.useMemo(() => {
-    if (!searchQuery) return countryCodes;
-    return countryCodes.filter((code) =>
+    if (!searchQuery.trim()) return safeCountryCodes;
+    return safeCountryCodes.filter((code) =>
       code.includes(searchQuery)
     );
-  }, [countryCodes, searchQuery]);
+  }, [safeCountryCodes, searchQuery]);
+
+  // Reset search when popover closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+    }
+  }, [open]);
+
+  console.log('PhoneInput render:', { countryCode, filteredCodes, searchQuery });
 
   return (
     <div className="flex gap-2">
@@ -51,7 +66,7 @@ export function PhoneInput({
             aria-expanded={open}
             className="w-[100px]"
           >
-            {countryCode}
+            {countryCode || "+1"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -72,6 +87,7 @@ export function PhoneInput({
                     setOpen(false);
                     setSearchQuery("");
                   }}
+                  className="cursor-pointer"
                 >
                   <Check
                     className={cn(
