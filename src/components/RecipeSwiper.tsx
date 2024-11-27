@@ -51,7 +51,6 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
         description: isLiked ? "Removed from your liked recipes" : "Added to your liked recipes"
       });
       
-      // Move to next recipe after liking
       handleNext();
     } catch (error) {
       console.error("Error updating like:", error);
@@ -87,7 +86,6 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
         description: isSaved ? "Removed from saved recipes" : "Added to saved recipes"
       });
       
-      // Move to next recipe after saving
       handleNext();
     } catch (error) {
       console.error("Error updating save status:", error);
@@ -142,7 +140,7 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
   }
 
   return (
-    <Carousel className="w-full max-w-md mx-auto" value={currentIndex} onValueChange={setCurrentIndex}>
+    <Carousel className="w-full max-w-md mx-auto">
       <CarouselContent>
         {visibleRecipes.map((recipe) => (
           <CarouselItem key={recipe.id}>

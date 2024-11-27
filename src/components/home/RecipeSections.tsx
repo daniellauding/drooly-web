@@ -1,4 +1,4 @@
-import { Recipe } from "@/types/recipe";
+import { Recipe } from "@/services/recipeService";
 import { RecipeCard } from "@/components/RecipeCard";
 import { RecipeSwiper } from "@/components/RecipeSwiper";
 import { Skeleton } from "@/components/ui/skeleton";
