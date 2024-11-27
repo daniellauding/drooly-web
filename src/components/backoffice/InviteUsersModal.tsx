@@ -40,6 +40,7 @@ export function InviteUsersModal({
 
   const handleSendInvites = async () => {
     if (!emails.length || !user) {
+      console.log("No emails or user not authenticated");
       toast({
         variant: "destructive",
         title: "Error",
@@ -50,11 +51,15 @@ export function InviteUsersModal({
 
     setSending(true);
     try {
-      console.log("Checking user role and verification status...");
+      console.log("Starting invite creation process...");
+      console.log("Current user:", user.uid);
+      console.log("User email verification status:", user.emailVerified);
+
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
       
-      console.log("User data:", {
+      console.log("User Firestore data:", userData);
+      console.log("Verification status:", {
         emailVerified: user.emailVerified,
         manuallyVerified: userData?.manuallyVerified,
         role: userData?.role
@@ -67,7 +72,7 @@ export function InviteUsersModal({
         toast({
           variant: "destructive",
           title: "Error",
-          description: "You need to be verified to send invites."
+          description: "You need to be verified to send invites. Please verify your email or contact support."
         });
         return;
       }
@@ -93,11 +98,42 @@ export function InviteUsersModal({
         };
         
         console.log("Creating invite with data:", inviteData);
-        return addDoc(invitesCollection, inviteData);
+        
+        try {
+          const docRef = await addDoc(invitesCollection, inviteData);
+          console.log("Successfully created invite document with ID:", docRef.id);
+          return docRef;
+        } catch (error) {
+          console.error("Error creating individual invite:", error);
+          throw error;
+        }
       });
 
       await Promise.all(invitePromises);
       console.log("All invites created successfully");
+
+      // Send notification emails through Firebase Functions
+      try {
+        const mailCollection = collection(db, "mail");
+        const emailPromises = emails.map(email => 
+          addDoc(mailCollection, {
+            to: email,
+            template: {
+              name: "invite",
+              data: {
+                inviterName: userData?.name || user.email,
+                message: customMessage,
+                signupUrl: `${window.location.protocol}//${domain}/register?invite=${btoa(email)}`
+              }
+            }
+          })
+        );
+        
+        await Promise.all(emailPromises);
+        console.log("All notification emails queued successfully");
+      } catch (emailError) {
+        console.error("Error sending notification emails:", emailError);
+      }
 
       toast({
         title: "Invites sent successfully",
