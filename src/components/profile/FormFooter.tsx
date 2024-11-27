@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 
 interface FormFooterProps {
   onCancel: () => void;
-  onSave: () => void;
+  onSave: (e?: React.FormEvent) => void;
   disabled?: boolean;
 }
 
@@ -17,7 +17,7 @@ export function FormFooter({ onCancel, onSave, disabled = false }: FormFooterPro
         Cancel
       </Button>
       <Button
-        onClick={onSave}
+        onClick={(e) => onSave(e)}
         disabled={disabled}
       >
         Save Changes

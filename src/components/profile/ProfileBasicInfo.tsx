@@ -55,8 +55,10 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
     });
   }, [userData]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
     try {
       console.log("Updating user profile with data:", formData);
       const userRef = doc(db, "users", userData.id);
