@@ -69,9 +69,12 @@ service cloud.firestore {
       
       // Allow creating invites if user is authenticated and either verified or superadmin
       allow create: if request.auth != null && 
-                   (request.auth.token.email_verified || 
-                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.manuallyVerified == true ||
-                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
+                   (
+                     request.auth.token.email_verified || 
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.manuallyVerified == true ||
+                     get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin'
+                   ) &&
+                   request.resource.data.createdBy == request.auth.uid;
       
       // Allow updating own invites
       allow update: if request.auth != null && 
