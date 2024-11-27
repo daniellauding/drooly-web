@@ -8,10 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { AvatarUpload } from "./AvatarUpload";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { CountrySelect } from "./CountrySelect";
+import { PhoneInput } from "./PhoneInput";
 
 // Move these to a separate constants file if needed
 const countryCodes = ["+1", "+20", "+27", "+30", "+31", "+32", "+33", "+34", "+36", "+39", "+40", "+41", "+43", "+44", "+45", "+46", "+47", "+48", "+49", "+51", "+52", "+53", "+54", "+55", "+56", "+57", "+58", "+60", "+61", "+62", "+63", "+64", "+65", "+66", "+81", "+82", "+84", "+86", "+90", "+91", "+92", "+93", "+94", "+95", "+98"];
@@ -41,9 +39,6 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
     avatarUrl: userData.avatarUrl || "",
     country: "United States",
   });
-
-  const [openCountry, setOpenCountry] = useState(false);
-  const [openCountryCode, setOpenCountryCode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,45 +98,11 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
 
         <div className="grid gap-2">
           <Label>Country</Label>
-          <Popover open={openCountry} onOpenChange={setOpenCountry}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                aria-expanded={openCountry}
-                className="justify-between"
-              >
-                {formData.country}
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-              <Command>
-                <CommandInput placeholder="Search country..." />
-                <CommandEmpty>No country found.</CommandEmpty>
-                <CommandGroup className="max-h-[300px] overflow-auto">
-                  {countries.map((country) => (
-                    <CommandItem
-                      key={country}
-                      value={country}
-                      onSelect={(currentValue) => {
-                        setFormData(prev => ({ ...prev, country: currentValue }));
-                        setOpenCountry(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          formData.country === country ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {country}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <CountrySelect
+            value={formData.country}
+            onValueChange={(country) => setFormData(prev => ({ ...prev, country }))}
+            countries={countries}
+          />
         </div>
 
         <div className="grid gap-2">
@@ -156,54 +117,13 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
 
         <div className="grid gap-2">
           <Label htmlFor="phone">Phone</Label>
-          <div className="flex gap-2">
-            <Popover open={openCountryCode} onOpenChange={setOpenCountryCode}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openCountryCode}
-                  className="w-[100px]"
-                >
-                  {formData.countryCode}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandInput placeholder="Search code..." />
-                  <CommandEmpty>No code found.</CommandEmpty>
-                  <CommandGroup className="max-h-[300px] overflow-auto">
-                    {countryCodes.map((code) => (
-                      <CommandItem
-                        key={code}
-                        value={code}
-                        onSelect={(currentValue) => {
-                          setFormData(prev => ({ ...prev, countryCode: currentValue }));
-                          setOpenCountryCode(false);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            formData.countryCode === code ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {code}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              className="flex-1"
-            />
-          </div>
+          <PhoneInput
+            countryCode={formData.countryCode}
+            phone={formData.phone}
+            onCountryCodeChange={(code) => setFormData(prev => ({ ...prev, countryCode: code }))}
+            onPhoneChange={(phone) => setFormData(prev => ({ ...prev, phone }))}
+            countryCodes={countryCodes}
+          />
         </div>
 
         <div className="grid gap-2">
