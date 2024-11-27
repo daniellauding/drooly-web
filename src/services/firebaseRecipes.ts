@@ -1,6 +1,7 @@
 import { collection, getDocs, query, orderBy, where, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Recipe } from '@/types/recipe';
+import { Timestamp } from 'firebase/firestore';
 
 const FALLBACK_IMAGE = "/placeholder.svg";
 
@@ -26,22 +27,24 @@ export const fetchFirebaseRecipes = async (): Promise<Recipe[]> => {
       const data = doc.data();
       console.log('Processing recipe:', doc.id, data);
       
-      // Format the image URL, replacing blob URLs with fallback
       const imageUrl = data.images?.[data.featuredImageIndex || 0];
       const validImage = imageUrl && !imageUrl.startsWith('blob:') ? imageUrl : FALLBACK_IMAGE;
 
-      // Format the date
       const date = data.createdAt 
         ? new Date(data.createdAt.seconds * 1000).toLocaleDateString()
         : 'Recently added';
 
-      // Format cooking time with fallback
       const cookTime = data.totalTime || '30 min';
 
       return {
         id: doc.id,
         ...data,
-        image: validImage,
+        images: data.images || [],
+        ingredients: data.ingredients || [],
+        instructions: data.instructions || [],
+        servings: data.servings || { amount: 4, unit: 'servings' },
+        createdAt: data.createdAt || Timestamp.now(),
+        updatedAt: data.updatedAt || Timestamp.now(),
         chef: data.creatorName || 'Anonymous Chef',
         date,
         cookTime,
@@ -72,9 +75,14 @@ export const fetchRecipeById = async (id: string): Promise<Recipe | null> => {
     const validImage = imageUrl && !imageUrl.startsWith('blob:') ? imageUrl : FALLBACK_IMAGE;
 
     return {
-      ...data,
       id: recipeDoc.id,
-      image: validImage,
+      ...data,
+      images: data.images || [],
+      ingredients: data.ingredients || [],
+      instructions: data.instructions || [],
+      servings: data.servings || { amount: 4, unit: 'servings' },
+      createdAt: data.createdAt || Timestamp.now(),
+      updatedAt: data.updatedAt || Timestamp.now(),
       chef: data.creatorName || 'Anonymous Chef',
       date: data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString() : 'Recently added',
       cookTime: data.totalTime || '30 min',

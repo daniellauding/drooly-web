@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { saveRecipe } from "@/services/recipeOperations";
+import { Timestamp } from "firebase/firestore";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -20,6 +21,7 @@ export default function CreateRecipe() {
   const isEditing = !!id;
 
   const [recipe, setRecipe] = useState<Recipe>({
+    id: '',
     title: "",
     description: "",
     difficulty: "Medium",
@@ -29,6 +31,7 @@ export default function CreateRecipe() {
     images: [],
     featuredImageIndex: 0,
     ingredients: [],
+    instructions: [],
     servings: {
       amount: 4,
       unit: "servings"
@@ -47,7 +50,9 @@ export default function CreateRecipe() {
     categories: [],
     estimatedCost: "",
     equipment: [],
-    status: "draft"
+    status: "draft",
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now()
   });
 
   const { data: existingRecipe, isLoading } = useQuery({

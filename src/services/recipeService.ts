@@ -1,4 +1,4 @@
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export interface Ingredient {
@@ -14,6 +14,7 @@ export interface RecipeStep {
   duration: string;
   media?: string[];
   ingredients?: Ingredient[];
+  ingredientGroup?: string;
 }
 
 export interface Recipe {
@@ -100,6 +101,8 @@ export const fetchRecipes = async (): Promise<Recipe[]> => {
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => ({
     id: doc.id,
-    ...doc.data()
+    ...doc.data(),
+    createdAt: doc.data().createdAt || Timestamp.now(),
+    updatedAt: doc.data().updatedAt || Timestamp.now()
   } as Recipe));
 };
