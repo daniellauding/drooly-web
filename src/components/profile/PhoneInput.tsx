@@ -25,8 +25,8 @@ interface PhoneInputProps {
 }
 
 export function PhoneInput({
-  countryCode,
-  phone,
+  countryCode = "+1",
+  phone = "",
   onCountryCodeChange,
   onPhoneChange,
   countryCodes = [],
@@ -34,27 +34,22 @@ export function PhoneInput({
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  // Ensure we have a valid array of country codes
   const safeCountryCodes = React.useMemo(() => {
     return Array.isArray(countryCodes) ? countryCodes : [];
   }, [countryCodes]);
 
-  // Filter country codes based on search query
   const filteredCodes = React.useMemo(() => {
     if (!searchQuery.trim()) return safeCountryCodes;
     return safeCountryCodes.filter((code) =>
-      code.includes(searchQuery)
+      code.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [safeCountryCodes, searchQuery]);
 
-  // Reset search when popover closes
   React.useEffect(() => {
     if (!open) {
       setSearchQuery("");
     }
   }, [open]);
-
-  console.log('PhoneInput render:', { countryCode, filteredCodes, searchQuery });
 
   return (
     <div className="flex gap-2">
@@ -66,7 +61,7 @@ export function PhoneInput({
             aria-expanded={open}
             className="w-[100px]"
           >
-            {countryCode || "+1"}
+            {countryCode}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
@@ -82,12 +77,11 @@ export function PhoneInput({
               {filteredCodes.map((code) => (
                 <CommandItem
                   key={code}
+                  value={code}
                   onSelect={() => {
                     onCountryCodeChange(code);
                     setOpen(false);
-                    setSearchQuery("");
                   }}
-                  className="cursor-pointer"
                 >
                   <Check
                     className={cn(
@@ -107,6 +101,7 @@ export function PhoneInput({
         value={phone}
         onChange={(e) => onPhoneChange(e.target.value)}
         className="flex-1"
+        placeholder="Phone number"
       />
     </div>
   );

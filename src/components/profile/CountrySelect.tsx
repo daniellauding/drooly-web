@@ -16,21 +16,23 @@ import {
 } from "@/components/ui/popover";
 
 interface CountrySelectProps {
-  value: string;
+  value?: string;
   onValueChange: (value: string) => void;
   countries: string[];
 }
 
-export function CountrySelect({ value, onValueChange, countries = [] }: CountrySelectProps) {
+export function CountrySelect({ 
+  value = "", 
+  onValueChange, 
+  countries = [] 
+}: CountrySelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  // Ensure we have a valid array of countries
   const safeCountries = React.useMemo(() => {
     return Array.isArray(countries) ? countries : [];
   }, [countries]);
 
-  // Filter countries based on search query
   const filteredCountries = React.useMemo(() => {
     if (!searchQuery.trim()) return safeCountries;
     return safeCountries.filter((country) =>
@@ -38,14 +40,11 @@ export function CountrySelect({ value, onValueChange, countries = [] }: CountryS
     );
   }, [safeCountries, searchQuery]);
 
-  // Reset search when popover closes
   React.useEffect(() => {
     if (!open) {
       setSearchQuery("");
     }
   }, [open]);
-
-  console.log('CountrySelect render:', { value, filteredCountries, searchQuery });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -54,7 +53,7 @@ export function CountrySelect({ value, onValueChange, countries = [] }: CountryS
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="justify-between"
+          className="w-full justify-between"
         >
           {value || "Select country..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -72,12 +71,11 @@ export function CountrySelect({ value, onValueChange, countries = [] }: CountryS
             {filteredCountries.map((country) => (
               <CommandItem
                 key={country}
+                value={country}
                 onSelect={() => {
                   onValueChange(country);
                   setOpen(false);
-                  setSearchQuery("");
                 }}
-                className="cursor-pointer"
               >
                 <Check
                   className={cn(
