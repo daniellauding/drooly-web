@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +10,7 @@ import { AvatarUpload } from "./AvatarUpload";
 import { CountrySelect } from "./CountrySelect";
 import { PhoneInput } from "./PhoneInput";
 import { countries, countryCodes } from "@/components/settings/profileConstants";
+import { FormFooter } from "./FormFooter";
 
 interface ProfileBasicInfoProps {
   userData: {
@@ -170,12 +170,10 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
         </div>
       </div>
 
-      <div className="flex justify-between">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit">Save Changes</Button>
-      </div>
+      <FormFooter 
+        onCancel={onClose}
+        onSave={handleSubmit}
+      />
     </form>
   );
 }

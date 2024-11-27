@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { doc, updateDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import { Trash2 } from "lucide-react";
+import { DeleteAccountDialog } from "./security/DeleteAccountDialog";
+import { ReAuthDialog } from "./security/ReAuthDialog";
+import { PrivacySection } from "./security/PrivacySection";
+import { SecuritySection } from "./security/SecuritySection";
+import { FormFooter } from "./FormFooter";
 
 interface ProfileSecuritySettingsProps {
   userId: string;
@@ -43,7 +43,6 @@ export function ProfileSecuritySettings({ userId, onClose }: ProfileSecuritySett
     try {
       console.log("Saving security settings...");
       
-      // Update privacy setting
       if (isPrivate !== undefined) {
         const userRef = doc(db, "users", userId);
         await updateDoc(userRef, {
@@ -53,7 +52,6 @@ export function ProfileSecuritySettings({ userId, onClose }: ProfileSecuritySett
         console.log("Privacy settings updated");
       }
 
-      // Update password if both fields are filled
       if (currentPassword && newPassword) {
         console.log("Updating password...");
         if (!auth.currentUser?.email) {
@@ -99,7 +97,6 @@ export function ProfileSecuritySettings({ userId, onClose }: ProfileSecuritySett
       );
       await reauthenticateWithCredential(auth.currentUser, credential);
       
-      // Delete user document
       await updateDoc(doc(db, "users", userId), {
         deletedAt: new Date(),
         isDeleted: true
@@ -124,44 +121,16 @@ export function ProfileSecuritySettings({ userId, onClose }: ProfileSecuritySett
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Privacy Settings</h3>
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <Label>Private Account</Label>
-            <p className="text-sm text-muted-foreground">
-              Only approved followers can see your content when enabled
-            </p>
-          </div>
-          <Switch
-            checked={isPrivate}
-            onCheckedChange={handlePrivacyChange}
-          />
-        </div>
-      </div>
+      <PrivacySection 
+        isPrivate={isPrivate}
+        onPrivacyChange={handlePrivacyChange}
+      />
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Security Settings</h3>
-        <div className="grid gap-2">
-          <Label htmlFor="current-password">Current Password</Label>
-          <Input
-            id="current-password"
-            type="password"
-            value={currentPassword}
-            onChange={e => handlePasswordChange('current', e.target.value)}
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="new-password">New Password</Label>
-          <Input
-            id="new-password"
-            type="password"
-            value={newPassword}
-            onChange={e => handlePasswordChange('new', e.target.value)}
-          />
-        </div>
-      </div>
+      <SecuritySection
+        currentPassword={currentPassword}
+        newPassword={newPassword}
+        onPasswordChange={handlePasswordChange}
+      />
 
       <div className="border-t pt-4">
         <Button 
@@ -174,74 +143,28 @@ export function ProfileSecuritySettings({ userId, onClose }: ProfileSecuritySett
         </Button>
       </div>
 
-      <div className="flex justify-end space-x-4 pt-4 border-t">
-        <Button
-          variant="outline"
-          onClick={onClose}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges}
-        >
-          Save Changes
-        </Button>
-      </div>
+      <FormFooter
+        onCancel={onClose}
+        onSave={handleSave}
+        disabled={!hasChanges}
+      />
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your account
-              and remove all your data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                setReAuthDialogOpen(true);
-              }}
-              className="bg-destructive text-destructive-foreground"
-            >
-              Delete Account
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteAccountDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirmDelete={() => {
+          setDeleteDialogOpen(false);
+          setReAuthDialogOpen(true);
+        }}
+      />
 
-      <Dialog open={reAuthDialogOpen} onOpenChange={setReAuthDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm your password</DialogTitle>
-            <DialogDescription>
-              For security reasons, please enter your password to continue with account deletion.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="delete-password">Password</Label>
-              <Input
-                id="delete-password"
-                type="password"
-                value={deletePassword}
-                onChange={e => setDeletePassword(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={() => setReAuthDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteAccount}>
-              Confirm Deletion
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ReAuthDialog
+        open={reAuthDialogOpen}
+        onOpenChange={setReAuthDialogOpen}
+        password={deletePassword}
+        onPasswordChange={setDeletePassword}
+        onConfirm={handleDeleteAccount}
+      />
     </div>
   );
 }
