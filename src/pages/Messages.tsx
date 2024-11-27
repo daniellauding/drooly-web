@@ -55,6 +55,8 @@ export default function Messages() {
     setIsSearchOpen(true);
   };
 
+  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
@@ -63,20 +65,16 @@ export default function Messages() {
           <div className="md:col-span-1 bg-white rounded-lg shadow-sm border">
             <ConversationList
               conversations={conversations}
-              selectedConversationId={selectedConversationId}
-              onConversationSelect={handleConversationSelect}
-              onStartNewChat={handleStartNewChat}
+              onSelectConversation={handleConversationSelect}
             />
           </div>
           <div className="md:col-span-2 bg-white rounded-lg shadow-sm border">
-            {selectedConversationId ? (
+            {selectedConversationId && selectedConversation ? (
               <ChatView
                 conversationId={selectedConversationId}
-                recipientEmail={
-                  conversations.find(c => c.id === selectedConversationId)?.participantEmails.find(
-                    email => email !== user?.email
-                  ) || ""
-                }
+                onDeleteConversation={() => setSelectedConversationId(null)}
+                recipientName={selectedConversation.name}
+                recipientInitials={selectedConversation.name.charAt(0).toUpperCase()}
               />
             ) : (
               <div className="h-[600px] flex items-center justify-center text-muted-foreground">

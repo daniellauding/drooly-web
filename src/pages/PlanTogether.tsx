@@ -135,7 +135,6 @@ export default function PlanTogether() {
           </div>
         )}
       </div>
-      <BottomBar />
     </div>
   );
 }
