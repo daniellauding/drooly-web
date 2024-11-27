@@ -1,270 +1,188 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
-import { Button } from "@/components/ui/button";
-import { TopBar } from "@/components/TopBar";
-import { RecipeBasicInfo } from "@/components/recipe/RecipeBasicInfo";
-import { RecipeDetails } from "@/components/recipe/RecipeDetails";
-import { IngredientInput } from "@/components/IngredientInput";
-import { RecipeStepInput } from "@/components/RecipeStepInput";
-import { useToast } from "@/hooks/use-toast";
-import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { fetchRecipeById } from "@/services/firebaseRecipes";
 import { Recipe, validateRecipe } from "@/types/recipe";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-
-const initialRecipe: Recipe = {
-  title: "",
-  description: "",
-  difficulty: "",
-  cookingMethods: [],
-  cuisine: "",
-  dishTypes: [],
-  images: [],
-  featuredImageIndex: 0,
-  ingredients: [],
-  servings: {
-    amount: 1,
-    unit: "serving"
-  },
-  steps: [{
-    title: "Preparation",
-    instructions: "",
-    duration: "",
-    ingredientGroup: "",
-    media: []
-  }],
-  tags: [],
-  totalTime: "",
-  worksWith: [],
-  serveWith: [],
-  dietaryInfo: {
-    isVegetarian: false,
-    isVegan: false,
-    isGlutenFree: false,
-    isDairyFree: false,
-    containsNuts: false
-  },
-  categories: [],
-  estimatedCost: "Under $5",
-  equipment: [],
-  season: "Year Round",
-  occasion: "",
-};
+import { TopBar } from "@/components/TopBar";
+import { Button } from "@/components/ui/button";
+import { RecipeBasicInfo } from "@/components/recipe/RecipeBasicInfo";
+import { RecipeStepInput } from "@/components/RecipeStepInput";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { doc, setDoc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function CreateRecipe() {
-  const { user } = useAuth();
+  const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  const [recipe, setRecipe] = useState<Recipe>(initialRecipe);
-  const [enableSteps, setEnableSteps] = useState(false);
-  const [openSections, setOpenSections] = useState<string[]>([]);
+  const { user } = useAuth();
+  const isEditing = !!id;
 
-  console.log("Recipe state updated:", recipe);
+  const { data: existingRecipe, isLoading } = useQuery({
+    queryKey: ['recipe', id],
+    queryFn: () => fetchRecipeById(id!),
+    enabled: !!id,
+  });
 
-  const handleRecipeImport = (importedRecipe: Partial<Recipe>) => {
-    setRecipe(prev => ({
-      ...prev,
-      ...importedRecipe
-    }));
-  };
+  const [recipe, setRecipe] = useState<Recipe>(() => existingRecipe || {
+    title: "",
+    description: "",
+    difficulty: "Medium",
+    cookingMethods: [],
+    cuisine: "",
+    dishTypes: [],
+    images: [],
+    featuredImageIndex: 0,
+    ingredients: [],
+    servings: {
+      amount: 4,
+      unit: "servings"
+    },
+    steps: [{
+      title: "",
+      instructions: "",
+      duration: "",
+      media: [],
+      ingredients: []
+    }],
+    tags: [],
+    totalTime: "",
+    worksWith: [],
+    serveWith: [],
+    categories: [],
+    estimatedCost: "",
+    equipment: [],
+    status: "draft"
+  });
 
-  const validateAndShowErrors = () => {
-    const validation = validateRecipe(recipe);
-    
-    const sectionsWithErrors = new Set<string>();
-    validation.errors.forEach(error => {
-      if (error.field.startsWith('title') || error.field.startsWith('description')) {
-        sectionsWithErrors.add('basic-info');
-      } else if (error.field.startsWith('difficulty') || error.field.startsWith('servings')) {
-        sectionsWithErrors.add('details');
-      } else if (error.field.startsWith('ingredients')) {
-        sectionsWithErrors.add('ingredients');
-      }
-    });
-    
-    setOpenSections(Array.from(sectionsWithErrors));
-    return validation.isValid;
-  };
+  if (isEditing && isLoading) {
+    return <div>Loading recipe...</div>;
+  }
 
-  const handleSave = async (isDraft = false) => {
+  const handleSave = async () => {
     if (!user) {
       toast({
         title: "Error",
-        description: "You must be logged in to create recipes",
+        description: "You must be logged in to save a recipe",
         variant: "destructive"
       });
       return;
     }
 
-    if (!isDraft && !validateAndShowErrors()) {
+    const validation = validateRecipe(recipe);
+    if (!validation.isValid) {
       toast({
         title: "Validation Error",
-        description: "Please fix the errors before publishing",
+        description: validation.errors[0].message,
         variant: "destructive"
       });
       return;
     }
 
-    setLoading(true);
     try {
       const recipeData = {
         ...recipe,
         creatorId: user.uid,
-        createdAt: new Date(),
-        status: isDraft ? "draft" : "published",
-        hasSteps: enableSteps
+        creatorName: user.displayName || "Anonymous Chef",
+        updatedAt: serverTimestamp(),
+        ...(isEditing ? {} : { createdAt: serverTimestamp() })
       };
 
-      const docRef = await addDoc(collection(db, "recipes"), recipeData);
-      console.log("Recipe created with ID:", docRef.id);
-      
+      if (isEditing && id) {
+        await updateDoc(doc(db, "recipes", id), recipeData);
+      } else {
+        const newRecipeRef = doc(collection(db, "recipes"));
+        await setDoc(newRecipeRef, recipeData);
+      }
+
       toast({
         title: "Success",
-        description: `Recipe ${isDraft ? 'saved as draft' : 'published'} successfully!`,
+        description: `Recipe ${isEditing ? "updated" : "created"} successfully!`
       });
-      
-      navigate(`/recipe/${docRef.id}`);
+
+      navigate("/profile");
     } catch (error) {
-      console.error("Error creating recipe:", error);
+      console.error("Error saving recipe:", error);
       toast({
         title: "Error",
-        description: "Failed to create recipe. Please try again.",
+        description: "Failed to save recipe. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
+  const handleAddStep = () => {
+    setRecipe(prev => ({
+      ...prev,
+      steps: [
+        ...prev.steps,
+        {
+          title: "",
+          instructions: "",
+          duration: "",
+          media: [],
+          ingredients: []
+        }
+      ]
+    }));
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#F7F9FC]">
+    <div className="min-h-screen pb-20">
       <TopBar />
-      <div className="flex-1 pt-20 pb-16">
-        <div className="container max-w-4xl mx-auto p-4 space-y-6">
-          <h1 className="text-2xl sm:text-3xl font-bold">Create New Recipe</h1>
+      <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
+        <h1 className="text-2xl font-bold">
+          {isEditing ? "Edit Recipe" : "Create New Recipe"}
+        </h1>
 
-          <RecipeCreationOptions onRecipeImported={handleRecipeImport} />
+        <RecipeBasicInfo
+          recipe={recipe}
+          onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+        />
 
-          <div className="flex items-center space-x-2 mb-4">
-            <Switch
-              checked={enableSteps}
-              onCheckedChange={setEnableSteps}
-              id="steps-mode"
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Steps</h2>
+          {recipe.steps.map((step, index) => (
+            <RecipeStepInput
+              key={index}
+              step={step}
+              onChange={(updatedStep) => {
+                const newSteps = [...recipe.steps];
+                newSteps[index] = updatedStep;
+                setRecipe(prev => ({ ...prev, steps: newSteps }));
+              }}
+              onDelete={() => {
+                if (recipe.steps.length > 1) {
+                  const newSteps = recipe.steps.filter((_, i) => i !== index);
+                  setRecipe(prev => ({ ...prev, steps: newSteps }));
+                }
+              }}
             />
-            <label htmlFor="steps-mode" className="text-sm">
-              Enable Step-by-Step Recipe Mode
-            </label>
-          </div>
-
-          <Accordion 
-            type="multiple" 
-            value={openSections}
-            onValueChange={setOpenSections}
-            className="w-full space-y-4"
+          ))}
+          <Button
+            variant="outline"
+            onClick={handleAddStep}
+            className="w-full gap-2"
           >
-            <AccordionItem value="basic-info" className="border rounded-lg bg-white">
-              <AccordionTrigger className="px-4">Basic Information</AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <RecipeBasicInfo 
-                  recipe={recipe}
-                  onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
-                />
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="details" className="border rounded-lg bg-white">
-              <AccordionTrigger className="px-4">Recipe Details</AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <RecipeDetails
-                  recipe={recipe}
-                  onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
-                />
-              </AccordionContent>
-            </AccordionItem>
-
-            <AccordionItem value="ingredients" className="border rounded-lg bg-white">
-              <AccordionTrigger className="px-4">Ingredients</AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <IngredientInput
-                  ingredients={recipe.ingredients}
-                  onChange={(ingredients) => setRecipe(prev => ({ ...prev, ingredients }))}
-                />
-              </AccordionContent>
-            </AccordionItem>
-
-            {enableSteps && (
-              <AccordionItem value="steps" className="border rounded-lg bg-white">
-                <AccordionTrigger className="px-4">Steps</AccordionTrigger>
-                <AccordionContent className="px-4 pb-4">
-                  <div className="space-y-4">
-                    {recipe.steps.map((step, index) => (
-                      <RecipeStepInput
-                        key={index}
-                        step={step}
-                        ingredientGroups={Array.from(new Set(recipe.ingredients.map(ing => ing.group)))}
-                        onChange={(updatedStep) => {
-                          const newSteps = [...recipe.steps];
-                          newSteps[index] = updatedStep;
-                          setRecipe(prev => ({ ...prev, steps: newSteps }));
-                        }}
-                        onDelete={() => {
-                          if (recipe.steps.length > 1) {
-                            const newSteps = recipe.steps.filter((_, i) => i !== index);
-                            setRecipe(prev => ({ ...prev, steps: newSteps }));
-                          }
-                        }}
-                      />
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setRecipe(prev => ({
-                        ...prev,
-                        steps: [...prev.steps, { title: "", instructions: "", duration: "", media: [] }]
-                      }))}
-                      className="w-full sm:w-auto"
-                    >
-                      Add Step
-                    </Button>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            )}
-          </Accordion>
-
-          <Card className="p-4">
-            <div className="flex flex-col sm:flex-row gap-4 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => handleSave(true)}
-                disabled={loading}
-                className="w-full sm:w-auto"
-              >
-                Save as Draft
-              </Button>
-              <Button
-                onClick={() => handleSave(false)}
-                disabled={loading}
-                className="w-full sm:w-auto"
-              >
-                Publish Recipe
-              </Button>
-            </div>
-          </Card>
+            <Plus className="w-4 h-4" />
+            Add Step
+          </Button>
         </div>
-      </div>
+
+        <div className="flex justify-end gap-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate(-1)}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>
+            {isEditing ? "Update Recipe" : "Create Recipe"}
+          </Button>
+        </div>
+      </main>
     </div>
   );
 }
