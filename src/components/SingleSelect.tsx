@@ -29,9 +29,24 @@ export function SingleSelect({
   placeholder = "Select item..." 
 }: SingleSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   // Ensure we always have arrays, even if undefined is passed
   const safeOptions = React.useMemo(() => Array.isArray(options) ? options : [], [options]);
+
+  const filteredOptions = React.useMemo(() => {
+    if (!searchQuery.trim()) return safeOptions;
+    return safeOptions.filter((option) =>
+      option.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [safeOptions, searchQuery]);
+
+  // Reset search query when popover closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+    }
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -47,11 +62,14 @@ export function SingleSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-        <Command>
-          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
-          <CommandEmpty>No items found.</CommandEmpty>
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder={`Search ${placeholder.toLowerCase()}...`}
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandGroup>
-            {safeOptions.map((option) => (
+            {filteredOptions.map((option) => (
               <CommandItem
                 key={option}
                 value={option}
