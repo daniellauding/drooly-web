@@ -8,15 +8,31 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, User, Settings, LayoutDashboard } from "lucide-react";
+import { Menu, LogOut, User, Settings, LayoutDashboard, Bell, MessageSquare, Calendar, Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 
 interface MobileMenuProps {
   onAuthModalOpen: () => void;
   onEditProfileOpen: () => void;
+  onSearchClick: () => void;
+  unreadNotifications: number;
+  unreadMessages: number;
+  isVerifiedOrSuperadmin: boolean;
+  handleNotificationsClick: () => void;
+  handleCreateClick: () => void;
 }
 
-export function MobileMenu({ onAuthModalOpen, onEditProfileOpen }: MobileMenuProps) {
+export function MobileMenu({ 
+  onAuthModalOpen, 
+  onEditProfileOpen,
+  onSearchClick,
+  unreadNotifications,
+  unreadMessages,
+  isVerifiedOrSuperadmin,
+  handleNotificationsClick,
+  handleCreateClick
+}: MobileMenuProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -66,6 +82,13 @@ export function MobileMenu({ onAuthModalOpen, onEditProfileOpen }: MobileMenuPro
           <Button 
             variant="ghost" 
             className="w-full justify-start" 
+            onClick={onSearchClick}
+          >
+            Search
+          </Button>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start" 
             onClick={() => navigate('/')}
           >
             Home
@@ -75,17 +98,54 @@ export function MobileMenu({ onAuthModalOpen, onEditProfileOpen }: MobileMenuPro
               <Button 
                 variant="ghost" 
                 className="w-full justify-start"
-                onClick={() => navigate('/profile')}
+                onClick={handleNotificationsClick}
               >
-                <User className="mr-2 h-4 w-4" />
-                Profile
+                <Bell className="mr-2 h-4 w-4" />
+                Notifications
+                {unreadNotifications > 0 && (
+                  <Badge variant="secondary" className="ml-auto">
+                    {unreadNotifications}
+                  </Badge>
+                )}
               </Button>
               <Button 
                 variant="ghost" 
                 className="w-full justify-start"
                 onClick={() => navigate('/messages')}
               >
+                <MessageSquare className="mr-2 h-4 w-4" />
                 Messages
+                {unreadMessages > 0 && (
+                  <Badge variant="secondary" className="ml-auto">
+                    {unreadMessages}
+                  </Badge>
+                )}
+              </Button>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => navigate('/events')}
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Events
+              </Button>
+              {isVerifiedOrSuperadmin && (
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={handleCreateClick}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create
+                </Button>
+              )}
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start"
+                onClick={() => navigate('/profile')}
+              >
+                <User className="mr-2 h-4 w-4" />
+                Profile
               </Button>
               <Button 
                 variant="ghost" 

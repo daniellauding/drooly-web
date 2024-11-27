@@ -12,6 +12,7 @@ import { EditProfileModal } from "./profile/EditProfileModal";
 import { MobileMenu } from "./navigation/MobileMenu";
 import { Logo } from "./navigation/Logo";
 import { DesktopNav } from "./navigation/DesktopNav";
+import { SearchBar } from "./navigation/SearchBar";
 
 export function TopBar() {
   const navigate = useNavigate();
@@ -88,12 +89,23 @@ export function TopBar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          <Logo />
-          <MobileMenu 
-            onAuthModalOpen={() => setAuthModalOpen(true)}
-            onEditProfileOpen={() => setEditProfileOpen(true)}
-          />
+        <div className="flex items-center gap-2 lg:w-auto w-full">
+          <div className="flex items-center gap-2">
+            <Logo />
+            <MobileMenu 
+              onAuthModalOpen={() => setAuthModalOpen(true)}
+              onEditProfileOpen={() => setEditProfileOpen(true)}
+              onSearchClick={() => setSearchOpen(true)}
+              unreadNotifications={unreadNotificationsCount}
+              unreadMessages={unreadMessagesCount}
+              isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
+              handleNotificationsClick={handleNotificationsClick}
+              handleCreateClick={handleCreateClick}
+            />
+          </div>
+          <div className="flex-1 mx-4 lg:hidden">
+            <SearchBar onSearchClick={() => setSearchOpen(true)} />
+          </div>
         </div>
 
         <DesktopNav
