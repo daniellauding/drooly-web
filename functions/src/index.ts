@@ -56,7 +56,8 @@ export const processSignUp = functions.auth.user().onCreate(async (user) => {
         template: {
           name: "welcome",
           data: {
-            userName: user.displayName || user.email
+            userName: user.displayName || user.email,
+            verificationLink: await auth.generateEmailVerificationLink(user.email)
           }
         }
       });
@@ -75,28 +76,6 @@ export const processSignUp = functions.auth.user().onCreate(async (user) => {
   }
 });
 
-export const deleteUserAuth = onCall(async (request) => {
-  const { uid } = request.data;
-
-  if (!request.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "Must be authenticated to perform this action"
-    );
-  }
-
-  try {
-    await auth.deleteUser(uid);
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    throw new functions.https.HttpsError(
-      "internal",
-      "Error deleting user account"
-    );
-  }
-});
-
 export const resendVerificationEmail = onCall(async (request) => {
   if (!request.auth) {
     throw new functions.https.HttpsError(
@@ -106,29 +85,31 @@ export const resendVerificationEmail = onCall(async (request) => {
   }
 
   try {
-    const user = await auth.getUser(request.data.userId);
-    if (!user) {
+    console.log("Resending verification email for user:", request.auth.uid);
+    const user = await auth.getUser(request.auth.uid);
+    
+    if (!user.email) {
       throw new functions.https.HttpsError(
-        "not-found",
-        "User not found"
+        "failed-precondition",
+        "User has no email address"
       );
     }
 
-    const customToken = await auth.createCustomToken(user.uid);
-    const link = await auth.generateEmailVerificationLink(user.email!);
+    const verificationLink = await auth.generateEmailVerificationLink(user.email);
     
-    // Send email using your email service
+    // Send verification email using the mail collection
     await db.collection("mail").add({
       to: user.email,
       template: {
         name: "email-verification",
         data: {
-          verificationLink: link,
+          verificationLink,
           userName: user.displayName || user.email
         }
       }
     });
     
+    console.log("Verification email sent successfully to:", user.email);
     return { success: true };
   } catch (error) {
     console.error("Error resending verification email:", error);
@@ -136,26 +117,5 @@ export const resendVerificationEmail = onCall(async (request) => {
       "internal",
       "Error resending verification email"
     );
-  }
-});
-
-export const processDelete = functions.auth.user().onDelete(async (user) => {
-  try {
-    // Delete user document
-    await db.collection("users").doc(user.uid).delete();
-    
-    // Delete user's recipes
-    const recipesSnapshot = await db.collection("recipes")
-      .where("creatorId", "==", user.uid)
-      .get();
-    
-    const batch = db.batch();
-    recipesSnapshot.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    
-    await batch.commit();
-  } catch (error) {
-    console.error("Error in processDelete:", error);
   }
 });

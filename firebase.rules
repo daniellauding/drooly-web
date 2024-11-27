@@ -31,7 +31,7 @@ service cloud.firestore {
       // Allow reading invites if authenticated
       allow read: if request.auth != null;
       
-      // Allow creating invites if user is authenticated and either verified, manually verified, or superadmin
+      // Allow creating invites if authenticated and verified through any method
       allow create: if request.auth != null && 
                    (
                      request.auth.token.email_verified == true || 
@@ -48,40 +48,14 @@ service cloud.firestore {
                    resource.data.createdBy == request.auth.uid;
     }
 
-    match /notifications/{notificationId} {
-      // Allow reading own notifications even if not verified
-      allow read: if request.auth != null && 
-                 resource.data.userId == request.auth.uid;
-      
-      // Allow creating notifications for authenticated users
-      allow create: if request.auth != null &&
-                   request.resource.data.userId == request.auth.uid;
-    }
-
-    match /messages/{messageId} {
-      // Allow reading own messages even if not verified  
-      allow read: if request.auth != null &&
-                 (resource.data.senderId == request.auth.uid ||
-                  resource.data.recipientId == request.auth.uid);
-                  
-      // Allow creating messages for authenticated users
-      allow create: if request.auth != null &&
-                   request.resource.data.senderId == request.auth.uid;
-    }
-
-    match /conversations/{conversationId} {
-      allow read: if request.auth != null && 
-                 request.auth.uid in resource.data.participants;
+    match /mail/{mailId} {
+      // Allow creating mail documents if authenticated
       allow create: if request.auth != null;
-      allow update: if request.auth != null && 
-                   request.auth.uid in resource.data.participants;
       
-      match /messages/{messageId} {
-        allow read: if request.auth != null && 
-                   request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-        allow write: if request.auth != null && 
-                    request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
-      }
+      // Only allow reading own mail documents
+      allow read: if request.auth != null && 
+                 resource.data.to == request.auth.token.email;
     }
+
   }
 }
