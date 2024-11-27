@@ -20,13 +20,15 @@ interface SingleSelectProps {
   selected: string;
   onChange: (selected: string) => void;
   placeholder?: string;
+  searchable?: boolean;
 }
 
 export function SingleSelect({ 
   options = [], 
   selected = "", 
   onChange, 
-  placeholder = "Select item..." 
+  placeholder = "Select item...",
+  searchable = false
 }: SingleSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -63,11 +65,13 @@ export function SingleSelect({
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command shouldFilter={false}>
-          <CommandInput 
-            placeholder={`Search ${placeholder.toLowerCase()}...`}
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-          />
+          {searchable && (
+            <CommandInput 
+              placeholder={`Search ${placeholder.toLowerCase()}...`}
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+            />
+          )}
           <CommandGroup>
             {filteredOptions.map((option) => (
               <CommandItem
@@ -88,6 +92,9 @@ export function SingleSelect({
               </CommandItem>
             ))}
           </CommandGroup>
+          {filteredOptions.length === 0 && (
+            <CommandEmpty>No items found.</CommandEmpty>
+          )}
         </Command>
       </PopoverContent>
     </Popover>
