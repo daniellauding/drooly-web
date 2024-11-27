@@ -3,6 +3,7 @@ import { User } from "firebase/auth";
 export interface AuthUser extends User {
   role?: string;
   manuallyVerified?: boolean;
+  avatarUrl?: string;
 }
 
 export interface AuthContextType {
