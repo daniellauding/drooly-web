@@ -1,3 +1,4 @@
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft, Edit, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";

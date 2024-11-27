@@ -3,6 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { Story } from "@/types/story";
 
 interface WeeklyPlan {
   id: string;
