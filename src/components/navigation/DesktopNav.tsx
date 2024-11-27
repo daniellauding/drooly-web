@@ -22,16 +22,18 @@ export function DesktopNav({
   unreadMessages,
   isVerifiedOrSuperadmin,
   handleNotificationsClick,
+  handleCreateClick,
   onAuthModalOpen,
+  onSearchClick,
 }: DesktopNavProps) {
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-6 w-full">
       <Link to="/" className="text-gray-600 hover:text-gray-900">
         <Home className="h-5 w-5" />
       </Link>
 
-      <div className="w-[320px]">
-        <SearchBar onSearchClick={() => onSearchClick()} />
+      <div className="flex-1 max-w-2xl">
+        <SearchBar onSearchClick={onSearchClick} />
       </div>
 
       <div className="flex items-center gap-2">
