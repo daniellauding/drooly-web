@@ -103,17 +103,16 @@ export function TopBar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
-        {/* Mobile Menu */}
-        <MobileMenu 
-          onAuthModalOpen={() => setAuthModalOpen(true)}
-          onEditProfileOpen={() => setEditProfileOpen(true)}
-        />
+        <div className="flex items-center gap-2 md:gap-4">
+          <Logo />
+          <MobileMenu 
+            onAuthModalOpen={() => setAuthModalOpen(true)}
+            onEditProfileOpen={() => setEditProfileOpen(true)}
+          />
+        </div>
 
-        {/* Logo */}
-        <Logo />
-
-        {/* Search Bar - Hidden on Mobile */}
-        <div className="hidden md:flex items-center gap-4 flex-1 justify-center max-w-xl">
+        {/* Search Bar - Shown inline on mobile */}
+        <div className="flex md:hidden flex-1 mx-2">
           <SearchBar onSearchClick={() => setSearchOpen(true)} />
         </div>
 
@@ -163,11 +162,6 @@ export function TopBar() {
             </>
           )}
         </div>
-      </div>
-
-      {/* Mobile Search Bar */}
-      <div className="md:hidden px-4 pb-3">
-        <SearchBar onSearchClick={() => setSearchOpen(true)} />
       </div>
 
       <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
