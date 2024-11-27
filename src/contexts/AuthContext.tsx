@@ -15,46 +15,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        console.log("Auth state changed - User:", user.email);
-        try {
-          const userData = await authService.getUserData(user);
-          console.log("User data from Firestore:", userData);
+    console.log("Setting up auth state listener");
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
+        if (firebaseUser) {
+          console.log("Auth state changed - User:", firebaseUser.email);
           
-          // Check both Firebase Auth and Firestore verification status
-          const isVerified = user.emailVerified || userData?.manuallyVerified;
-          
-          setUser({ 
-            ...user, 
-            role: userData?.role,
-            manuallyVerified: userData?.manuallyVerified,
-            photoURL: userData?.avatarUrl || user.photoURL
-          });
-
-          if (!isVerified) {
-            toast({
-              title: "Email verification required",
-              description: "Please check your inbox and verify your email to access all features.",
-              duration: 10000,
-            });
+          // Verify the token is still valid
+          try {
+            await firebaseUser.getIdToken(true);
+          } catch (tokenError) {
+            console.error("Token refresh failed:", tokenError);
+            // Force logout if token is invalid
+            await auth.signOut();
+            setUser(null);
+            setLoading(false);
+            return;
           }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
+          
+          try {
+            const userData = await authService.getUserData(firebaseUser);
+            console.log("User data from Firestore:", userData);
+            
+            // Check both Firebase Auth and Firestore verification status
+            const isVerified = firebaseUser.emailVerified || userData?.manuallyVerified;
+            
+            setUser({ 
+              ...firebaseUser, 
+              role: userData?.role,
+              manuallyVerified: userData?.manuallyVerified,
+              photoURL: userData?.avatarUrl || firebaseUser.photoURL
+            });
+
+            if (!isVerified) {
+              toast({
+                title: "Email verification required",
+                description: "Please check your inbox and verify your email to access all features.",
+                duration: 10000,
+              });
+            }
+          } catch (error) {
+            console.error("Error fetching user data:", error);
+            // Don't clear user here, just log the error
+            setUser(firebaseUser); // Keep basic Firebase user data
+          }
+        } else {
+          console.log("No user signed in");
           setUser(null);
         }
-      } else {
+      } catch (error) {
+        console.error("Auth state change error:", error);
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      console.log("Cleaning up auth state listener");
+      unsubscribe();
+    };
   }, [toast]);
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login for:", email);
       const user = await authService.loginUser(email, password);
+      
+      if (!user) {
+        throw new Error("Login failed - no user returned");
+      }
+
       const userData = await authService.getUserData(user);
       
       // Check both verification methods
@@ -64,11 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           await sendVerificationEmail();
         } catch (error: any) {
-          if (error.message.includes("Please wait")) {
+          console.error("Error sending verification email:", error);
+          if (error.message.includes("too-many-requests")) {
             toast({
               variant: "destructive",
               title: "Rate limit",
-              description: error.message,
+              description: "Too many attempts. Please try again later.",
             });
           }
         }
@@ -97,6 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error.code === "auth/too-many-requests") {
         errorMessage = "Too many attempts. Please try again in a few minutes.";
+      } else if (error.code === "auth/user-not-found") {
+        errorMessage = "No account found with this email.";
       }
       
       toast({
@@ -179,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const sendVerificationEmail = async () => {
     if (auth.currentUser) {
       try {
+        console.log("Sending verification email to:", auth.currentUser.email);
         await authService.sendVerificationEmailToUser(auth.currentUser);
         toast({
           title: "Verification email sent",
