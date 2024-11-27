@@ -50,18 +50,24 @@ export function InviteUsersModal({
 
     setSending(true);
     try {
-      console.log("Checking user role...");
+      console.log("Checking user role and verification status...");
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
-      const isSuperAdmin = userData?.role === 'superadmin';
-      console.log("User role check - Is superadmin:", isSuperAdmin);
       
-      if (!isSuperAdmin && !user.emailVerified) {
-        console.log("User is not superadmin and email is not verified");
+      console.log("User data:", {
+        emailVerified: user.emailVerified,
+        manuallyVerified: userData?.manuallyVerified,
+        role: userData?.role
+      });
+
+      const canInvite = user.emailVerified || userData?.manuallyVerified || userData?.role === 'superadmin';
+      
+      if (!canInvite) {
+        console.log("User cannot send invites - missing required verification");
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Please verify your email before sending invites."
+          description: "You need to be verified to send invites."
         });
         return;
       }
@@ -86,7 +92,7 @@ export function InviteUsersModal({
           marketingContent: marketingOptions
         };
         
-        console.log("Creating invite:", inviteData);
+        console.log("Creating invite with data:", inviteData);
         return addDoc(invitesCollection, inviteData);
       });
 
