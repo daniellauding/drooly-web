@@ -17,7 +17,7 @@ interface ProfileDropdownProps {
 }
 
 export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
