@@ -32,12 +32,13 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  
+
   // Ensure we always have arrays, even if undefined is passed
-  const safeOptions = Array.isArray(options) ? options : [];
-  const safeSelected = Array.isArray(selected) ? selected : [];
+  const safeOptions = React.useMemo(() => Array.isArray(options) ? options : [], [options]);
+  const safeSelected = React.useMemo(() => Array.isArray(selected) ? selected : [], [selected]);
 
   const filteredOptions = React.useMemo(() => {
+    if (!searchQuery.trim()) return safeOptions;
     return safeOptions.filter((option) =>
       option.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -49,6 +50,13 @@ export function MultiSelect({
       : [...safeSelected, option];
     onChange(newSelected);
   }, [safeSelected, onChange]);
+
+  // Reset search query when popover closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+    }
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -85,7 +93,7 @@ export function MultiSelect({
             onValueChange={setSearchQuery}
           />
           <CommandList>
-            <CommandEmpty>No item found.</CommandEmpty>
+            <CommandEmpty>No items found.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
               {filteredOptions.map((option) => (
                 <CommandItem
