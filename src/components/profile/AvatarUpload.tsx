@@ -1,6 +1,12 @@
-import { Camera, X } from "lucide-react";
+import { Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface AvatarUploadProps {
   currentAvatar: string;
@@ -10,6 +16,7 @@ interface AvatarUploadProps {
 export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -20,56 +27,13 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleAvatarClick = () => {
-    const options = ["Upload Image", "Take Photo", "Cancel"];
-    if (currentAvatar) {
-      options.unshift("Remove Photo");
-    }
-
-    const dialog = document.createElement("dialog");
-    dialog.className = "fixed inset-0 bg-black/50 flex items-center justify-center";
-    
-    const content = document.createElement("div");
-    content.className = "bg-white rounded-lg shadow-lg overflow-hidden min-w-[200px]";
-    
-    options.forEach((option) => {
-      const button = document.createElement("button");
-      button.className = "w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors";
-      button.textContent = option;
-      
-      button.onclick = () => {
-        switch (option) {
-          case "Upload Image":
-            fileInputRef.current?.click();
-            break;
-          case "Take Photo":
-            cameraInputRef.current?.click();
-            break;
-          case "Remove Photo":
-            onAvatarChange("");
-            break;
-        }
-        dialog.close();
-      };
-      
-      content.appendChild(button);
-    });
-    
-    dialog.appendChild(content);
-    document.body.appendChild(dialog);
-    dialog.showModal();
-    
-    dialog.addEventListener("close", () => {
-      document.body.removeChild(dialog);
-    });
+    setDialogOpen(false);
   };
 
   return (
     <div className="relative">
       <div 
-        onClick={handleAvatarClick}
+        onClick={() => setDialogOpen(true)}
         className="cursor-pointer group"
       >
         <img
@@ -81,6 +45,42 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
           <Camera className="h-6 w-6 text-white" />
         </div>
       </div>
+      
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-[300px]">
+          <DialogHeader>
+            <DialogTitle>Change Profile Picture</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload Image
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              Take Photo
+            </Button>
+            {currentAvatar && (
+              <Button
+                variant="destructive"
+                className="w-full justify-start"
+                onClick={() => {
+                  onAvatarChange("");
+                  setDialogOpen(false);
+                }}
+              >
+                Remove Photo
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       
       <input
         ref={fileInputRef}
