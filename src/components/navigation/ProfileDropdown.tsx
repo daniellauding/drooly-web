@@ -21,6 +21,8 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
   const navigate = useNavigate();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
+  console.log("Current user photo URL:", user?.photoURL); // Debug log
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -60,7 +62,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
                 <AvatarImage 
                   src={user.photoURL} 
                   alt={user.displayName || user.email || "User avatar"}
-                  className="object-cover"
+                  className="object-cover w-full h-full"
                 />
               ) : (
                 <AvatarFallback>{userInitial}</AvatarFallback>
