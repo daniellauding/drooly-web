@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +27,31 @@ export function ProfileSecuritySettings({ userId, onClose }: ProfileSecuritySett
   const [reAuthDialogOpen, setReAuthDialogOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+
+  useEffect(() => {
+    const fetchPrivacySettings = async () => {
+      try {
+        console.log("Fetching privacy settings for user:", userId);
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log("User data fetched:", userData);
+          setIsPrivate(userData.isPrivate || false);
+        }
+      } catch (error) {
+        console.error("Error fetching privacy settings:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load privacy settings.",
+        });
+      }
+    };
+
+    if (userId) {
+      fetchPrivacySettings();
+    }
+  }, [userId, toast]);
 
   const handlePrivacyChange = (checked: boolean) => {
     setIsPrivate(checked);
