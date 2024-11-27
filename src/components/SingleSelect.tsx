@@ -33,8 +33,13 @@ export function SingleSelect({
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  // Ensure we always have arrays, even if undefined is passed
-  const safeOptions = React.useMemo(() => Array.isArray(options) ? options : [], [options]);
+  // Ensure we always have an array of strings
+  const safeOptions = React.useMemo(() => {
+    if (!Array.isArray(options)) return [];
+    return options.filter((option): option is string => 
+      typeof option === 'string' && option.length > 0
+    );
+  }, [options]);
 
   const filteredOptions = React.useMemo(() => {
     if (!searchQuery.trim()) return safeOptions;
@@ -72,28 +77,29 @@ export function SingleSelect({
               onValueChange={setSearchQuery}
             />
           )}
-          <CommandGroup>
-            {filteredOptions.map((option) => (
-              <CommandItem
-                key={option}
-                value={option}
-                onSelect={() => {
-                  onChange(option);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selected === option ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {option}
-              </CommandItem>
-            ))}
-          </CommandGroup>
-          {filteredOptions.length === 0 && (
+          {filteredOptions.length === 0 ? (
             <CommandEmpty>No items found.</CommandEmpty>
+          ) : (
+            <CommandGroup>
+              {filteredOptions.map((option) => (
+                <CommandItem
+                  key={option}
+                  value={option}
+                  onSelect={() => {
+                    onChange(option);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selected === option ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {option}
+                </CommandItem>
+              ))}
+            </CommandGroup>
           )}
         </Command>
       </PopoverContent>
