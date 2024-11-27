@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfileDropdown } from "./ProfileDropdown";
 import { SearchBar } from "./SearchBar";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { CreateOptions } from "../create/CreateOptions";
 
 interface DesktopNavProps {
   unreadNotifications: number;
@@ -20,19 +22,13 @@ export function DesktopNav({
   unreadMessages,
   isVerifiedOrSuperadmin,
   handleNotificationsClick,
-  handleCreateClick,
   onAuthModalOpen,
-  onSearchClick,
 }: DesktopNavProps) {
   return (
     <div className="flex items-center gap-4">
       <Link to="/" className="text-gray-600 hover:text-gray-900">
         <Home className="h-5 w-5" />
       </Link>
-      
-      <div className="flex-1 max-w-xl mx-4">
-        <SearchBar onSearchClick={onSearchClick} />
-      </div>
 
       <div className="flex items-center gap-2">
         <Button
@@ -67,13 +63,19 @@ export function DesktopNav({
         </Link>
 
         {isVerifiedOrSuperadmin && (
-          <Button
-            variant="default"
-            size="icon"
-            onClick={handleCreateClick}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="default" size="icon">
+                <Plus className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <div className="p-4">
+                <h2 className="text-lg font-semibold mb-4">Create</h2>
+                <CreateOptions />
+              </div>
+            </DialogContent>
+          </Dialog>
         )}
 
         <ProfileDropdown onAuthModalOpen={onAuthModalOpen} />
