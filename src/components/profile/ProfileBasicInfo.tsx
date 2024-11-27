@@ -42,7 +42,6 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
     country: userData.country || "United States",
   });
 
-  // Update form data when userData changes
   useEffect(() => {
     setFormData({
       name: userData.name || "",
@@ -114,6 +113,15 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
         </div>
 
         <div className="grid gap-2">
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea
+            id="bio"
+            value={formData.bio}
+            onChange={e => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+          />
+        </div>
+
+        <div className="grid gap-2">
           <Label>Country</Label>
           <CountrySelect
             value={formData.country}
@@ -140,15 +148,6 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
             onCountryCodeChange={(code) => setFormData(prev => ({ ...prev, countryCode: code }))}
             onPhoneChange={(phone) => setFormData(prev => ({ ...prev, phone }))}
             countryCodes={countryCodes}
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea
-            id="bio"
-            value={formData.bio}
-            onChange={e => setFormData(prev => ({ ...prev, bio: e.target.value }))}
           />
         </div>
 

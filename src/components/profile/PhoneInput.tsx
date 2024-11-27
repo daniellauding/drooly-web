@@ -1,6 +1,11 @@
-import * as React from "react";
 import { Input } from "@/components/ui/input";
-import { SingleSelect } from "@/components/SingleSelect";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface PhoneInputProps {
   countryCode: string;
@@ -11,29 +16,32 @@ interface PhoneInputProps {
 }
 
 export function PhoneInput({
-  countryCode = "+1",
-  phone = "",
+  countryCode,
+  phone,
   onCountryCodeChange,
   onPhoneChange,
-  countryCodes = [],
+  countryCodes
 }: PhoneInputProps) {
   return (
     <div className="flex gap-2">
-      <div className="w-[100px]">
-        <SingleSelect
-          options={countryCodes}
-          selected={countryCode}
-          onChange={onCountryCodeChange}
-          placeholder="Code"
-          searchable={false}
-        />
-      </div>
+      <Select value={countryCode} onValueChange={onCountryCodeChange}>
+        <SelectTrigger className="w-[120px]">
+          <SelectValue placeholder="Code" />
+        </SelectTrigger>
+        <SelectContent>
+          {countryCodes.map((code) => (
+            <SelectItem key={code} value={code}>
+              {code}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Input
         type="tel"
         value={phone}
         onChange={(e) => onPhoneChange(e.target.value)}
-        className="flex-1"
         placeholder="Phone number"
+        className="flex-1"
       />
     </div>
   );
