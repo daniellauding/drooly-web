@@ -1,5 +1,6 @@
 import { Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRef } from "react";
 
 interface AvatarUploadProps {
   currentAvatar: string;
@@ -7,6 +8,9 @@ interface AvatarUploadProps {
 }
 
 export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -18,39 +22,78 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
     }
   };
 
+  const handleAvatarClick = () => {
+    const options = ["Upload Image", "Take Photo", "Cancel"];
+    if (currentAvatar) {
+      options.unshift("Remove Photo");
+    }
+
+    const dialog = document.createElement("dialog");
+    dialog.className = "fixed inset-0 bg-black/50 flex items-center justify-center";
+    
+    const content = document.createElement("div");
+    content.className = "bg-white rounded-lg shadow-lg overflow-hidden min-w-[200px]";
+    
+    options.forEach((option) => {
+      const button = document.createElement("button");
+      button.className = "w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors";
+      button.textContent = option;
+      
+      button.onclick = () => {
+        switch (option) {
+          case "Upload Image":
+            fileInputRef.current?.click();
+            break;
+          case "Take Photo":
+            cameraInputRef.current?.click();
+            break;
+          case "Remove Photo":
+            onAvatarChange("");
+            break;
+        }
+        dialog.close();
+      };
+      
+      content.appendChild(button);
+    });
+    
+    dialog.appendChild(content);
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    
+    dialog.addEventListener("close", () => {
+      document.body.removeChild(dialog);
+    });
+  };
+
   return (
     <div className="relative">
-      <img
-        src={currentAvatar || "/placeholder.svg"}
-        alt="Profile"
-        className="w-24 h-24 rounded-full object-cover"
-      />
-      <div className="absolute -bottom-2 -right-2 flex gap-1">
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          className="h-8 w-8 rounded-full"
-          onClick={() => document.getElementById('avatar-upload')?.click()}
-        >
-          <Camera className="h-4 w-4" />
-        </Button>
-        {currentAvatar && (
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="h-8 w-8 rounded-full"
-            onClick={() => onAvatarChange("")}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+      <div 
+        onClick={handleAvatarClick}
+        className="cursor-pointer group"
+      >
+        <img
+          src={currentAvatar || "/placeholder.svg"}
+          alt="Profile"
+          className="w-24 h-24 rounded-full object-cover group-hover:opacity-90 transition-opacity"
+        />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <Camera className="h-6 w-6 text-white" />
+        </div>
       </div>
+      
       <input
-        id="avatar-upload"
+        ref={fileInputRef}
         type="file"
         accept="image/*"
+        className="hidden"
+        onChange={handleImageUpload}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={handleImageUpload}
       />
