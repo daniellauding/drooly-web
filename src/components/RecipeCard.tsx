@@ -1,8 +1,11 @@
-import { Heart, Clock, ChefHat, Edit } from "lucide-react";
+import { Heart, Clock, ChefHat, Edit, X } from "lucide-react";
 import { Card } from "./ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types/recipe";
+import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useToast } from "@/hooks/use-toast";
 
 export interface RecipeCardProps {
   id: string;
@@ -16,6 +19,10 @@ export interface RecipeCardProps {
   images?: string[];
   featuredImageIndex?: number;
   creatorId?: string;
+  stats?: {
+    likes?: string[];
+  };
+  onDismiss?: () => void;
 }
 
 export function RecipeCard({ 
@@ -29,25 +36,62 @@ export function RecipeCard({
   isFavorite = false,
   chef,
   date,
-  creatorId
+  creatorId,
+  stats,
+  onDismiss
 }: RecipeCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
+
+  const isLiked = user && stats?.likes?.includes(user.uid);
+  const likesCount = stats?.likes?.length || 0;
 
   const handleClick = () => {
     console.log('Navigating to recipe:', id);
     navigate(`/recipe/${id}`);
   };
 
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Toggle favorite for recipe:', id);
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to like recipes",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const recipeRef = doc(db, "recipes", id);
+      await updateDoc(recipeRef, {
+        "stats.likes": isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
+      });
+      
+      toast({
+        title: isLiked ? "Recipe unliked" : "Recipe liked",
+        description: isLiked ? "Removed from your liked recipes" : "Added to your liked recipes"
+      });
+    } catch (error) {
+      console.error("Error updating like:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update like status",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Navigating to edit recipe:', id);
     navigate(`/recipe/edit/${id}`);
+  };
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDismiss?.();
   };
 
   const getFeaturedImage = () => {
@@ -70,6 +114,14 @@ export function RecipeCard({
           className="h-48 w-full object-cover" 
         />
         <div className="absolute top-3 right-3 flex gap-2">
+          {onDismiss && (
+            <button 
+              className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
+              onClick={handleDismiss}
+            >
+              <X className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
           {user && creatorId === user.uid && (
             <button 
               className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
@@ -79,12 +131,19 @@ export function RecipeCard({
             </button>
           )}
           <button 
-            className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors"
-            onClick={handleFavorite}
+            className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors group"
+            onClick={handleLike}
           >
-            <Heart className={`h-5 w-5 ${isFavorite ? "fill-[#FF6B6B] text-[#FF6B6B]" : "text-gray-600"}`} />
+            <Heart 
+              className={`h-5 w-5 ${isLiked ? "fill-[#FF6B6B] text-[#FF6B6B]" : "text-gray-600 group-hover:text-[#FF6B6B]"}`} 
+            />
           </button>
         </div>
+        {likesCount > 0 && (
+          <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm">
+            {likesCount} {likesCount === 1 ? 'like' : 'likes'}
+          </div>
+        )}
       </div>
       <div className="p-5">
         <h3 className="font-semibold text-lg mb-3 text-[#2C3E50]">{title}</h3>
