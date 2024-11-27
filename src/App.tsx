@@ -10,6 +10,7 @@ import RecipeDetail from "./pages/RecipeDetail";
 import Home from "./pages/Index";
 import Create from "./pages/Create";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Backoffice from "./pages/Backoffice";
@@ -28,6 +29,7 @@ function App() {
             <Route path="/create-recipe" element={<CreateRecipe />} />
             <Route path="/recipe/:id" element={<RecipeDetail />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/backoffice" element={<Backoffice />} />
