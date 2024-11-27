@@ -1,4 +1,4 @@
-import { Home, Calendar } from "lucide-react";
+import { Home, MessageSquare, User, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 export function BottomBar() {
@@ -13,11 +13,23 @@ export function BottomBar() {
           </div>
           <span className="text-xs font-medium">Home</span>
         </Link>
-        <Link to="/plan" className={`nav-item ${location.pathname === "/plan" ? "active" : ""}`}>
+        <Link to="/profile" className={`nav-item ${location.pathname === "/profile" ? "active" : ""}`}>
           <div className="p-2 rounded-xl hover:bg-[#F7F9FC] transition-colors">
-            <Calendar className="h-6 w-6" />
+            <User className="h-6 w-6" />
           </div>
-          <span className="text-xs font-medium">Plan</span>
+          <span className="text-xs font-medium">Profile</span>
+        </Link>
+        <Link to="/messages" className={`nav-item ${location.pathname === "/messages" ? "active" : ""}`}>
+          <div className="p-2 rounded-xl hover:bg-[#F7F9FC] transition-colors">
+            <MessageSquare className="h-6 w-6" />
+          </div>
+          <span className="text-xs font-medium">Messages</span>
+        </Link>
+        <Link to="/settings" className={`nav-item ${location.pathname === "/settings" ? "active" : ""}`}>
+          <div className="p-2 rounded-xl hover:bg-[#F7F9FC] transition-colors">
+            <Settings className="h-6 w-6" />
+          </div>
+          <span className="text-xs font-medium">Settings</span>
         </Link>
       </nav>
     </div>

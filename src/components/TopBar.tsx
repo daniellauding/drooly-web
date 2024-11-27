@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "./ui/button";
-import { Bell, MessageSquare, PlusCircle } from "lucide-react";
+import { Bell, MessageSquare, PlusCircle, Home, User, Settings } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { db } from "@/lib/firebase";
@@ -111,13 +111,33 @@ export function TopBar() {
           />
         </div>
 
+        {/* Desktop Navigation - Hidden on Mobile */}
+        <div className="hidden md:flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+            <Home className="h-5 w-5" />
+            <span>Home</span>
+          </Link>
+          <Link to="/profile" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+            <User className="h-5 w-5" />
+            <span>Profile</span>
+          </Link>
+          <Link to="/messages" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+            <MessageSquare className="h-5 w-5" />
+            <span>Messages</span>
+          </Link>
+          <Link to="/settings" className="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+            <Settings className="h-5 w-5" />
+            <span>Settings</span>
+          </Link>
+        </div>
+
         {/* Search Bar - Shown inline on mobile */}
         <div className="flex md:hidden flex-1 mx-2">
           <SearchBar onSearchClick={() => setSearchOpen(true)} />
         </div>
 
         {/* Right Actions - Hidden on Mobile */}
-        <div className="hidden sm:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-2">
           {user && (
             <>
               <Button
