@@ -1,9 +1,8 @@
-export interface RecipeStep {
-  title: string;
-  instructions: string;
-  duration: string;
-  ingredientGroup?: string;
-  media?: string[];
+export interface Ingredient {
+  name: string;
+  amount: string;
+  unit: string;
+  group: string;
 }
 
 export interface Recipe {
@@ -17,10 +16,6 @@ export interface Recipe {
   images: string[];
   featuredImageIndex: number;
   ingredients: any[];
-  ingredientSections?: Array<{
-    title?: string;
-    ingredients: string[];
-  }>;
   servings: {
     amount: number;
     unit: string;
@@ -30,7 +25,7 @@ export interface Recipe {
   totalTime: string;
   worksWith: string[];
   serveWith: string[];
-  dietaryInfo: {
+  dietaryInfo?: {
     isVegetarian: boolean;
     isVegan: boolean;
     isGlutenFree: boolean;
@@ -39,10 +34,11 @@ export interface Recipe {
   };
   categories: string[];
   estimatedCost: string;
+  equipment: string[];
   season?: string;
   occasion?: string;
-  equipment: string[];
   createdAt?: { seconds: number };
+  updatedAt?: { seconds: number };
   creatorId?: string;
   creatorName?: string;
   status?: string;
@@ -50,7 +46,114 @@ export interface Recipe {
   chef?: string;
   date?: string;
   cookTime?: string;
+  source?: 'image' | 'scrape' | 'ai' | 'manual' | 'trello';
+  sourceUrl?: string;
+  privacy?: 'public' | 'private' | 'unlisted';
+  stats?: {
+    views: number;
+    likes: string[];
+    comments: number;
+  };
+  ingredientSections?: {
+    title: string;
+    ingredients: string[];
+  }[];
 }
+
+export interface RecipeStep {
+  title: string;
+  instructions: string;
+  duration: string;
+  ingredientGroup?: string;
+  media?: string[];
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: {
+    field: string;
+    message: string;
+  }[];
+}
+
+export const validateRecipe = (recipe: Recipe): ValidationResult => {
+  const errors: { field: string; message: string }[] = [];
+
+  // Title validation
+  if (!recipe.title?.trim()) {
+    errors.push({
+      field: 'title',
+      message: 'Recipe title is required'
+    });
+  } else if (recipe.title.length < 3) {
+    errors.push({
+      field: 'title',
+      message: 'Title must be at least 3 characters long'
+    });
+  }
+
+  // Description validation
+  if (!recipe.description?.trim()) {
+    errors.push({
+      field: 'description',
+      message: 'Recipe description is required'
+    });
+  }
+
+  // Ingredients validation
+  if (recipe.ingredients.length === 0) {
+    errors.push({
+      field: 'ingredients',
+      message: 'At least one ingredient is required'
+    });
+  } else {
+    recipe.ingredients.forEach((ingredient, index) => {
+      if (!ingredient.name?.trim()) {
+        errors.push({
+          field: 'ingredients',
+          message: `Ingredient ${index + 1} requires a name`
+        });
+      }
+      // Set default values for amount and unit if not provided
+      if (!ingredient.amount?.trim()) {
+        ingredient.amount = '1';
+      }
+      if (!ingredient.unit?.trim()) {
+        ingredient.unit = 'piece';
+      }
+    });
+  }
+
+  // Steps validation
+  if (recipe.steps.length === 0) {
+    errors.push({
+      field: 'steps',
+      message: 'At least one step is required'
+    });
+  } else {
+    recipe.steps.forEach((step, index) => {
+      if (!step.instructions?.trim()) {
+        errors.push({
+          field: `steps.${index}`,
+          message: `Step ${index + 1} requires instructions`
+        });
+      }
+    });
+  }
+
+  // Servings validation - only if provided
+  if (recipe.servings.amount && !recipe.servings.unit) {
+    errors.push({
+      field: 'servings',
+      message: 'Servings unit is required when amount is specified'
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
 
 export const CUISINES = [
   "American", "Italian", "Japanese", "Mexican", "Indian", "French", "Thai", 
@@ -120,45 +223,3 @@ export const COST_CATEGORIES = [
   "$20-$30",
   "$30+"
 ];
-
-export const validateRecipe = (recipe: Recipe): { isValid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-
-  if (!recipe.title?.trim()) {
-    errors.push("Title is required");
-  }
-
-  if (!recipe.description?.trim()) {
-    errors.push("Description is required");
-  }
-
-  if (!recipe.difficulty) {
-    errors.push("Difficulty level is required");
-  }
-
-  if (recipe.ingredients.length === 0) {
-    errors.push("At least one ingredient is required");
-  }
-
-  if (recipe.steps.length === 0) {
-    errors.push("At least one step is required");
-  }
-
-  recipe.steps.forEach((step, index) => {
-    if (!step.title?.trim()) {
-      errors.push(`Step ${index + 1} requires a title`);
-    }
-    if (!step.instructions?.trim()) {
-      errors.push(`Step ${index + 1} requires instructions`);
-    }
-  });
-
-  if (!recipe.servings.amount || !recipe.servings.unit) {
-    errors.push("Servings information is required");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};

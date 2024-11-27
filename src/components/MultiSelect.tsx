@@ -31,20 +31,36 @@ export function MultiSelect({
   placeholder = "Select items..." 
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
-  
-  const safeOptions = options || [];
-  const safeSelected = selected || [];
+  const [searchQuery, setSearchQuery] = React.useState("");
 
-  const handleSelect = (option: string) => {
+  // Ensure we always have arrays, even if undefined is passed
+  const safeOptions = React.useMemo(() => Array.isArray(options) ? options : [], [options]);
+  const safeSelected = React.useMemo(() => Array.isArray(selected) ? selected : [], [selected]);
+
+  const filteredOptions = React.useMemo(() => {
+    if (!searchQuery.trim()) return safeOptions;
+    return safeOptions.filter((option) =>
+      option.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [safeOptions, searchQuery]);
+
+  const handleSelect = React.useCallback((option: string) => {
     const newSelected = safeSelected.includes(option)
       ? safeSelected.filter((item) => item !== option)
       : [...safeSelected, option];
     onChange(newSelected);
-  };
+  }, [safeSelected, onChange]);
+
+  // Reset search query when popover closes
+  React.useEffect(() => {
+    if (!open) {
+      setSearchQuery("");
+    }
+  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild className="w-full">
+      <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
@@ -70,16 +86,19 @@ export function MultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-        <Command className="w-full">
-          <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
+        <Command shouldFilter={false}>
+          <CommandInput 
+            placeholder={`Search ${placeholder.toLowerCase()}...`}
+            value={searchQuery}
+            onValueChange={setSearchQuery}
+          />
           <CommandList>
-            <CommandEmpty>No item found.</CommandEmpty>
+            <CommandEmpty>No items found.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-auto">
-              {safeOptions.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option}
                   onSelect={() => handleSelect(option)}
-                  value={option}
                 >
                   <Check
                     className={cn(

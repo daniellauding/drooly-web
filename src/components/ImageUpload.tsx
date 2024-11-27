@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { Image as ImageIcon, Camera, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ImageUploadProps {
   images: string[];
@@ -11,11 +12,52 @@ interface ImageUploadProps {
 
 export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploadProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleImageError = (error: string) => {
+    console.error("Image upload error:", error);
+    toast({
+      variant: "destructive",
+      title: "Error uploading image",
+      description: "Please try again with a different image or format",
+    });
+  };
+
+  const processFile = (file: File) => {
+    console.log("Processing file:", file.name, file.type, file.size);
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      handleImageError("File size too large (max 5MB)");
+      return null;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      handleImageError("Invalid file type");
+      return null;
+    }
+
+    try {
+      const imageUrl = URL.createObjectURL(file);
+      console.log("Created image URL:", imageUrl);
+      return imageUrl;
+    } catch (error) {
+      handleImageError("Failed to process image");
+      return null;
+    }
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Convert files to URLs
-    const newImages = acceptedFiles.map(file => URL.createObjectURL(file));
-    onChange([...images, ...newImages], featuredImageIndex);
+    console.log("Files dropped:", acceptedFiles.length);
+    
+    const newImages = acceptedFiles
+      .map(processFile)
+      .filter((url): url is string => url !== null);
+
+    if (newImages.length > 0) {
+      onChange([...images, ...newImages], featuredImageIndex);
+    }
   }, [images, featuredImageIndex, onChange]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -23,14 +65,21 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp']
     },
-    multiple: true
+    multiple: true,
+    maxSize: 5 * 1024 * 1024 // 5MB
   });
 
   const handleCameraCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Camera capture triggered");
     const file = event.target.files?.[0];
+    
     if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      onChange([...images, imageUrl], featuredImageIndex);
+      console.log("Captured image:", file.name, file.type, file.size);
+      const imageUrl = processFile(file);
+      
+      if (imageUrl) {
+        onChange([...images, imageUrl], featuredImageIndex);
+      }
     }
   };
 
@@ -60,7 +109,7 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
             <p className="text-sm text-gray-600">
               {isDragActive
                 ? "Drop the images here"
-                : "Drag & drop images here, or click to select"}
+                : "Tap to select images or use camera"}
             </p>
           </div>
         </div>
@@ -92,6 +141,10 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
                 alt={`Upload ${index + 1}`}
                 className={`w-full h-32 object-cover rounded-lg 
                   ${index === featuredImageIndex ? "ring-2 ring-primary" : ""}`}
+                onError={() => {
+                  handleImageError("Failed to load image");
+                  removeImage(index);
+                }}
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
                 <Button

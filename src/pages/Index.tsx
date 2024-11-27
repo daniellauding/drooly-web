@@ -1,18 +1,14 @@
 import { useState } from "react";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
-import { RecipeCard } from "@/components/RecipeCard";
 import { WeeklyStories } from "@/components/WeeklyStories";
-import { RecipeSwiper } from "@/components/RecipeSwiper";
 import { StoryViewer } from "@/components/StoryViewer";
 import { useQuery } from "@tanstack/react-query";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Recipe } from "@/types/recipe";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { formatRecipeData } from "@/utils/recipeFormatters";
+import { RecipeSections } from "@/components/home/RecipeSections";
 
 const WEEKLY_STORIES = [
   {
@@ -69,7 +65,6 @@ const WEEKLY_STORIES = [
 
 const Index = () => {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
-  const { toast } = useToast();
 
   const { data: recipes, isLoading, error } = useQuery({
     queryKey: ['recipes'],
@@ -92,19 +87,7 @@ const Index = () => {
           return [];
         }
 
-        const fetchedRecipes = querySnapshot.docs.map(doc => {
-          const data = doc.data();
-          console.log('Recipe data:', data);
-          return {
-            id: doc.id,
-            ...data,
-            image: data.images?.[data.featuredImageIndex || 0],
-            chef: data.creatorName || 'Anonymous',
-            date: new Date(data.createdAt?.seconds * 1000).toLocaleDateString(),
-            cookTime: data.totalTime || '30 min'
-          };
-        }) as Recipe[];
-
+        const fetchedRecipes = querySnapshot.docs.map(formatRecipeData);
         console.log('Processed recipes:', fetchedRecipes);
         return fetchedRecipes;
       } catch (error) {
@@ -113,9 +96,6 @@ const Index = () => {
       }
     }
   });
-
-  const discoverRecipes = recipes || [];
-  const popularRecipes = recipes?.slice(0, 3) || [];
 
   return (
     <div className="min-h-screen pb-16 pt-16">
@@ -135,52 +115,9 @@ const Index = () => {
             </AlertDescription>
           </Alert>
         ) : (
-          <>
-            <section>
-              <h2 className="text-2xl font-bold mb-6">Discover New Recipes</h2>
-              {isLoading ? (
-                <div className="w-full max-w-md mx-auto h-[400px]">
-                  <Skeleton className="w-full h-full rounded-xl" />
-                </div>
-              ) : discoverRecipes.length > 0 ? (
-                <RecipeSwiper recipes={discoverRecipes} />
-              ) : (
-                <p className="text-center text-gray-500">No recipes available yet.</p>
-              )}
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-6">Popular Recipes</h2>
-              {isLoading ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-[300px] rounded-xl" />
-                  ))}
-                </div>
-              ) : popularRecipes.length > 0 ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {popularRecipes.map((recipe) => (
-                    <RecipeCard 
-                      key={recipe.id}
-                      id={recipe.id}
-                      title={recipe.title}
-                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
-                      cookTime={recipe.totalTime}
-                      difficulty={recipe.difficulty}
-                      chef={recipe.creatorName}
-                      date={new Date(recipe.createdAt?.seconds * 1000).toLocaleDateString()}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-gray-500">No popular recipes available yet.</p>
-              )}
-            </section>
-          </>
+          <RecipeSections isLoading={isLoading} recipes={recipes || []} />
         )}
       </main>
-      <BottomBar />
-      
       {selectedStoryIndex !== null && (
         <StoryViewer
           stories={WEEKLY_STORIES}

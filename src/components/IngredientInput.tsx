@@ -51,6 +51,9 @@ const COMMON_UNITS = [
   "to taste"
 ];
 
+const DEFAULT_UNIT = "piece";
+const DEFAULT_AMOUNT = "1";
+
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -60,7 +63,12 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
   const addIngredient = (name = "", group = "Main Ingredients") => {
     onChange([
       ...ingredients,
-      { name, amount: "", unit: "", group }
+      { 
+        name, 
+        amount: DEFAULT_AMOUNT, 
+        unit: DEFAULT_UNIT, 
+        group 
+      }
     ]);
     setShowSuggestions(false);
     setCustomIngredientInput("");

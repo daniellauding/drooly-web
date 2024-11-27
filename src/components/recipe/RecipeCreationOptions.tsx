@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Globe, Bot, Instagram, Youtube, ChevronDown, Camera } from "lucide-react";
+import { Globe, Bot, Instagram, Youtube, ChevronDown, Camera, Trello } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RecipeUrlDialog } from "./RecipeUrlDialog";
 import { ImageRecognitionDialog } from "./ImageRecognitionDialog";
+import { TrelloImportDialog } from "./TrelloImportDialog";
+import { InstagramImportDialog } from "./InstagramImportDialog";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeCreationOptionsProps {
@@ -18,6 +20,8 @@ interface RecipeCreationOptionsProps {
 export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOptionsProps) {
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [showImageRecognitionDialog, setShowImageRecognitionDialog] = useState(false);
+  const [showTrelloDialog, setShowTrelloDialog] = useState(false);
+  const [showInstagramDialog, setShowInstagramDialog] = useState(false);
 
   return (
     <>
@@ -33,6 +37,10 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
               <Globe className="mr-2 h-4 w-4" />
               Web Scrape URL
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowTrelloDialog(true)}>
+              <Trello className="mr-2 h-4 w-4" />
+              Import from Trello
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
               <Camera className="mr-2 h-4 w-4" />
               Take Photo & Scan
@@ -41,7 +49,7 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
               <Bot className="mr-2 h-4 w-4" />
               AI Assistant
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowInstagramDialog(true)}>
               <Instagram className="mr-2 h-4 w-4" />
               Import from Instagram
             </DropdownMenuItem>
@@ -63,6 +71,18 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
         open={showImageRecognitionDialog}
         onOpenChange={setShowImageRecognitionDialog}
         onRecipeScanned={onRecipeImported}
+      />
+
+      <TrelloImportDialog
+        open={showTrelloDialog}
+        onOpenChange={setShowTrelloDialog}
+        onRecipeImported={onRecipeImported}
+      />
+
+      <InstagramImportDialog
+        open={showInstagramDialog}
+        onOpenChange={setShowInstagramDialog}
+        onRecipeImported={onRecipeImported}
       />
     </>
   );

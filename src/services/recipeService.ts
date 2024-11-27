@@ -6,15 +6,10 @@ export const fetchRecipes = async (): Promise<Recipe[]> => {
   console.log('Fetching recipes...');
   try {
     const firebaseRecipes = await fetchFirebaseRecipes();
-    if (firebaseRecipes.length > 0) {
-      console.log('Using Firebase recipes');
-      return firebaseRecipes;
-    }
-    
-    console.log('No Firebase recipes found, using sample data');
-    return SAMPLE_RECIPES;
+    console.log('Successfully fetched recipes:', firebaseRecipes.length);
+    return firebaseRecipes;
   } catch (error) {
-    console.error('Error fetching recipes:', error);
+    console.error('Error fetching recipes, falling back to sample data:', error);
     return SAMPLE_RECIPES;
   }
 };

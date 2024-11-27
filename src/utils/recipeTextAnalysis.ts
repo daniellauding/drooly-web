@@ -1,122 +1,75 @@
 import { Recipe } from "@/types/recipe";
 
-export const analyzeRecipeText = (text: string) => {
-  console.log("Analyzing recipe text:", text);
+export const analyzeRecipeText = (text: string): Partial<Recipe> => {
+  console.log("Analyzing text:", text);
   
-  const lines = text.split('\n').map(line => line.trim());
-  
-  // Extract title and cuisine
-  const title = lines[0] || "";
-  const cuisine = detectCuisine(title);
-  
-  // Extract servings
-  const servingsMatch = text.match(/(\d+)\s*personer/i);
-  const servings = servingsMatch ? {
-    amount: parseInt(servingsMatch[1]),
-    unit: "serving"
-  } : undefined;
-  
-  // Extract cooking methods
-  const cookingMethods = detectCookingMethods(text);
-  
-  // Extract equipment
-  const equipment = detectEquipment(text);
-  
-  // Extract ingredients with amounts and units
-  const ingredients = extractIngredients(text);
-  
-  // Extract instructions
-  const instructionsStart = lines.findIndex(line => 
-    line.toLowerCase().includes("gör du") ||
-    line.toLowerCase().includes("instructions") ||
-    line.toLowerCase().includes("directions")
+  // Split text into lines and remove empty ones
+  const lines = text.split('\n').filter(line => line.trim());
+
+  // Try to find title (usually first non-empty line or line with "Recipe" in it)
+  const titleLine = lines.find(line => 
+    line.toLowerCase().includes('recipe') || 
+    line.length > 3 && line.length < 50
+  ) || lines[0];
+
+  // Extract potential ingredients (lines with numbers or measurements)
+  const ingredientLines = lines.filter(line => {
+    const hasNumbers = /\d/.test(line);
+    const hasMeasurements = /\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i.test(line);
+    return hasNumbers || hasMeasurements;
+  });
+
+  // Convert ingredient lines to structured format
+  const ingredients = ingredientLines.map(line => {
+    const amount = line.match(/\d+(\.\d+)?/)?.[0] || "";
+    const unit = line.match(/\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i)?.[0] || "";
+    const name = line
+      .replace(/\d+(\.\d+)?/, '')
+      .replace(/\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i, '')
+      .trim();
+
+    return {
+      name,
+      amount,
+      unit,
+      group: "main"
+    };
+  });
+
+  // Extract instructions (longer lines without numbers at start)
+  const instructionLines = lines.filter(line => 
+    line.length > 30 && 
+    !line.trim().match(/^\d/) &&
+    !ingredientLines.includes(line)
   );
-  
-  const instructions = instructionsStart !== -1 
-    ? lines.slice(instructionsStart + 1).join("\n")
-    : "";
+
+  const steps = instructionLines.map((instruction, index) => ({
+    title: `Step ${index + 1}`,
+    instructions: instruction.trim(),
+    duration: "",
+    media: []
+  }));
 
   return {
-    title,
-    cuisine,
-    servings,
-    cookingMethods,
-    equipment,
+    title: titleLine?.trim() || "Untitled Recipe",
+    description: lines[1]?.trim() || "",
     ingredients,
-    steps: [{
-      title: "Instructions",
-      instructions,
-      duration: "",
-      media: []
-    }]
+    steps,
+    servings: {
+      amount: 4,
+      unit: "serving"
+    },
+    difficulty: "Medium",
+    cuisine: "International",
+    totalTime: "",
+    images: [],
+    featuredImageIndex: 0,
+    cookingMethods: [],
+    dishTypes: [],
+    equipment: [],
+    categories: [],
+    tags: [],
+    estimatedCost: "Under $5",
+    season: "Year Round"
   };
-};
-
-const detectCuisine = (text: string): string => {
-  const cuisineKeywords: Record<string, string[]> = {
-    "thai": ["thai", "curry", "coconut milk"],
-    "italian": ["pasta", "pizza", "risotto"],
-    "japanese": ["sushi", "ramen", "miso"],
-    // Add more cuisines and their keywords
-  };
-
-  const lowerText = text.toLowerCase();
-  for (const [cuisine, keywords] of Object.entries(cuisineKeywords)) {
-    if (keywords.some(keyword => lowerText.includes(keyword))) {
-      return cuisine;
-    }
-  }
-  return "";
-};
-
-const detectCookingMethods = (text: string): string[] => {
-  const methods = [
-    "wok", "fry", "boil", "steam", "bake", "grill", "roast",
-    "simmer", "stir-fry", "deep-fry", "sauté"
-  ];
-  
-  const foundMethods = methods.filter(method => 
-    text.toLowerCase().includes(method.toLowerCase())
-  );
-  
-  return [...new Set(foundMethods)];
-};
-
-const detectEquipment = (text: string): string[] => {
-  const equipment = [
-    "wok", "pan", "pot", "gryta", "plate", "tallrik", "deep plate",
-    "djup tallrik", "bowl", "skål"
-  ];
-  
-  const foundEquipment = equipment.filter(item => 
-    text.toLowerCase().includes(item.toLowerCase())
-  );
-  
-  return [...new Set(foundEquipment)];
-};
-
-const extractIngredients = (text: string): { name: string; amount: string; unit: string; }[] => {
-  console.log("Extracting ingredients from text:", text);
-  const ingredients: { name: string; amount: string; unit: string; }[] = [];
-  
-  // Look for ingredient patterns
-  const lines = text.split('\n');
-  const ingredientSection = lines.slice(
-    lines.findIndex(line => line.toLowerCase().includes("ingrediens")),
-    lines.findIndex(line => line.toLowerCase().includes("gör du"))
-  );
-  
-  ingredientSection.forEach(line => {
-    const match = line.match(/^(\d+)\s*(ml|g|msk|tsk|st|burk)?\s*(.+)/i);
-    if (match) {
-      ingredients.push({
-        amount: match[1],
-        unit: match[2] || "",
-        name: match[3].trim()
-      });
-    }
-  });
-  
-  console.log("Extracted ingredients:", ingredients);
-  return ingredients;
 };

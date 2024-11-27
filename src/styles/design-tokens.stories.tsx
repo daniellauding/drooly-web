@@ -1,45 +1,66 @@
-import { Meta, ColorPalette, ColorItem } from '@storybook/blocks';
+import type { Meta, StoryObj } from '@storybook/react';
 
-<Meta title="Design System/Colors" />
+interface ColorItemProps {
+  color: string;
+  name: string;
+}
 
-# Design System
+const ColorItem = ({ color, name }: ColorItemProps) => (
+  <div className="flex items-center gap-4">
+    <div 
+      className="w-16 h-16 rounded-lg shadow-md" 
+      style={{ backgroundColor: color }}
+    />
+    <div>
+      <p className="font-medium">{name}</p>
+      <p className="text-sm text-muted-foreground">{color}</p>
+    </div>
+  </div>
+);
 
-## Colors
+interface ColorDisplayProps {
+  title: string;
+  subtitle: string;
+  colors: Record<string, string>;
+}
 
-<ColorPalette>
-  <ColorItem
-    title="Primary"
-    colors={{
-      'primary': 'hsl(var(--primary))',
-      'primary-foreground': 'hsl(var(--primary-foreground))',
-    }}
-  />
-  <ColorItem
-    title="Secondary"
-    colors={{
-      'secondary': 'hsl(var(--secondary))',
-      'secondary-foreground': 'hsl(var(--secondary-foreground))',
-    }}
-  />
-  <ColorItem
-    title="Destructive"
-    colors={{
-      'destructive': 'hsl(var(--destructive))',
-      'destructive-foreground': 'hsl(var(--destructive-foreground))',
-    }}
-  />
-  <ColorItem
-    title="Muted"
-    colors={{
-      'muted': 'hsl(var(--muted))',
-      'muted-foreground': 'hsl(var(--muted-foreground))',
-    }}
-  />
-  <ColorItem
-    title="Accent"
-    colors={{
-      'accent': 'hsl(var(--accent))',
-      'accent-foreground': 'hsl(var(--accent-foreground))',
-    }}
-  />
-</ColorPalette>
+const ColorDisplay = ({ title, subtitle, colors }: ColorDisplayProps) => {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">{title}</h2>
+        <p className="text-muted-foreground">{subtitle}</p>
+      </div>
+      <div className="grid gap-4">
+        {Object.entries(colors).map(([name, color]) => (
+          <ColorItem key={name} name={name} color={color} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const meta: Meta<typeof ColorDisplay> = {
+  title: 'Design System/Colors',
+  component: ColorDisplay,
+  parameters: {
+    layout: 'centered',
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof ColorDisplay>;
+
+export const Primary: Story = {
+  args: {
+    title: 'Color Palette',
+    subtitle: 'Our design system color palette',
+    colors: {
+      primary: '#0066CC',
+      secondary: '#6B7280',
+      success: '#10B981',
+      warning: '#F59E0B',
+      error: '#EF4444',
+    },
+  },
+};

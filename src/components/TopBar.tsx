@@ -1,20 +1,33 @@
-import { Search, Bell, MessageSquare, PlusCircle } from "lucide-react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Badge } from "./ui/badge";
-import { useQuery } from "@tanstack/react-query";
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useToast } from "./ui/use-toast";
+import { SearchDialog } from "./navigation/SearchDialog";
+import { AuthModal } from "./auth/AuthModal";
+import { EmailVerificationBanner } from "./auth/EmailVerificationBanner";
+import { EditProfileModal } from "./profile/EditProfileModal";
+import { MobileMenu } from "./navigation/MobileMenu";
+import { Logo } from "./navigation/Logo";
+import { DesktopNav } from "./navigation/DesktopNav";
+import { Home } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "./ui/button";
 
 export function TopBar() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
 
-  // Fetch unread messages count
+  console.log("User data in TopBar:", user); // Debug log
+
+  const isVerifiedOrSuperadmin = user?.emailVerified || user?.manuallyVerified || user?.role === 'superadmin';
+
   const { data: unreadMessagesCount = 0 } = useQuery({
     queryKey: ['unreadMessages', user?.uid],
     queryFn: async () => {
@@ -31,7 +44,6 @@ export function TopBar() {
     enabled: !!user,
   });
 
-  // Fetch notifications count
   const { data: unreadNotificationsCount = 0 } = useQuery({
     queryKey: ['unreadNotifications', user?.uid],
     queryFn: async () => {
@@ -48,64 +60,93 @@ export function TopBar() {
     enabled: !!user,
   });
 
+  const handleRestrictedAction = () => {
+    if (!isVerifiedOrSuperadmin) {
+      toast({
+        title: "Email verification required",
+        description: "Please verify your email to access this feature.",
+        variant: "destructive"
+      });
+      return true;
+    }
+    return false;
+  };
+
   const handleNotificationsClick = () => {
+    if (handleRestrictedAction()) return;
     toast({
       title: "Coming Soon",
       description: "Notifications feature will be available soon!",
     });
   };
 
+  const handleCreateClick = () => {
+    if (!user) {
+      setAuthModalOpen(true);
+      return;
+    }
+    if (handleRestrictedAction()) return;
+    navigate('/create');
+  };
+
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b">
-      <div className="flex items-center gap-4 px-6 py-4 max-w-7xl mx-auto">
-        <div className="flex items-center gap-3">
-          <img src="/lovable-uploads/e7734f7b-7b98-4c29-9f0f-1cd60bacbfac.png" alt="Recipe App" className="h-8 w-8" />
-          <h1 className="text-2xl font-bold text-[#2C3E50]">Yummy</h1>
+      <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
+        <div className="flex items-center gap-6">
+          <Logo />
+          <Link to="/">
+            <Button variant="ghost" size="icon">
+              <Home className="h-5 w-5 text-gray-600 hover:text-gray-900" />
+            </Button>
+          </Link>
         </div>
-        <div className="relative flex-1 max-w-md ml-auto">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input 
-            className="pl-9 bg-[#F7F9FC] border-none rounded-2xl" 
-            placeholder="Find recipes..." 
+
+        <div className="hidden md:block flex-1 max-w-4xl mx-auto px-6">
+          <DesktopNav
+            unreadNotifications={unreadNotificationsCount}
+            unreadMessages={unreadMessagesCount}
+            isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
+            handleNotificationsClick={handleNotificationsClick}
+            handleCreateClick={handleCreateClick}
+            onAuthModalOpen={() => setAuthModalOpen(true)}
+            onSearchClick={() => setSearchOpen(true)}
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={handleNotificationsClick}
-          >
-            <Bell className="h-5 w-5" />
-            {unreadNotificationsCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
-                {unreadNotificationsCount}
-              </Badge>
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative"
-            onClick={() => navigate('/messages')}
-          >
-            <MessageSquare className="h-5 w-5" />
-            {unreadMessagesCount > 0 && (
-              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0">
-                {unreadMessagesCount}
-              </Badge>
-            )}
-          </Button>
-          <Button
-            variant="default"
-            className="gap-2"
-            onClick={() => navigate('/create')}
-          >
-            <PlusCircle className="h-4 w-4" />
-            Create
-          </Button>
+
+        <div className="md:hidden">
+          <MobileMenu 
+            onAuthModalOpen={() => setAuthModalOpen(true)}
+            onEditProfileOpen={() => setEditProfileOpen(true)}
+            onSearchClick={() => setSearchOpen(true)}
+            unreadNotifications={unreadNotificationsCount}
+            unreadMessages={unreadMessagesCount}
+            isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
+            handleNotificationsClick={handleNotificationsClick}
+            handleCreateClick={handleCreateClick}
+          />
         </div>
       </div>
+
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
+      <EmailVerificationBanner />
+      {user && (
+        <EditProfileModal
+          open={editProfileOpen}
+          onOpenChange={setEditProfileOpen}
+          userData={{
+            id: user.uid,
+            name: user.displayName || "",
+            email: user.email || "",
+            avatarUrl: user.photoURL || "",
+          }}
+          isAdmin={user?.role === 'superadmin'}
+          onUpdate={() => {
+            console.log("Profile updated");
+            setEditProfileOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

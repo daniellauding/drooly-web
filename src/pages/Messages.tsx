@@ -1,12 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { MessageSquare, PlusSquare } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ChatView } from "@/components/chat/ChatView";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { UserSearchDialog } from "@/components/chat/UserSearchDialog";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
 import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Conversation } from "@/types/chat";
@@ -25,13 +22,15 @@ export default function Messages() {
     const q = query(
       conversationsRef,
       where("participants", "array-contains", user.uid),
-      orderBy("lastMessageTimestamp", "desc")
+      orderBy("lastMessageAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      console.log("Received conversations snapshot");
       const conversationsData = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data(),
+        participants: doc.data().participants,
+        participantEmails: doc.data().participantEmails,
         name: doc.data().participantEmails.find((email: string) => email !== user.email) || "Unknown",
         lastMessage: doc.data().lastMessage || "No messages yet",
         unreadCount: doc.data().unreadCount || 0,
@@ -40,64 +39,51 @@ export default function Messages() {
       setConversations(conversationsData);
     });
 
-    return () => unsubscribe();
+    return () => {
+      console.log("Cleaning up conversations listener");
+      unsubscribe();
+    };
   }, [user]);
 
-  const handleNewMessage = () => {
-    setIsSearchOpen(true);
-  };
-
-  const handleSelectConversation = (conversationId: string) => {
+  const handleConversationSelect = (conversationId: string) => {
     console.log("Selected conversation:", conversationId);
     setSelectedConversationId(conversationId);
   };
 
-  const handleDeleteConversation = (conversationId: string) => {
-    setSelectedConversationId(null);
+  const handleStartNewChat = () => {
+    console.log("Opening new chat dialog");
+    setIsSearchOpen(true);
   };
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <TopBar />
-      <div className="flex-1 flex mt-16 mb-16">
-        <div className="flex flex-col w-full max-w-screen-xl mx-auto">
-          <div className="flex h-full">
-            <div className="w-80 border-r">
-              <div className="h-full flex flex-col">
-                <div className="p-4 border-b flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">Messages</h2>
-                  <Button onClick={handleNewMessage} size="icon" variant="ghost">
-                    <PlusSquare className="h-5 w-5" />
-                  </Button>
-                </div>
-                <ConversationList
-                  conversations={conversations}
-                  onSelectConversation={handleSelectConversation}
-                />
+      <div className="container mx-auto px-4 pt-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-6xl mx-auto">
+          <div className="md:col-span-1 bg-white rounded-lg shadow-sm border">
+            <ConversationList
+              conversations={conversations}
+              onSelectConversation={handleConversationSelect}
+            />
+          </div>
+          <div className="md:col-span-2 bg-white rounded-lg shadow-sm border">
+            {selectedConversationId && selectedConversation ? (
+              <ChatView
+                conversationId={selectedConversationId}
+                onDeleteConversation={() => setSelectedConversationId(null)}
+                recipientName={selectedConversation.name}
+                recipientInitials={selectedConversation.name.charAt(0).toUpperCase()}
+              />
+            ) : (
+              <div className="h-[600px] flex items-center justify-center text-muted-foreground">
+                Select a conversation or start a new chat
               </div>
-            </div>
-            
-            <div className="flex-1">
-              {!selectedConversationId ? (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Select a conversation or start a new one
-                </div>
-              ) : (
-                <ChatView
-                  conversationId={selectedConversationId}
-                  onDeleteConversation={handleDeleteConversation}
-                  recipientName={selectedConversation?.name || "Unknown"}
-                  recipientAvatar={selectedConversation?.participantAvatar}
-                  recipientInitials={selectedConversation?.name?.[0]?.toUpperCase()}
-                />
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
-      <BottomBar />
       <UserSearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </div>
   );

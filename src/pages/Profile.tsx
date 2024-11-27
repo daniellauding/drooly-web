@@ -1,32 +1,50 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { RecipeCard } from "@/components/RecipeCard";
 import { Recipe } from "@/types/recipe";
+import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
+import { useToast } from "@/components/ui/use-toast";
+import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const { userId: profileUserId } = useParams();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const { toast } = useToast();
+  const [remainingInvites, setRemainingInvites] = useState(5);
+  const [userData, setUserData] = useState({
+    id: "",
+    name: "",
+    username: "",
+    birthday: "",
+    email: "",
+    phone: "",
+    bio: "",
+    gender: "prefer-not-to-say",
+    isPrivate: false,
+    avatarUrl: "",
+    followers: [] as string[],
+    following: [] as string[],
+  });
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-    }
-  }, [user, navigate]);
+  const targetUserId = profileUserId || user?.uid;
 
-  const { data: recipes, isLoading } = useQuery({
-    queryKey: ['userRecipes', user?.uid],
+  const { data: recipes = [], isLoading: recipesLoading } = useQuery({
+    queryKey: ['userRecipes', targetUserId],
     queryFn: async () => {
-      if (!user?.uid) return [];
-      console.log('Fetching recipes for user:', user.uid);
+      if (!targetUserId) return [];
+      console.log('Fetching recipes for user:', targetUserId);
       const recipesRef = collection(db, 'recipes');
-      const q = query(recipesRef, where('creatorId', '==', user.uid));
+      const q = query(recipesRef, where('creatorId', '==', targetUserId));
       const querySnapshot = await getDocs(q);
       
       return querySnapshot.docs.map(doc => ({
@@ -34,37 +52,89 @@ export default function Profile() {
         ...doc.data()
       })) as Recipe[];
     },
-    enabled: !!user?.uid
+    enabled: !!targetUserId
   });
 
-  console.log('User recipes:', recipes);
+  useEffect(() => {
+    if (!targetUserId) {
+      navigate('/login');
+      return;
+    }
 
-  if (!user) return null;
+    const fetchUserData = async () => {
+      try {
+        console.log("Fetching user data for:", targetUserId);
+        const userDoc = await getDoc(doc(db, "users", targetUserId));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setIsAdmin(data.role === 'superadmin');
+          setUserData(prev => ({
+            ...prev,
+            id: userDoc.id,
+            ...data,
+            email: user?.email || '',
+            followers: data.followers || [],
+            following: data.following || []
+          }));
+          console.log("Fetched user data:", data);
+        }
+        
+        if (targetUserId === user?.uid) {
+          const invitesRef = collection(db, "invites");
+          const q = query(invitesRef, where("createdBy", "==", targetUserId));
+          const querySnapshot = await getDocs(q);
+          const usedInvites = querySnapshot.size;
+          setRemainingInvites(Math.max(0, 5 - usedInvites));
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load user data. Please try again.",
+        });
+      }
+    };
+
+    fetchUserData();
+  }, [targetUserId, user, navigate, toast]);
+
+  const handleProfileUpdate = async () => {
+    if (!targetUserId) return;
+    const userDoc = await getDoc(doc(db, "users", targetUserId));
+    if (userDoc.exists()) {
+      const data = userDoc.data();
+      setUserData(prev => ({
+        ...prev,
+        ...data,
+        followers: data.followers || [],
+        following: data.following || []
+      }));
+    }
+  };
+
+  const isOwnProfile = user?.uid === targetUserId;
+
+  if (!targetUserId) return null;
 
   return (
     <div className="min-h-screen pb-20">
       <TopBar />
       <main className="container py-6 px-4 max-w-4xl mx-auto space-y-6">
-        <div className="text-center space-y-4">
-          <div className="w-24 h-24 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
-            {user.email?.[0].toUpperCase()}
-          </div>
-          <h1 className="text-2xl font-bold">{user.email}</h1>
-        </div>
+        <ProfileHeader 
+          userData={userData}
+          recipesCount={recipes.length}
+          isOwnProfile={isOwnProfile}
+          remainingInvites={remainingInvites}
+          onEditProfile={() => setEditProfileOpen(true)}
+          onInvite={() => setInviteModalOpen(true)}
+        />
 
         <div className="space-y-4">
-          <Button 
-            variant="destructive" 
-            className="w-full"
-            onClick={() => logout()}
-          >
-            Logout
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">My Recipes</h2>
-          {isLoading ? (
+          <h2 className="text-xl font-semibold">
+            {isOwnProfile ? "My Recipes" : "Recipes"}
+          </h2>
+          {recipesLoading ? (
             <div>Loading recipes...</div>
           ) : recipes && recipes.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -83,12 +153,37 @@ export default function Profile() {
             </div>
           ) : (
             <div className="text-center text-gray-500">
-              No recipes yet. Start creating!
+              No recipes yet
             </div>
           )}
         </div>
       </main>
-      <BottomBar />
+      
+      {isOwnProfile && (
+        <>
+          <EditProfileModal
+            open={editProfileOpen}
+            onOpenChange={setEditProfileOpen}
+            userData={userData}
+            onUpdate={handleProfileUpdate}
+            isAdmin={isAdmin}
+          />
+
+          <SendInviteModal
+            open={inviteModalOpen}
+            onOpenChange={setInviteModalOpen}
+            recipe={null}
+            remainingInvites={remainingInvites}
+            onInviteSent={() => {
+              setRemainingInvites(prev => Math.max(0, prev - 1));
+              toast({
+                title: "Invite sent successfully",
+                description: `You have ${remainingInvites - 1} invites remaining.`
+              });
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
