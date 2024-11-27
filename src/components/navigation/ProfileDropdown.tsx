@@ -22,6 +22,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   console.log("User data in ProfileDropdown:", user); // Debug log
+  console.log("Avatar URL:", user?.photoURL || "No avatar URL"); // Debug log for avatar URL
 
   const handleLogout = async () => {
     try {
@@ -57,9 +58,9 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
         <DropdownMenuTrigger asChild>
           <div className="flex items-center gap-2 cursor-pointer">
             <Avatar className="h-8 w-8">
-              {user.photoURL || user.avatarUrl ? (
+              {user.photoURL ? (
                 <AvatarImage 
-                  src={user.photoURL || user.avatarUrl} 
+                  src={user.photoURL} 
                   alt={user.displayName || user.email || "User avatar"}
                   className="object-cover w-full h-full"
                 />
@@ -100,7 +101,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
           id: user.uid,
           name: user.displayName || "",
           email: user.email || "",
-          avatarUrl: user.photoURL || user.avatarUrl || "",
+          avatarUrl: user.photoURL || "",
         }}
         isAdmin={user?.role === 'superadmin'}
         onUpdate={() => {
