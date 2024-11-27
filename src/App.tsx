@@ -4,6 +4,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CookieConsent } from "./components/CookieConsent";
 import { Toaster } from "./components/ui/toaster";
 import { Routes, Route } from "react-router-dom";
+import { MobileNav } from "./components/navigation/MobileNav";
 import CreateRecipe from "./pages/CreateRecipe";
 import RecipeDetail from "./pages/RecipeDetail";
 import Home from "./pages/Index";
@@ -30,6 +31,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/backoffice" element={<Backoffice />} />
           </Routes>
+          <MobileNav />
         </Router>
         <CookieConsent />
         <Toaster />
