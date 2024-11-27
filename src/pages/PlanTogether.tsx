@@ -6,7 +6,6 @@ import { ArrowLeft, Plus, Users, CalendarDays } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EventDetailView } from "@/components/event/EventDetailView";
 

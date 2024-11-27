@@ -6,15 +6,11 @@ import { ChatView } from "@/components/chat/ChatView";
 import { ConversationList } from "@/components/chat/ConversationList";
 import { UserSearchDialog } from "@/components/chat/UserSearchDialog";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
-import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { Conversation } from "@/types/chat";
 
 export default function Messages() {
   const { user } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +31,7 @@ export default function Messages() {
         name: doc.data().participantEmails.find((email: string) => email !== user.email) || "Unknown",
         lastMessage: doc.data().lastMessage || "No messages yet",
         unreadCount: doc.data().unreadCount || 0,
-      })) as Conversation[];
+      }));
       console.log("Received conversations update:", conversationsData);
       setConversations(conversationsData);
     });
@@ -97,7 +93,6 @@ export default function Messages() {
           </div>
         </div>
       </div>
-      <BottomBar />
       <UserSearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />
     </div>
   );

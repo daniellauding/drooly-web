@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
 import { WeeklyStories } from "@/components/WeeklyStories";
 import { StoryViewer } from "@/components/StoryViewer";
 import { useQuery } from "@tanstack/react-query";
@@ -119,8 +118,6 @@ const Index = () => {
           <RecipeSections isLoading={isLoading} recipes={recipes || []} />
         )}
       </main>
-      <BottomBar />
-      
       {selectedStoryIndex !== null && (
         <StoryViewer
           stories={WEEKLY_STORIES}

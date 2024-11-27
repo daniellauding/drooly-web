@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Edit3, Users, Camera } from "lucide-react";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
 
 const Create = () => {
   const navigate = useNavigate();
@@ -54,7 +53,6 @@ const Create = () => {
           ))}
         </div>
       </div>
-      <BottomBar />
     </div>
   );
 };

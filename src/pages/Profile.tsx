@@ -1,6 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -210,8 +209,7 @@ export default function Profile() {
           )}
         </div>
       </main>
-      <BottomBar />
-
+      
       {isOwnProfile && (
         <>
           <EditProfileModal

@@ -1,6 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -89,7 +88,6 @@ export default function Backoffice() {
           </Tabs>
         </ScrollArea>
       </main>
-      <BottomBar />
     </div>
   );
 }

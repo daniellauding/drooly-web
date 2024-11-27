@@ -5,7 +5,6 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { TopBar } from "@/components/TopBar";
-import { BottomBar } from "@/components/BottomBar";
 import { RecipeBasicInfo } from "@/components/recipe/RecipeBasicInfo";
 import { RecipeDetails } from "@/components/recipe/RecipeDetails";
 import { IngredientInput } from "@/components/IngredientInput";
@@ -268,7 +267,6 @@ export default function CreateRecipe() {
           </Card>
         </div>
       </div>
-      <BottomBar />
     </div>
   );
 }
