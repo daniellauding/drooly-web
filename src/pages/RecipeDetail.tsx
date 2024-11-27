@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft, Edit } from "lucide-react";
+import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft, Edit, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +14,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -58,6 +59,8 @@ export default function RecipeDetail() {
   const validImages = (recipe.images || []).filter(img => !img.startsWith('blob:')) || [];
   const ingredients = recipe.ingredientSections?.[0]?.ingredients || [];
   const instructions = recipe.steps?.map(step => step.instructions).filter(Boolean) || [];
+  
+  const [showPlanModal, setShowPlanModal] = React.useState(false);
 
   const handleEdit = () => {
     navigate(`/recipe/edit/${id}`);
@@ -135,6 +138,15 @@ export default function RecipeDetail() {
             <Share2 className="w-4 h-4" />
             Share
           </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 flex-1 sm:flex-none"
+            onClick={() => setShowPlanModal(true)}
+          >
+            <Calendar className="w-4 h-4" />
+            Add to Plan
+          </Button>
           <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none hidden sm:flex">
             <Printer className="w-4 h-4" />
             Print
@@ -144,6 +156,15 @@ export default function RecipeDetail() {
             Start Cooking
           </Button>
         </div>
+
+        {/* Add the modal */}
+        <AddToWeeklyPlanModal
+          open={showPlanModal}
+          onOpenChange={setShowPlanModal}
+          recipeId={recipe.id}
+          recipeTitle={recipe.title}
+          recipeImage={validImages[0] || "/placeholder.svg"}
+        />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <Card className="p-3 sm:p-4 rounded-xl">
