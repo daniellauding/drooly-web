@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { collection, getDocs, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useToast } from '@/components/ui/use-toast';
 import { User } from '@/components/backoffice/types';
 import { httpsCallable, getFunctions } from 'firebase/functions';
@@ -55,26 +55,24 @@ export function useUserManagement(searchQuery: string) {
     try {
       console.log('Deleting user:', id);
       
-      // Delete from Firestore
-      await deleteDoc(doc(db, 'users', id));
+      // Call the Cloud Function to delete the user
+      const deleteUserAccount = httpsCallable(functions, 'deleteUserAccount');
+      await deleteUserAccount({ uid: id });
       
-      // Delete from Firebase Authentication using Cloud Function
-      const deleteUserAuth = httpsCallable(functions, 'deleteUserAuth');
-      await deleteUserAuth({ uid: id });
-      
+      // Update local state after successful deletion
       setUsers(users.filter(user => user.id !== id));
       
-      console.log('User deleted successfully from both Firestore and Auth');
+      console.log('User deleted successfully');
       toast({
         title: "User deleted",
         description: "The user has been completely removed from the system."
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to delete user. Please try again."
+        description: error.message || "Failed to delete user. Please try again."
       });
     }
   };

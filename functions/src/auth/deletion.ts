@@ -1,8 +1,10 @@
 import * as functions from "firebase-functions";
 import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 import * as cors from 'cors';
 
 const db = getFirestore();
+const auth = getAuth();
 const corsHandler = cors({ origin: true });
 
 export const deleteUserAccount = functions.https.onCall(async (data, context) => {
@@ -17,6 +19,10 @@ export const deleteUserAccount = functions.https.onCall(async (data, context) =>
   console.log('Starting cleanup process for user:', uid);
 
   try {
+    // Delete from Firebase Auth first
+    await auth.deleteUser(uid);
+    console.log('User deleted from Firebase Auth');
+
     const batch = db.batch();
 
     // Delete user document
