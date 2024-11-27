@@ -60,6 +60,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
                 <AvatarImage 
                   src={user.photoURL} 
                   alt={user.displayName || user.email || "User avatar"}
+                  className="object-cover"
                 />
               ) : (
                 <AvatarFallback>{userInitial}</AvatarFallback>
