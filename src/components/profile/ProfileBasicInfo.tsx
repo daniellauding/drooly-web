@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,11 +10,7 @@ import { db } from "@/lib/firebase";
 import { AvatarUpload } from "./AvatarUpload";
 import { CountrySelect } from "./CountrySelect";
 import { PhoneInput } from "./PhoneInput";
-
-// Move these to a separate constants file if needed
-const countryCodes = ["+1", "+20", "+27", "+30", "+31", "+32", "+33", "+34", "+36", "+39", "+40", "+41", "+43", "+44", "+45", "+46", "+47", "+48", "+49", "+51", "+52", "+53", "+54", "+55", "+56", "+57", "+58", "+60", "+61", "+62", "+63", "+64", "+65", "+66", "+81", "+82", "+84", "+86", "+90", "+91", "+92", "+93", "+94", "+95", "+98"];
-
-const countries = ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua & Deps", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Rep", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Congo {Democratic Rep}", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland {Republic}", "Israel", "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea North", "Korea South", "Kosovo", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Macedonia", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar, {Burma}", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russian Federation", "Rwanda", "St Kitts & Nevis", "St Lucia", "Saint Vincent & the Grenadines", "Samoa", "San Marino", "Sao Tome & Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Swaziland", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad & Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"];
+import { countries, countryCodes } from "@/components/settings/profileConstants";
 
 interface ProfileBasicInfoProps {
   userData: {
@@ -22,6 +18,12 @@ interface ProfileBasicInfoProps {
     name: string;
     email: string;
     avatarUrl: string;
+    birthday: string;
+    phone: string;
+    countryCode: string;
+    bio: string;
+    gender: string;
+    country: string;
   };
   onUpdate: () => void;
   onClose: () => void;
@@ -31,18 +33,33 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: userData.name || "",
-    birthday: "",
-    phone: "",
-    countryCode: "+1",
-    bio: "",
-    gender: "prefer-not-to-say",
+    birthday: userData.birthday || "",
+    phone: userData.phone || "",
+    countryCode: userData.countryCode || "+1",
+    bio: userData.bio || "",
+    gender: userData.gender || "prefer-not-to-say",
     avatarUrl: userData.avatarUrl || "",
-    country: "United States",
+    country: userData.country || "United States",
   });
+
+  // Update form data when userData changes
+  useEffect(() => {
+    setFormData({
+      name: userData.name || "",
+      birthday: userData.birthday || "",
+      phone: userData.phone || "",
+      countryCode: userData.countryCode || "+1",
+      bio: userData.bio || "",
+      gender: userData.gender || "prefer-not-to-say",
+      avatarUrl: userData.avatarUrl || "",
+      country: userData.country || "United States",
+    });
+  }, [userData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log("Updating user profile with data:", formData);
       const userRef = doc(db, "users", userData.id);
       await updateDoc(userRef, {
         ...formData,

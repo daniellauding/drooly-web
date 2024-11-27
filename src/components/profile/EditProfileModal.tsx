@@ -2,6 +2,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileBasicInfo } from "./ProfileBasicInfo";
 import { ProfileSecuritySettings } from "./ProfileSecuritySettings";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface EditProfileModalProps {
   open: boolean;
@@ -23,6 +26,53 @@ export function EditProfileModal({
   onUpdate,
   isAdmin = false,
 }: EditProfileModalProps) {
+  const [fullUserData, setFullUserData] = useState({
+    ...userData,
+    birthday: "",
+    phone: "",
+    countryCode: "+1",
+    bio: "",
+    gender: "prefer-not-to-say",
+    country: "United States",
+  });
+
+  useEffect(() => {
+    const fetchFullUserData = async () => {
+      try {
+        console.log("Fetching full user data for:", userData.id);
+        const userDoc = await getDoc(doc(db, "users", userData.id));
+        
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          console.log("Fetched user data:", data);
+          
+          setFullUserData(prev => ({
+            ...prev,
+            ...data,
+            // Ensure we keep the basic data if not present in Firestore
+            id: userData.id,
+            name: data.name || userData.name,
+            email: userData.email,
+            avatarUrl: data.avatarUrl || userData.avatarUrl,
+            // Set defaults for optional fields if not present
+            birthday: data.birthday || "",
+            phone: data.phone || "",
+            countryCode: data.countryCode || "+1",
+            bio: data.bio || "",
+            gender: data.gender || "prefer-not-to-say",
+            country: data.country || "United States",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching full user data:", error);
+      }
+    };
+
+    if (open && userData.id) {
+      fetchFullUserData();
+    }
+  }, [open, userData]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl outline-none">
@@ -38,7 +88,7 @@ export function EditProfileModal({
 
           <TabsContent value="profile" className="mt-4">
             <ProfileBasicInfo 
-              userData={userData}
+              userData={fullUserData}
               onUpdate={onUpdate}
               onClose={() => onOpenChange(false)}
             />
