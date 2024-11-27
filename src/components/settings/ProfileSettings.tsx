@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Camera, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { SingleSelect } from "@/components/SingleSelect";
+import { PhoneInput } from "@/components/profile/PhoneInput";
+import { CountrySelect } from "@/components/profile/CountrySelect";
 
 // Move these to a separate constants file if needed
 const countryCodes = ["+1", "+20", "+27", "+30", "+31", "+32", "+33", "+34", "+36", "+39", "+40", "+41", "+43", "+44", "+45", "+46", "+47", "+48", "+49", "+51", "+52", "+53", "+54", "+55", "+56", "+57", "+58", "+60", "+61", "+62", "+63", "+64", "+65", "+66", "+81", "+82", "+84", "+86", "+90", "+91", "+92", "+93", "+94", "+95", "+98"];
@@ -20,15 +22,59 @@ export function ProfileSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: user?.displayName || "",
+    name: "",
     birthday: "",
     phone: "",
     countryCode: "+1",
     bio: "",
     gender: "prefer-not-to-say",
-    avatarUrl: user?.photoURL || "",
+    avatarUrl: "",
     country: "United States",
   });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (!user?.uid) return;
+
+      try {
+        console.log("Loading user data for:", user.uid);
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log("Loaded user data:", userData);
+          
+          // Extract phone number and country code
+          const phoneNumber = userData.phone || "";
+          const countryCode = countryCodes.find(code => phoneNumber.startsWith(code)) || "+1";
+          const phoneWithoutCode = phoneNumber.replace(countryCode, "");
+
+          setFormData({
+            name: userData.name || "",
+            birthday: userData.birthday || "",
+            phone: phoneWithoutCode || "",
+            countryCode: countryCode,
+            bio: userData.bio || "",
+            gender: userData.gender || "prefer-not-to-say",
+            avatarUrl: userData.avatarUrl || "",
+            country: userData.country || "United States",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load profile data. Please try again.",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, toast]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,6 +92,7 @@ export function ProfileSettings() {
     if (!user?.uid) return;
 
     try {
+      console.log("Updating user profile:", formData);
       const userRef = doc(db, "users", user.uid);
       await updateDoc(userRef, {
         name: formData.name,
@@ -54,6 +101,7 @@ export function ProfileSettings() {
         bio: formData.bio,
         gender: formData.gender,
         avatarUrl: formData.avatarUrl,
+        country: formData.country,
         updatedAt: new Date(),
       });
 
@@ -61,6 +109,7 @@ export function ProfileSettings() {
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       });
+      console.log("Profile update successful");
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -70,6 +119,10 @@ export function ProfileSettings() {
       });
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -107,7 +160,6 @@ export function ProfileSettings() {
             id="avatar-upload"
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={handleImageUpload}
           />
@@ -134,33 +186,22 @@ export function ProfileSettings() {
 
         <div className="grid gap-2">
           <Label>Country</Label>
-          <SingleSelect
-            options={countries}
-            selected={formData.country}
-            onChange={(country) => setFormData(prev => ({ ...prev, country }))}
-            placeholder="Select country..."
+          <CountrySelect
+            value={formData.country}
+            onValueChange={(country) => setFormData(prev => ({ ...prev, country }))}
+            countries={countries}
           />
         </div>
 
         <div className="grid gap-2">
           <Label htmlFor="phone">Phone</Label>
-          <div className="flex gap-2">
-            <div className="w-[120px]">
-              <SingleSelect
-                options={countryCodes}
-                selected={formData.countryCode}
-                onChange={(code) => setFormData(prev => ({ ...prev, countryCode: code }))}
-                placeholder="Code"
-              />
-            </div>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              className="flex-1"
-            />
-          </div>
+          <PhoneInput
+            countryCode={formData.countryCode}
+            phone={formData.phone}
+            onCountryCodeChange={(code) => setFormData(prev => ({ ...prev, countryCode: code }))}
+            onPhoneChange={(phone) => setFormData(prev => ({ ...prev, phone }))}
+            countryCodes={countryCodes}
+          />
         </div>
 
         <div className="grid gap-2">
