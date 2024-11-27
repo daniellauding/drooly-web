@@ -1,4 +1,4 @@
-import { Heart, Clock, ChefHat, Edit, X } from "lucide-react";
+import { Heart, Clock, ChefHat, Edit, X, Bookmark } from "lucide-react";
 import { Card } from "./ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +21,7 @@ export interface RecipeCardProps {
   creatorId?: string;
   stats?: {
     likes?: string[];
+    saves?: string[];
   };
   onDismiss?: () => void;
 }
@@ -45,7 +46,9 @@ export function RecipeCard({
   const { toast } = useToast();
 
   const isLiked = user && stats?.likes?.includes(user.uid);
+  const isSaved = user && stats?.saves?.includes(user.uid);
   const likesCount = stats?.likes?.length || 0;
+  const savesCount = stats?.saves?.length || 0;
 
   const handleClick = () => {
     console.log('Navigating to recipe:', id);
@@ -78,6 +81,37 @@ export function RecipeCard({
       toast({
         title: "Error",
         description: "Failed to update like status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSave = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to save recipes",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const recipeRef = doc(db, "recipes", id);
+      await updateDoc(recipeRef, {
+        "stats.saves": isSaved ? arrayRemove(user.uid) : arrayUnion(user.uid)
+      });
+      
+      toast({
+        title: isSaved ? "Recipe removed" : "Recipe saved",
+        description: isSaved ? "Removed from your saved recipes" : "Added to your saved recipes"
+      });
+    } catch (error) {
+      console.error("Error updating save status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update save status",
         variant: "destructive"
       });
     }
@@ -132,6 +166,14 @@ export function RecipeCard({
           )}
           <button 
             className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors group"
+            onClick={handleSave}
+          >
+            <Bookmark 
+              className={`h-5 w-5 ${isSaved ? "fill-primary text-primary" : "text-gray-600 group-hover:text-primary"}`} 
+            />
+          </button>
+          <button 
+            className="h-10 w-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors group"
             onClick={handleLike}
           >
             <Heart 
@@ -139,11 +181,18 @@ export function RecipeCard({
             />
           </button>
         </div>
-        {likesCount > 0 && (
-          <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm">
-            {likesCount} {likesCount === 1 ? 'like' : 'likes'}
-          </div>
-        )}
+        <div className="absolute bottom-3 right-3 flex gap-2">
+          {savesCount > 0 && (
+            <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm">
+              {savesCount} {savesCount === 1 ? 'save' : 'saves'}
+            </div>
+          )}
+          {likesCount > 0 && (
+            <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-sm">
+              {likesCount} {likesCount === 1 ? 'like' : 'likes'}
+            </div>
+          )}
+        </div>
       </div>
       <div className="p-5">
         <h3 className="font-semibold text-lg mb-3 text-[#2C3E50]">{title}</h3>

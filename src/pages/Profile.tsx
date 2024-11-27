@@ -8,9 +8,10 @@ import { db } from "@/lib/firebase";
 import { RecipeCard } from "@/components/RecipeCard";
 import { Recipe } from "@/types/recipe";
 import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -45,6 +46,23 @@ export default function Profile() {
       console.log('Fetching recipes for user:', targetUserId);
       const recipesRef = collection(db, 'recipes');
       const q = query(recipesRef, where('creatorId', '==', targetUserId));
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
+    },
+    enabled: !!targetUserId
+  });
+
+  const { data: savedRecipes = [], isLoading: savedRecipesLoading } = useQuery({
+    queryKey: ['savedRecipes', targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return [];
+      console.log('Fetching saved recipes for user:', targetUserId);
+      const recipesRef = collection(db, 'recipes');
+      const q = query(recipesRef, where('stats.saves', 'array-contains', targetUserId));
       const querySnapshot = await getDocs(q);
       
       return querySnapshot.docs.map(doc => ({
@@ -130,33 +148,70 @@ export default function Profile() {
           onInvite={() => setInviteModalOpen(true)}
         />
 
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">
-            {isOwnProfile ? "My Recipes" : "Recipes"}
-          </h2>
-          {recipesLoading ? (
-            <div>Loading recipes...</div>
-          ) : recipes && recipes.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recipes.map((recipe) => (
-                <RecipeCard
-                  key={recipe.id}
-                  id={recipe.id}
-                  title={recipe.title}
-                  image={recipe.images?.[recipe.featuredImageIndex || 0]}
-                  cookTime={recipe.totalTime}
-                  difficulty={recipe.difficulty}
-                  chef={recipe.creatorName}
-                  date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
-                />
-              ))}
+        <Tabs defaultValue="recipes" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="recipes">My Recipes</TabsTrigger>
+            <TabsTrigger value="saved">Saved Recipes</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="recipes" className="mt-6">
+            <div className="space-y-4">
+              {recipesLoading ? (
+                <div>Loading recipes...</div>
+              ) : recipes && recipes.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {recipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      id={recipe.id}
+                      title={recipe.title}
+                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
+                      cookTime={recipe.totalTime}
+                      difficulty={recipe.difficulty}
+                      chef={recipe.creatorName}
+                      date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
+                      stats={recipe.stats}
+                      creatorId={recipe.creatorId}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500">
+                  No recipes yet
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="text-center text-gray-500">
-              No recipes yet
+          </TabsContent>
+
+          <TabsContent value="saved" className="mt-6">
+            <div className="space-y-4">
+              {savedRecipesLoading ? (
+                <div>Loading saved recipes...</div>
+              ) : savedRecipes && savedRecipes.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {savedRecipes.map((recipe) => (
+                    <RecipeCard
+                      key={recipe.id}
+                      id={recipe.id}
+                      title={recipe.title}
+                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
+                      cookTime={recipe.totalTime}
+                      difficulty={recipe.difficulty}
+                      chef={recipe.creatorName}
+                      date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
+                      stats={recipe.stats}
+                      creatorId={recipe.creatorId}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center text-gray-500">
+                  No saved recipes yet
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </TabsContent>
+        </Tabs>
       </main>
       
       {isOwnProfile && (
