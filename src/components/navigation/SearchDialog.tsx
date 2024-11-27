@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -75,7 +75,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     enabled: searchQuery.length >= 2,
   });
 
-  const hasResults = (searchResults.users?.length || 0) > 0 || (searchResults.recipes?.length || 0) > 0;
+  const hasResults = (searchResults?.users?.length || 0) > 0 || (searchResults?.recipes?.length || 0) > 0;
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -91,11 +91,11 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
           </div>
         ) : !hasResults ? (
           <CommandEmpty className="py-6 text-center text-sm">
-            No results found for "{searchQuery}"
+            {searchQuery.length < 2 ? "Type at least 2 characters to search" : `No results found for "${searchQuery}"`}
           </CommandEmpty>
         ) : (
           <ScrollArea className="h-[400px]">
-            {searchResults.users?.length > 0 && (
+            {searchResults?.users?.length > 0 && (
               <CommandGroup heading="Users" className="p-2">
                 {searchResults.users.map((user: any) => (
                   <CommandItem
@@ -121,7 +121,7 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
               </CommandGroup>
             )}
 
-            {searchResults.recipes?.length > 0 && (
+            {searchResults?.recipes?.length > 0 && (
               <CommandGroup heading="Recipes" className="p-2">
                 <div className="grid gap-4 p-2">
                   {searchResults.recipes.map((recipe: any) => (
