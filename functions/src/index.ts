@@ -52,9 +52,11 @@ export const processSignUp = functions.auth.user().onCreate(async (user) => {
       });
     }
 
-    // Generate verification link
+    // Generate verification link with authorized domain
     console.log("Generating verification link for:", user.email);
-    const verificationLink = await auth.generateEmailVerificationLink(user.email);
+    const verificationLink = await auth.generateEmailVerificationLink(user.email, {
+      url: 'https://drooly.firebaseapp.com/login'
+    });
     console.log("Verification link generated successfully");
 
     // Send welcome email with verification link
@@ -105,7 +107,9 @@ export const resendVerificationEmail = onCall(async (request) => {
       );
     }
 
-    const verificationLink = await auth.generateEmailVerificationLink(user.email);
+    const verificationLink = await auth.generateEmailVerificationLink(user.email, {
+      url: 'https://drooly.firebaseapp.com/login'
+    });
     
     // Queue verification email
     await db.collection("mail").add({
