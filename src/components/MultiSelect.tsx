@@ -32,19 +32,20 @@ export function MultiSelect({
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
   
-  const safeOptions = options || [];
-  const safeSelected = selected || [];
+  // Ensure we always have arrays, even if undefined is passed
+  const safeOptions = Array.isArray(options) ? options : [];
+  const safeSelected = Array.isArray(selected) ? selected : [];
 
-  const handleSelect = (option: string) => {
+  const handleSelect = React.useCallback((option: string) => {
     const newSelected = safeSelected.includes(option)
       ? safeSelected.filter((item) => item !== option)
       : [...safeSelected, option];
     onChange(newSelected);
-  };
+  }, [safeSelected, onChange]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild className="w-full">
+      <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
@@ -70,7 +71,7 @@ export function MultiSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-        <Command className="w-full">
+        <Command className="w-full" shouldFilter={false}>
           <CommandInput placeholder={`Search ${placeholder.toLowerCase()}...`} />
           <CommandList>
             <CommandEmpty>No item found.</CommandEmpty>
