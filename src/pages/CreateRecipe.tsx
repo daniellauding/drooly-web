@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { doc, setDoc, updateDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -19,6 +20,7 @@ export default function CreateRecipe() {
   const { toast } = useToast();
   const { user } = useAuth();
   const isEditing = !!id;
+  const storage = getStorage();
 
   const [recipe, setRecipe] = useState<Recipe>({
     title: "",
@@ -89,13 +91,41 @@ export default function CreateRecipe() {
     }
 
     try {
-      console.log("Saving recipe:", recipe);
+      console.log("Processing recipe images...");
+      // Upload images and get their URLs
+      const uploadedImageUrls = await Promise.all(
+        recipe.images.map(async (imageUrl) => {
+          if (imageUrl.startsWith('blob:')) {
+            try {
+              const response = await fetch(imageUrl);
+              const blob = await response.blob();
+              const imagePath = `recipes/${user.uid}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
+              const imageRef = ref(storage, imagePath);
+              await uploadBytes(imageRef, blob);
+              const downloadUrl = await getDownloadURL(imageRef);
+              console.log("Uploaded image:", downloadUrl);
+              return downloadUrl;
+            } catch (error) {
+              console.error("Error uploading image:", error);
+              return null;
+            }
+          }
+          return imageUrl;
+        })
+      );
+
+      const validImageUrls = uploadedImageUrls.filter((url): url is string => url !== null);
+      console.log("Valid image URLs:", validImageUrls);
+
       const recipeData = {
         ...recipe,
+        images: validImageUrls,
         creatorId: user.uid,
         creatorName: user.displayName || "Anonymous Chef",
         updatedAt: serverTimestamp(),
       };
+
+      console.log("Saving recipe with data:", recipeData);
 
       if (isEditing && id) {
         const recipeRef = doc(db, "recipes", id);
