@@ -2,6 +2,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getFunctions, httpsCallable } from "firebase/functions";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { deleteUserAccount } from "@/services/authService";
+import { logger } from "@/utils/logger";
 
 export function useAccountDeletion() {
   const { user, logout } = useAuth();
@@ -11,6 +13,7 @@ export function useAccountDeletion() {
 
   const deleteAccount = async () => {
     if (!user) {
+      logger.error("Attempt to delete account without being logged in");
       toast({
         variant: "destructive",
         title: "Error",
@@ -20,12 +23,16 @@ export function useAccountDeletion() {
     }
 
     try {
-      console.log("Starting account deletion process");
-      const deleteUserAccount = httpsCallable(functions, 'deleteUserAccount');
-      await deleteUserAccount();
+      logger.info("Starting account deletion process for user:", user.uid);
       
-      // Logout after successful deletion
-      await logout();
+      // Call the Cloud Function to delete user data
+      const deleteUserAccountFn = httpsCallable(functions, 'deleteUserAccount');
+      await deleteUserAccountFn();
+      
+      // Delete local user data and clear session
+      await deleteUserAccount(user.uid);
+      
+      logger.info("Account deletion completed successfully");
       
       toast({
         title: "Account deleted",
@@ -34,7 +41,7 @@ export function useAccountDeletion() {
       
       navigate('/');
     } catch (error: any) {
-      console.error('Error deleting account:', error);
+      logger.error('Error deleting account:', error);
       toast({
         variant: "destructive",
         title: "Error",
