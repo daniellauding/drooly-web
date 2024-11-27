@@ -1,6 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
-import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -11,9 +10,7 @@ import { Recipe } from "@/types/recipe";
 import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
 import { useToast } from "@/components/ui/use-toast";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
-import { Pencil } from "lucide-react";
-import { ProfileStats } from "@/components/profile/ProfileStats";
-import { ProfileActions } from "@/components/profile/ProfileActions";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -41,7 +38,7 @@ export default function Profile() {
 
   const targetUserId = profileUserId || user?.uid;
 
-  const { data: recipes, isLoading: recipesLoading } = useQuery({
+  const { data: recipes = [], isLoading: recipesLoading } = useQuery({
     queryKey: ['userRecipes', targetUserId],
     queryFn: async () => {
       if (!targetUserId) return [];
@@ -76,6 +73,8 @@ export default function Profile() {
             id: userDoc.id,
             ...data,
             email: user?.email || '',
+            followers: data.followers || [],
+            following: data.following || []
           }));
           console.log("Fetched user data:", data);
         }
@@ -104,9 +103,12 @@ export default function Profile() {
     if (!targetUserId) return;
     const userDoc = await getDoc(doc(db, "users", targetUserId));
     if (userDoc.exists()) {
+      const data = userDoc.data();
       setUserData(prev => ({
         ...prev,
-        ...userDoc.data(),
+        ...data,
+        followers: data.followers || [],
+        following: data.following || []
       }));
     }
   };
@@ -119,67 +121,14 @@ export default function Profile() {
     <div className="min-h-screen pb-20">
       <TopBar />
       <main className="container py-6 px-4 max-w-4xl mx-auto space-y-6">
-        <div className="text-center space-y-4">
-          <div className="relative inline-block">
-            <div className="w-24 h-24 mx-auto bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
-              {userData.avatarUrl ? (
-                <img
-                  src={userData.avatarUrl}
-                  alt={userData.name || "Profile"}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-2xl">
-                  {(userData.name || userData.email)?.[0]?.toUpperCase()}
-                </span>
-              )}
-            </div>
-            {isOwnProfile && (
-              <Button
-                variant="outline"
-                size="icon"
-                className="absolute -bottom-2 -right-2 rounded-full"
-                onClick={() => setEditProfileOpen(true)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-          
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold">{userData.name}</h1>
-            {userData.username && (
-              <p className="text-muted-foreground">@{userData.username}</p>
-            )}
-            {userData.bio && (
-              <p className="text-sm max-w-md mx-auto">{userData.bio}</p>
-            )}
-          </div>
-
-          {!isOwnProfile && (
-            <ProfileActions 
-              userId={targetUserId} 
-              isFollowing={userData.followers.includes(user?.uid || '')}
-            />
-          )}
-
-          <ProfileStats
-            userId={targetUserId}
-            recipesCount={recipes?.length || 0}
-            followersCount={userData.followers?.length || 0}
-            followingCount={userData.following?.length || 0}
-          />
-          
-          {isOwnProfile && remainingInvites > 0 && (
-            <Button 
-              variant="outline"
-              onClick={() => setInviteModalOpen(true)}
-              className="w-full sm:w-auto"
-            >
-              Invite Friends ({remainingInvites} remaining)
-            </Button>
-          )}
-        </div>
+        <ProfileHeader 
+          userData={userData}
+          recipesCount={recipes.length}
+          isOwnProfile={isOwnProfile}
+          remainingInvites={remainingInvites}
+          onEditProfile={() => setEditProfileOpen(true)}
+          onInvite={() => setInviteModalOpen(true)}
+        />
 
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">
