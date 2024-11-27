@@ -11,28 +11,14 @@ import { AvatarUpload } from "./AvatarUpload";
 
 // Country codes list
 const countryCodes = [
-  { code: "+1", country: "USA/Canada" },
-  { code: "+44", country: "UK" },
-  { code: "+33", country: "France" },
-  { code: "+49", country: "Germany" },
-  { code: "+81", country: "Japan" },
-  { code: "+86", country: "China" },
-  { code: "+91", country: "India" },
-  { code: "+61", country: "Australia" },
-  { code: "+55", country: "Brazil" },
-  { code: "+52", country: "Mexico" },
-  { code: "+34", country: "Spain" },
-  { code: "+39", country: "Italy" },
-  { code: "+7", country: "Russia" },
-  { code: "+82", country: "South Korea" },
-  { code: "+31", country: "Netherlands" },
-  { code: "+46", country: "Sweden" },
-  { code: "+47", country: "Norway" },
-  { code: "+45", country: "Denmark" },
-  { code: "+358", country: "Finland" },
-  { code: "+48", country: "Poland" },
-  // Add more country codes as needed
-].sort((a, b) => a.country.localeCompare(b.country));
+  "+1", "+20", "+210", "+211", "+212", "+213", "+214", "+215", "+216", "+217",
+  "+218", "+219", "+220", "+221", "+222", "+223", "+224", "+225", "+226", "+227",
+  "+228", "+229", "+230", "+231", "+232", "+233", "+234", "+235", "+236", "+237",
+  "+238", "+239", "+240", "+241", "+242", "+243", "+244", "+245", "+246", "+247",
+  "+248", "+249", "+250", "+251", "+252", "+253", "+254", "+255", "+256", "+257",
+  "+258", "+259", "+260", "+261", "+262", "+263", "+264", "+265", "+266", "+267",
+  "+268", "+269", "+27", "+28x", "+290", "+291"
+];
 
 interface ProfileBasicInfoProps {
   userData: {
@@ -134,13 +120,13 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
               value={formData.countryCode}
               onValueChange={value => setFormData(prev => ({ ...prev, countryCode: value }))}
             >
-              <SelectTrigger className="w-[140px]">
+              <SelectTrigger className="w-[100px]">
                 <SelectValue placeholder="Code" />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
-                {countryCodes.map(({ code, country }) => (
+                {countryCodes.map((code) => (
                   <SelectItem key={code} value={code}>
-                    {code} {country}
+                    {code}
                   </SelectItem>
                 ))}
               </SelectContent>
