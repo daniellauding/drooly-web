@@ -15,6 +15,13 @@ import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions
 import { Recipe, validateRecipe, ValidationResult } from "@/types/recipe";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const initialRecipe: Recipe = {
   title: "",
@@ -153,91 +160,112 @@ export default function CreateRecipe() {
   const ingredientGroups = Array.from(new Set(recipe.ingredients.map(ing => ing.group)));
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F7F9FC]">
       <TopBar />
       <div className="flex-1 pt-20 pb-16">
-        <div className="container max-w-4xl mx-auto p-4 space-y-8">
-          <h1 className="text-3xl font-bold">Create New Recipe</h1>
+        <div className="container max-w-4xl mx-auto p-4 space-y-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">Create New Recipe</h1>
 
           <RecipeCreationOptions onRecipeImported={handleRecipeImport} />
 
-          <div>
-            <RecipeBasicInfo 
-              recipe={recipe}
-              onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
-            />
-            {renderFieldErrors('title')}
-            {renderFieldErrors('description')}
-          </div>
-
-          <div>
-            <RecipeDetails
-              recipe={recipe}
-              onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
-            />
-            {renderFieldErrors('difficulty')}
-            {renderFieldErrors('servings')}
-            {renderFieldErrors('totalTime')}
-            {renderFieldErrors('categories')}
-            {renderFieldErrors('equipment')}
-          </div>
-
-          <div>
-            <IngredientInput
-              ingredients={recipe.ingredients}
-              onChange={(ingredients) => setRecipe(prev => ({ ...prev, ingredients }))}
-            />
-            {renderFieldErrors('ingredients')}
-          </div>
-
-          <div className="space-y-4">
-            {recipe.steps.map((step, index) => (
-              <div key={index}>
-                <RecipeStepInput
-                  step={step}
-                  ingredientGroups={ingredientGroups}
-                  onChange={(updatedStep) => {
-                    const newSteps = [...recipe.steps];
-                    newSteps[index] = updatedStep;
-                    setRecipe(prev => ({ ...prev, steps: newSteps }));
-                  }}
-                  onDelete={() => {
-                    if (recipe.steps.length > 1) {
-                      const newSteps = recipe.steps.filter((_, i) => i !== index);
-                      setRecipe(prev => ({ ...prev, steps: newSteps }));
-                    }
-                  }}
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem value="basic-info" className="border rounded-lg bg-white">
+              <AccordionTrigger className="px-4">Basic Information</AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <RecipeBasicInfo 
+                  recipe={recipe}
+                  onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
                 />
-                {renderFieldErrors(`steps.${index}`)}
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setRecipe(prev => ({
-                ...prev,
-                steps: [...prev.steps, { title: "", instructions: "", duration: "", media: [] }]
-              }))}
-            >
-              Add Step
-            </Button>
-          </div>
+                {renderFieldErrors('title')}
+                {renderFieldErrors('description')}
+              </AccordionContent>
+            </AccordionItem>
 
-          <div className="flex gap-4 justify-end">
-            <Button
-              variant="outline"
-              onClick={() => handleSave(true)}
-              disabled={loading}
-            >
-              Save as Draft
-            </Button>
-            <Button
-              onClick={() => handleSave(false)}
-              disabled={loading}
-            >
-              Publish Recipe
-            </Button>
-          </div>
+            <AccordionItem value="details" className="border rounded-lg bg-white">
+              <AccordionTrigger className="px-4">Recipe Details</AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <RecipeDetails
+                  recipe={recipe}
+                  onChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+                />
+                {renderFieldErrors('difficulty')}
+                {renderFieldErrors('servings')}
+                {renderFieldErrors('totalTime')}
+                {renderFieldErrors('categories')}
+                {renderFieldErrors('equipment')}
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="ingredients" className="border rounded-lg bg-white">
+              <AccordionTrigger className="px-4">Ingredients</AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <IngredientInput
+                  ingredients={recipe.ingredients}
+                  onChange={(ingredients) => setRecipe(prev => ({ ...prev, ingredients }))}
+                />
+                {renderFieldErrors('ingredients')}
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="steps" className="border rounded-lg bg-white">
+              <AccordionTrigger className="px-4">Steps</AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-4">
+                  {recipe.steps.map((step, index) => (
+                    <div key={index}>
+                      <RecipeStepInput
+                        step={step}
+                        ingredientGroups={ingredientGroups}
+                        onChange={(updatedStep) => {
+                          const newSteps = [...recipe.steps];
+                          newSteps[index] = updatedStep;
+                          setRecipe(prev => ({ ...prev, steps: newSteps }));
+                        }}
+                        onDelete={() => {
+                          if (recipe.steps.length > 1) {
+                            const newSteps = recipe.steps.filter((_, i) => i !== index);
+                            setRecipe(prev => ({ ...prev, steps: newSteps }));
+                          }
+                        }}
+                      />
+                      {renderFieldErrors(`steps.${index}`)}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setRecipe(prev => ({
+                      ...prev,
+                      steps: [...prev.steps, { title: "", instructions: "", duration: "", media: [] }]
+                    }))}
+                    className="w-full sm:w-auto"
+                  >
+                    Add Step
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          <Card className="p-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => handleSave(true)}
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                Save as Draft
+              </Button>
+              <Button
+                onClick={() => handleSave(false)}
+                disabled={loading}
+                className="w-full sm:w-auto"
+              >
+                Publish Recipe
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
       <BottomBar />

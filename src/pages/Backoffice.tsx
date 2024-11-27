@@ -13,6 +13,7 @@ import { BackofficeTranslations } from "@/components/backoffice/BackofficeTransl
 import { RecipeFieldsSettings } from "@/components/backoffice/RecipeFieldsSettings";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function Backoffice() {
   const { user } = useAuth();
@@ -44,45 +45,49 @@ export default function Backoffice() {
           />
         </div>
         
-        <Tabs defaultValue="recipes" className="w-full">
-          <TabsList className="w-full justify-start overflow-x-auto">
-            <TabsTrigger value="recipes">Recipes</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
-            <TabsTrigger value="images">Images</TabsTrigger>
-            <TabsTrigger value="comments">Comments</TabsTrigger>
-            <TabsTrigger value="plans">Plans</TabsTrigger>
-            <TabsTrigger value="translations">Translations</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="recipes">
-            <BackofficeRecipes searchQuery={searchQuery} />
-          </TabsContent>
-          
-          <TabsContent value="users">
-            <BackofficeUsers searchQuery={searchQuery} />
-          </TabsContent>
-          
-          <TabsContent value="images">
-            <BackofficeImages />
-          </TabsContent>
-          
-          <TabsContent value="comments">
-            <BackofficeComments />
-          </TabsContent>
-          
-          <TabsContent value="plans">
-            <BackofficePlans />
-          </TabsContent>
-          
-          <TabsContent value="translations">
-            <BackofficeTranslations />
-          </TabsContent>
+        <ScrollArea className="w-full">
+          <Tabs defaultValue="recipes" className="w-full">
+            <TabsList className="w-full justify-start overflow-x-auto">
+              <TabsTrigger value="recipes">Recipes</TabsTrigger>
+              <TabsTrigger value="users">Users</TabsTrigger>
+              <TabsTrigger value="images">Images</TabsTrigger>
+              <TabsTrigger value="comments">Comments</TabsTrigger>
+              <TabsTrigger value="plans">Plans</TabsTrigger>
+              <TabsTrigger value="translations">Translations</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+            
+            <div className="mt-6 overflow-x-auto">
+              <TabsContent value="recipes">
+                <BackofficeRecipes searchQuery={searchQuery} />
+              </TabsContent>
+              
+              <TabsContent value="users">
+                <BackofficeUsers searchQuery={searchQuery} />
+              </TabsContent>
+              
+              <TabsContent value="images">
+                <BackofficeImages />
+              </TabsContent>
+              
+              <TabsContent value="comments">
+                <BackofficeComments />
+              </TabsContent>
+              
+              <TabsContent value="plans">
+                <BackofficePlans />
+              </TabsContent>
+              
+              <TabsContent value="translations">
+                <BackofficeTranslations />
+              </TabsContent>
 
-          <TabsContent value="settings">
-            <RecipeFieldsSettings />
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="settings">
+                <RecipeFieldsSettings />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </ScrollArea>
       </main>
       <BottomBar />
     </div>
