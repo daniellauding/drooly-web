@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { generateRecipeSuggestions } from "@/services/openaiService";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface AISuggestionsProps {
   onSuggestionsApply: (suggestions: Partial<Recipe>) => void;
@@ -14,18 +15,33 @@ interface AISuggestionsProps {
 export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<Partial<Recipe> | null>(null);
   const { toast } = useToast();
+
+  const hasExistingData = !!(
+    currentRecipe.title ||
+    currentRecipe.description ||
+    (currentRecipe.ingredients && currentRecipe.ingredients.length > 0) ||
+    (currentRecipe.steps && currentRecipe.steps.length > 0)
+  );
 
   const handleGenerateSuggestions = async () => {
     setIsGenerating(true);
     try {
       const suggestions = await generateRecipeSuggestions(currentRecipe);
-      onSuggestionsApply(suggestions);
-      setIsOpen(false);
-      toast({
-        title: "Success",
-        description: "AI suggestions have been applied to your recipe"
-      });
+      
+      if (hasExistingData) {
+        setAiSuggestions(suggestions);
+        setShowConfirmDialog(true);
+      } else {
+        onSuggestionsApply(suggestions);
+        setIsOpen(false);
+        toast({
+          title: "Success",
+          description: "AI suggestions have been applied to your recipe"
+        });
+      }
     } catch (error) {
       console.error("Error generating suggestions:", error);
       toast({
@@ -35,6 +51,18 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
       });
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleConfirmOverwrite = () => {
+    if (aiSuggestions) {
+      onSuggestionsApply(aiSuggestions);
+      setShowConfirmDialog(false);
+      setIsOpen(false);
+      toast({
+        title: "Success",
+        description: "AI suggestions have been applied to your recipe"
+      });
     }
   };
 
@@ -78,6 +106,21 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Keep Existing Data?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have existing recipe data. Would you like to keep your current data or replace it with AI suggestions?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>Keep Current Data</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmOverwrite}>Use AI Suggestions</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
