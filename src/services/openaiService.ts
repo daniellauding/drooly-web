@@ -7,11 +7,13 @@ const OPENAI_SYSTEM_PROMPT = `You are a culinary AI assistant. Your task is to e
 - Nutritional balance
 - Presentation suggestions`;
 
-export const generateRecipeSuggestions = async (recipe: Partial<Recipe>, apiKey: string): Promise<Partial<Recipe>> => {
+export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promise<Partial<Recipe>> => {
   console.log("Generating recipe suggestions for:", recipe);
 
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  
   if (!apiKey) {
-    throw new Error("OpenAI API key is required");
+    throw new Error("OpenAI API key not configured. Please contact the administrator.");
   }
 
   const recipeContext = `
@@ -40,6 +42,8 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>, apiKey:
     });
 
     if (!response.ok) {
+      const error = await response.json();
+      console.error("OpenAI API error:", error);
       throw new Error('Failed to generate suggestions');
     }
 
@@ -47,7 +51,6 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>, apiKey:
     console.log("OpenAI response:", data);
 
     // Parse the AI response and convert it to recipe format
-    // This is a simplified example - you'll need to implement proper parsing
     const suggestions = {
       title: recipe.title,
       description: data.choices[0].message.content,

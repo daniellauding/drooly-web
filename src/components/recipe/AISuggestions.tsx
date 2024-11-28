@@ -4,7 +4,6 @@ import { Wand2, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { generateRecipeSuggestions } from "@/services/openaiService";
 
 interface AISuggestionsProps {
@@ -15,22 +14,12 @@ interface AISuggestionsProps {
 export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestionsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [apiKey, setApiKey] = useState("");
   const { toast } = useToast();
 
   const handleGenerateSuggestions = async () => {
-    if (!apiKey) {
-      toast({
-        title: "API Key Required",
-        description: "Please enter your OpenAI API key to use AI suggestions",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsGenerating(true);
     try {
-      const suggestions = await generateRecipeSuggestions(currentRecipe, apiKey);
+      const suggestions = await generateRecipeSuggestions(currentRecipe);
       onSuggestionsApply(suggestions);
       setIsOpen(false);
       toast({
@@ -65,25 +54,11 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
           <DialogHeader>
             <DialogTitle>AI Recipe Suggestions</DialogTitle>
             <DialogDescription>
-              Enter your OpenAI API key to get AI-powered suggestions for your recipe.
-              The AI will analyze your current recipe data and provide enhancements.
+              Our AI will analyze your current recipe data and provide enhancements.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="password"
-                placeholder="Enter your OpenAI API key"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">
-                Your API key is not stored and is only used for this request.
-                Get your API key from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">OpenAI's website</a>.
-              </p>
-            </div>
-
             <div className="bg-muted p-4 rounded-lg space-y-2">
               <h3 className="font-medium">Current Recipe Data:</h3>
               <p>Title: {currentRecipe.title || "Not set"}</p>
@@ -94,7 +69,7 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
 
             <Button 
               onClick={handleGenerateSuggestions} 
-              disabled={isGenerating || !apiKey}
+              disabled={isGenerating}
               className="w-full"
             >
               {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
