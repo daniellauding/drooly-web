@@ -8,6 +8,8 @@ import { RecipeFilter } from "@/components/recipe/RecipeFilter";
 import { BentoGrid } from "@/components/home/BentoGrid";
 import { Separator } from "@/components/ui/separator";
 import { RecipeSections } from "@/components/home/RecipeSections";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface Filters {
   ingredients?: string[];
@@ -30,6 +32,7 @@ export default function Index() {
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<Filters>({});
+  const { toast } = useToast();
 
   const isSearching = searchQuery.length > 0;
   const isFiltering = Object.values(activeFilters).some(value => 
@@ -81,7 +84,6 @@ export default function Index() {
             return values.includes(recipe.difficulty);
           case 'cuisine':
             return values.includes(recipe.cuisine);
-          // Add more filter cases as needed
           default:
             return true;
         }
@@ -96,6 +98,15 @@ export default function Index() {
     setActiveFilters(filters);
   };
 
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setActiveFilters({});
+    toast({
+      title: "Filters cleared",
+      description: "All search filters have been reset"
+    });
+  };
+
   const filteredRecipes = filterRecipes(recipes);
   console.log("Filtered recipes count:", filteredRecipes.length);
 
@@ -104,7 +115,16 @@ export default function Index() {
       <TopBar />
       <Hero onSearch={setSearchQuery} />
       <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          {(isSearching || isFiltering) && (
+            <Button 
+              variant="outline"
+              onClick={handleClearFilters}
+              className="flex items-center gap-2"
+            >
+              Clear All Filters
+            </Button>
+          )}
           <RecipeFilter onFilterChange={handleFilterChange} />
         </div>
       </div>
@@ -122,7 +142,21 @@ export default function Index() {
           <h2 className="text-2xl font-bold mb-6">
             {isSearching || isFiltering ? "Search Results" : "All Recipes"}
           </h2>
-          <BentoGrid recipes={filteredRecipes} />
+          {filteredRecipes.length === 0 && (isSearching || isFiltering) ? (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground mb-4">
+                No recipes found matching your criteria
+              </p>
+              <Button 
+                variant="secondary"
+                onClick={handleClearFilters}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <BentoGrid recipes={filteredRecipes} />
+          )}
         </section>
       </main>
     </div>
