@@ -24,9 +24,15 @@ export function RecipeHeader({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">
-          {isEditing ? "Edit Recipe" : "Create New Recipe"}
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold">
+            {isEditing ? "Edit Recipe" : "Create New Recipe"}
+          </h1>
+          <AISuggestions
+            onSuggestionsApply={onRecipeChange}
+            currentRecipe={recipe}
+          />
+        </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Step-based creation</span>
@@ -42,13 +48,6 @@ export function RecipeHeader({
             Cancel
           </Button>
         </div>
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <AISuggestions
-          onSuggestionsApply={onRecipeChange}
-          currentRecipe={recipe}
-        />
       </div>
     </div>
   );

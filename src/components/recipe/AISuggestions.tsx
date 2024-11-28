@@ -4,6 +4,8 @@ import { Wand2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface AISuggestionsProps {
   onSuggestionsApply: (suggestions: Partial<Recipe>) => void;
@@ -13,10 +15,12 @@ interface AISuggestionsProps {
 export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestionsProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState<Partial<Recipe> | null>(null);
+  const [description, setDescription] = useState("");
   const { toast } = useToast();
 
   const generateSuggestions = async () => {
     console.log("Generating AI suggestions for recipe:", currentRecipe);
+    console.log("Using description:", description);
     setIsGenerating(true);
     
     try {
@@ -26,7 +30,7 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
       
       const mockSuggestions: Partial<Recipe> = {
         title: currentRecipe.title || "Delicious Home-Style Pasta",
-        description: "A comforting pasta dish that combines traditional Italian flavors with modern cooking techniques.",
+        description: description || "A comforting pasta dish that combines traditional Italian flavors with modern cooking techniques.",
         cuisine: "Italian",
         difficulty: "Medium",
         categories: ["Family Friendly", "Comfort Food"],
@@ -77,9 +81,8 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" size="icon" className="w-8 h-8">
           <Wand2 className="h-4 w-4" />
-          Get AI Suggestions
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
@@ -88,15 +91,28 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
         </DialogHeader>
         
         <div className="space-y-4">
-          {!suggestions ? (
-            <Button 
-              onClick={generateSuggestions} 
-              disabled={isGenerating}
-              className="w-full"
-            >
-              {isGenerating ? "Generating Suggestions..." : "Generate Suggestions"}
-            </Button>
-          ) : (
+          {!suggestions && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="description">Describe your recipe idea</Label>
+                <Textarea
+                  id="description"
+                  placeholder="E.g., I want to make a healthy vegetarian pasta dish with Mediterranean flavors..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+              <Button 
+                onClick={generateSuggestions} 
+                disabled={isGenerating}
+                className="w-full"
+              >
+                {isGenerating ? "Generating Suggestions..." : "Generate Suggestions"}
+              </Button>
+            </>
+          )}
+
+          {suggestions && (
             <div className="space-y-4">
               <div className="space-y-2">
                 <h3 className="font-medium">Suggested Recipe Details:</h3>
