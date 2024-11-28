@@ -17,6 +17,7 @@ import { Timestamp } from "firebase/firestore";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -26,7 +27,6 @@ export default function CreateRecipe() {
   const isEditing = !!id;
   const [openSections, setOpenSections] = useState<string[]>(["basic-info"]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
-
   const [recipe, setRecipe] = useState<Recipe>({
     id: '',
     title: "",
@@ -159,6 +159,8 @@ export default function CreateRecipe() {
     }));
   };
 
+  const [isStepBased, setIsStepBased] = useState(false);
+
   if (isEditing && isLoading) {
     return <div>Loading recipe...</div>;
   }
@@ -167,9 +169,18 @@ export default function CreateRecipe() {
     <div className="min-h-screen pb-20">
       <TopBar />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
-        <h1 className="text-2xl font-bold">
-          {isEditing ? "Edit Recipe" : "Create New Recipe"}
-        </h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">
+            {isEditing ? "Edit Recipe" : "Create New Recipe"}
+          </h1>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Step-based creation</span>
+            <Switch
+              checked={isStepBased}
+              onCheckedChange={setIsStepBased}
+            />
+          </div>
+        </div>
 
         <Accordion
           type="multiple"
@@ -233,36 +244,40 @@ export default function CreateRecipe() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="ingredients" className="border rounded-lg">
-            <AccordionTrigger className="px-4">
-              <div className="flex items-center gap-2">
-                <span>Ingredients</span>
+          {!isStepBased && (
+            <AccordionItem value="ingredients" className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <span>Ingredients</span>
+                  {validationErrors["ingredients"]?.length > 0 && (
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                  )}
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
                 {validationErrors["ingredients"]?.length > 0 && (
-                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertDescription>
+                      <ul className="list-disc pl-4">
+                        {validationErrors["ingredients"].map((error, index) => (
+                          <li key={index}>{error}</li>
+                        ))}
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {validationErrors["ingredients"]?.length > 0 && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertDescription>
-                    <ul className="list-disc pl-4">
-                      {validationErrors["ingredients"].map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
-              <IngredientInput
-                ingredients={recipe.ingredients}
-                onChange={(ingredients) => setRecipe(prev => ({ ...prev, ingredients }))}
-              />
-            </AccordionContent>
-          </AccordionItem>
+                <IngredientInput
+                  ingredients={recipe.ingredients}
+                  onChange={(ingredients) => setRecipe(prev => ({ ...prev, ingredients }))}
+                />
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
           <AccordionItem value="steps" className="border rounded-lg">
-            <AccordionTrigger className="px-4">Steps</AccordionTrigger>
+            <AccordionTrigger className="px-4">
+              {isStepBased ? "Recipe Steps" : "Additional Steps"}
+            </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
               <div className="space-y-4">
                 {recipe.steps.map((step, index) => (
@@ -275,11 +290,12 @@ export default function CreateRecipe() {
                       setRecipe(prev => ({ ...prev, steps: newSteps }));
                     }}
                     onDelete={() => {
-                      if (recipe.steps.length > 1) {
+                      if (recipe.steps.length > 1 || !isStepBased) {
                         const newSteps = recipe.steps.filter((_, i) => i !== index);
                         setRecipe(prev => ({ ...prev, steps: newSteps }));
                       }
                     }}
+                    ingredientGroups={isStepBased ? ["Main Ingredients", "Sauce", "Marinade", "Garnish"] : []}
                   />
                 ))}
                 <Button
