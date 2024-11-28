@@ -124,15 +124,9 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
         });
 
         if (unsplashResponse.response?.results) {
-          suggestedImages = unsplashResponse.response.results.map(photo => ({
-            url: photo.urls.regular,
-            attribution: {
-              name: photo.user.name,
-              username: photo.user.username,
-              link: photo.links.html
-            }
-          }));
-          console.log("Fetched Unsplash images:", suggestedImages);
+          // Extract only the URLs from the Unsplash response
+          suggestedImages = unsplashResponse.response.results.map(photo => photo.urls.regular);
+          console.log("Fetched Unsplash image URLs:", suggestedImages);
         }
       } catch (error) {
         console.error("Error fetching Unsplash images:", error);
