@@ -60,7 +60,6 @@ export default function Index() {
 
   const filterRecipes = (recipes: Recipe[]) => {
     return recipes.filter(recipe => {
-      // Search query filter
       const searchMatch = !searchQuery || 
         recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         recipe.chef?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,7 +67,6 @@ export default function Index() {
 
       if (!searchMatch) return false;
 
-      // Apply active filters
       const filterMatches = Object.entries(activeFilters).every(([key, values]) => {
         if (!values || values.length === 0) return true;
 
@@ -134,7 +132,7 @@ export default function Index() {
           <RecipeSections 
             isLoading={isLoading} 
             error={error} 
-            recipes={filteredRecipes} 
+            recipes={recipes} 
           />
         )}
         {shouldShowExtraSections && <Separator className="my-12" />}
