@@ -33,7 +33,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4-1106-preview', // Updated to latest model
+        model: 'gpt-4',  // Using standard gpt-4 model instead of preview
         messages: [
           { role: 'system', content: OPENAI_SYSTEM_PROMPT },
           { role: 'user', content: `Please enhance this recipe while keeping its core concept:\n${recipeContext}` }
