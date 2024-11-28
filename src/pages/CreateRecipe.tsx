@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipeById, Recipe } from "@/services/recipeService";
 import { validateRecipe } from "@/types/recipe";
@@ -12,6 +12,7 @@ import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
 import { RecipeHeader } from "@/components/recipe/RecipeHeader";
 import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
+import { Save } from "lucide-react";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -176,7 +177,6 @@ export default function CreateRecipe() {
           onRecipeChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
           isStepBased={isStepBased}
           onStepBasedChange={setIsStepBased}
-          onSaveAsDraft={handleSaveAsDraft}
         />
 
         <RecipeCreationOptions 
@@ -195,7 +195,15 @@ export default function CreateRecipe() {
           onAddStep={handleAddStep}
         />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          <Button 
+            variant="outline" 
+            onClick={handleSaveAsDraft}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Save as Draft
+          </Button>
           <Button onClick={handleSave}>
             {isEditing ? "Update Recipe" : "Publish Recipe"}
           </Button>
