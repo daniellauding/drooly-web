@@ -7,6 +7,7 @@ import { SearchExamples } from "@/components/home/SearchExamples";
 import { RecipeFilter } from "@/components/recipe/RecipeFilter";
 import { BentoGrid } from "@/components/home/BentoGrid";
 import { Separator } from "@/components/ui/separator";
+import { RecipeSections } from "@/components/home/RecipeSections";
 
 export default function Index() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
