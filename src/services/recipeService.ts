@@ -1,8 +1,8 @@
 import { Timestamp, doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Recipe, Ingredient, RecipeStep } from '@/types/recipe';
+import type { Recipe, Ingredient, RecipeStep } from '@/types/recipe';
 
-export { Recipe, Ingredient, RecipeStep };
+export type { Recipe, Ingredient, RecipeStep };
 
 export const fetchRecipeById = async (id: string): Promise<Recipe> => {
   const recipeRef = doc(db, 'recipes', id);

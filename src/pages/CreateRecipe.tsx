@@ -54,7 +54,13 @@ export default function CreateRecipe() {
     equipment: [],
     status: "draft",
     createdAt: Timestamp.now(),
-    updatedAt: Timestamp.now()
+    updatedAt: Timestamp.now(),
+    stats: {
+      views: 0,
+      likes: [],
+      saves: [],
+      comments: 0
+    }
   });
 
   const { data: existingRecipe, isLoading } = useQuery({
