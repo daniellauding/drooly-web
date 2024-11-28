@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LoginForm } from "@/components/LoginForm";
-import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
@@ -24,15 +23,11 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#F7F9FC]">
       <div className="w-full max-w-md space-y-4">
-        <LoginForm onSubmit={handleLogin} loading={loading} />
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
-        </div>
+        <LoginForm 
+          onSubmit={handleLogin} 
+          loading={loading} 
+          onSignUpClick={() => navigate('/register')}
+        />
       </div>
     </div>
   );
