@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { RecipeCard } from "@/components/RecipeCard";
 import { Recipe } from "@/types/recipe";
 import { SendInviteModal } from "@/components/backoffice/SendInviteModal";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +12,7 @@ import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProfileRecipeGrid } from "@/components/profile/ProfileRecipeGrid";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -180,90 +180,27 @@ export default function Profile() {
           </TabsList>
 
           <TabsContent value="recipes" className="mt-6">
-            <div className="space-y-4">
-              {recipesLoading ? (
-                <div>Loading recipes...</div>
-              ) : recipes && recipes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {recipes.map((recipe) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      id={recipe.id}
-                      title={recipe.title}
-                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
-                      cookTime={recipe.totalTime}
-                      difficulty={recipe.difficulty}
-                      chef={recipe.creatorName}
-                      date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
-                      stats={recipe.stats}
-                      creatorId={recipe.creatorId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-gray-500">
-                  No recipes yet
-                </div>
-              )}
-            </div>
+            <ProfileRecipeGrid
+              recipes={recipes}
+              isLoading={recipesLoading}
+              emptyMessage="No recipes yet"
+            />
           </TabsContent>
 
           <TabsContent value="saved" className="mt-6">
-            <div className="space-y-4">
-              {savedRecipesLoading ? (
-                <div>Loading saved recipes...</div>
-              ) : savedRecipes && savedRecipes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {savedRecipes.map((recipe) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      id={recipe.id}
-                      title={recipe.title}
-                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
-                      cookTime={recipe.totalTime}
-                      difficulty={recipe.difficulty}
-                      chef={recipe.creatorName}
-                      date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
-                      stats={recipe.stats}
-                      creatorId={recipe.creatorId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-gray-500">
-                  No saved recipes yet
-                </div>
-              )}
-            </div>
+            <ProfileRecipeGrid
+              recipes={savedRecipes}
+              isLoading={savedRecipesLoading}
+              emptyMessage="No saved recipes yet"
+            />
           </TabsContent>
 
           <TabsContent value="liked" className="mt-6">
-            <div className="space-y-4">
-              {likedRecipesLoading ? (
-                <div>Loading liked recipes...</div>
-              ) : likedRecipes && likedRecipes.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {likedRecipes.map((recipe) => (
-                    <RecipeCard
-                      key={recipe.id}
-                      id={recipe.id}
-                      title={recipe.title}
-                      image={recipe.images?.[recipe.featuredImageIndex || 0]}
-                      cookTime={recipe.totalTime}
-                      difficulty={recipe.difficulty}
-                      chef={recipe.creatorName}
-                      date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
-                      stats={recipe.stats}
-                      creatorId={recipe.creatorId}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-gray-500">
-                  No liked recipes yet
-                </div>
-              )}
-            </div>
+            <ProfileRecipeGrid
+              recipes={likedRecipes}
+              isLoading={likedRecipesLoading}
+              emptyMessage="No liked recipes yet"
+            />
           </TabsContent>
         </Tabs>
       </main>
