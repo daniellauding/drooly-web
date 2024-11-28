@@ -1,4 +1,4 @@
-import { RecipeStep } from "@/types/recipe";
+import { RecipeStep, Ingredient } from "@/types/recipe";
 
 export const parseSteps = (stepsText: string): RecipeStep[] => {
   const steps = stepsText.split('\n')
@@ -29,11 +29,16 @@ export const parseSteps = (stepsText: string): RecipeStep[] => {
   return steps;
 };
 
-export const mapIngredientsToSteps = (steps: RecipeStep[], ingredients: Array<{ name: string }>) => {
+export const mapIngredientsToSteps = (steps: RecipeStep[], ingredients: Ingredient[]) => {
   return steps.map(step => {
     const stepIngredients = ingredients.filter(ing => 
       step.instructions.toLowerCase().includes(ing.name.toLowerCase())
-    );
+    ).map(ing => ({
+      name: ing.name,
+      amount: ing.amount,
+      unit: ing.unit,
+      group: ing.group || "Main Ingredients"
+    }));
     
     return {
       ...step,
