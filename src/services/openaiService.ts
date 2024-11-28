@@ -14,7 +14,11 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   
   if (!apiKey) {
-    throw new Error("OpenAI API key not configured. Please contact the administrator.");
+    console.error("OpenAI API key not found in environment variables");
+    throw new Error(
+      "OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file. " +
+      "If you don't have an API key, you can get one from https://platform.openai.com/api-keys"
+    );
   }
 
   const recipeContext = `
@@ -34,7 +38,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',  // Using the recommended model for simple tasks
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: OPENAI_SYSTEM_PROMPT },
           { role: 'user', content: `Please enhance this recipe while keeping its core concept:\n${recipeContext}` }
