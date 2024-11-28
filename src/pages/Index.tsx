@@ -105,14 +105,16 @@ export default function Index() {
             );
           case 'dietary':
             return values.every(requirement => 
-              recipe.dietary?.includes(requirement)
+              recipe.dietaryInfo?.[requirement as keyof typeof recipe.dietaryInfo] || false
             );
           case 'equipment':
             return values.some(equipment => 
               recipe.equipment?.includes(equipment)
             );
           case 'dishTypes':
-            return values.includes(recipe.type);
+            return values.some(dishType => 
+              recipe.dishTypes?.includes(dishType)
+            );
           default:
             return true;
         }
