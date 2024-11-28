@@ -1,77 +1,8 @@
 import { Timestamp, doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Recipe, Ingredient, RecipeStep } from '@/types/recipe';
 
-export interface Ingredient {
-  name: string;
-  amount: string;
-  unit: string;
-  group?: string; // Made optional to match existing usage
-}
-
-export interface RecipeStep {
-  title: string;
-  instructions: string;
-  duration: string;
-  media?: string[];
-  ingredients?: Ingredient[];
-  ingredientGroup?: string;
-}
-
-export interface Recipe {
-  id: string;
-  title: string;
-  description: string;
-  chef?: string;
-  date?: string;
-  cookTime?: string;
-  difficulty?: string;
-  cookingMethods?: string[];
-  cuisine?: string;
-  dishTypes?: string[];
-  images: string[];
-  featuredImageIndex?: number;
-  ingredients: Ingredient[];
-  instructions: string[];
-  servings: {
-    amount: number;
-    unit: string;
-  };
-  steps?: RecipeStep[];
-  tags?: string[];
-  totalTime?: string;
-  worksWith?: string[];
-  serveWith?: string[];
-  categories?: string[];
-  estimatedCost?: string;
-  equipment?: string[];
-  season?: string;
-  occasion?: string;
-  creatorId?: string;
-  creatorName?: string;
-  status?: string;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
-  stats?: {
-    views?: number;
-    likes?: string[];
-    saves?: string[];
-    comments?: number;
-  };
-  ingredientSections?: {
-    title: string;
-    ingredients: string[];
-  }[];
-  source?: string;
-  sourceUrl?: string;
-  privacy?: 'public' | 'private';
-  dietaryInfo?: {
-    isVegetarian: boolean;
-    isVegan: boolean;
-    isGlutenFree: boolean;
-    isDairyFree: boolean;
-    containsNuts: boolean;
-  };
-}
+export { Recipe, Ingredient, RecipeStep };
 
 export const fetchRecipeById = async (id: string): Promise<Recipe> => {
   const recipeRef = doc(db, 'recipes', id);

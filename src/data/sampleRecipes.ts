@@ -29,7 +29,7 @@ export const SAMPLE_RECIPES: Recipe[] = [
       containsNuts: false
     },
     categories: ['comfort food'],
-    equipment: ['oven'],
+    equipment: [],
     featuredImageIndex: 0,
     tags: [],
     worksWith: [],
@@ -38,7 +38,14 @@ export const SAMPLE_RECIPES: Recipe[] = [
     season: 'Year Round',
     occasion: '',
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    status: 'published',
+    stats: {
+      views: 0,
+      likes: [],
+      saves: [],
+      comments: 0
+    }
   },
   {
     id: '2',
@@ -65,7 +72,7 @@ export const SAMPLE_RECIPES: Recipe[] = [
       containsNuts: false
     },
     categories: ['seafood'],
-    equipment: ['rice cooker'],
+    equipment: [],
     featuredImageIndex: 0,
     tags: [],
     worksWith: [],
@@ -74,7 +81,14 @@ export const SAMPLE_RECIPES: Recipe[] = [
     season: 'Year Round',
     occasion: '',
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    status: 'published',
+    stats: {
+      views: 0,
+      likes: [],
+      saves: [],
+      comments: 0
+    }
   },
   {
     id: '3',
@@ -101,7 +115,7 @@ export const SAMPLE_RECIPES: Recipe[] = [
       containsNuts: true
     },
     categories: ['healthy'],
-    equipment: ['bowl'],
+    equipment: [],
     featuredImageIndex: 0,
     tags: [],
     worksWith: [],
@@ -110,6 +124,13 @@ export const SAMPLE_RECIPES: Recipe[] = [
     season: 'Year Round',
     occasion: '',
     createdAt: now,
-    updatedAt: now
+    updatedAt: now,
+    status: 'published',
+    stats: {
+      views: 0,
+      likes: [],
+      saves: [],
+      comments: 0
+    }
   }
 ];
