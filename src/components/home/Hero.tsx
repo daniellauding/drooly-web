@@ -3,11 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 
-export function Hero() {
+interface HeroProps {
+  onSearch?: (query: string) => void;
+}
+
+export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
 
   const handleCreateRecipe = () => {
     navigate('/create');
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onSearch) {
+      onSearch(e.target.value);
+    }
   };
 
   return (
@@ -25,6 +35,7 @@ export function Hero() {
             <Input 
               placeholder="Search recipes, ingredients, or paste a recipe URL..."
               className="h-12 pl-12 pr-32 text-lg shadow-sm"
+              onChange={handleSearchChange}
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Button 

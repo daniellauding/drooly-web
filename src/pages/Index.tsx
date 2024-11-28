@@ -1,7 +1,6 @@
-import { Recipe } from "@/services/recipeService";
 import { useEffect, useState } from "react";
+import { Recipe } from "@/services/recipeService";
 import { fetchFirebaseRecipes } from "@/services/firebaseRecipes";
-import { RecipeSections } from "@/components/home/RecipeSections";
 import { TopBar } from "@/components/TopBar";
 import { Hero } from "@/components/home/Hero";
 import { SearchExamples } from "@/components/home/SearchExamples";
@@ -46,16 +45,9 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
-      <Hero />
+      <Hero onSearch={setSearchQuery} />
       <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center gap-4 flex-wrap">
-          <input
-            type="text"
-            placeholder="Search recipes..."
-            className="flex-1 max-w-md px-4 py-2 rounded-lg border border-input bg-background"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+        <div className="flex justify-end">
           <RecipeFilter onFilterChange={handleFilterChange} />
         </div>
       </div>
