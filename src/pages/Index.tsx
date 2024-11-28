@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { fetchFirebaseRecipes } from "@/services/firebaseRecipes";
 import { RecipeSections } from "@/components/home/RecipeSections";
 import { TopBar } from "@/components/TopBar";
+import { Hero } from "@/components/home/Hero";
+import { SearchExamples } from "@/components/home/SearchExamples";
 
 export default function Index() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -27,7 +29,9 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
-      <main className="container mx-auto px-4 pt-20">
+      <Hero />
+      <SearchExamples />
+      <main className="container mx-auto px-4 py-12">
         <RecipeSections isLoading={isLoading} error={error} recipes={recipes} />
       </main>
     </div>
