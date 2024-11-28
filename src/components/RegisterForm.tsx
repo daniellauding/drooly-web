@@ -7,9 +7,10 @@ import { User, Lock, Mail } from "lucide-react";
 interface RegisterFormProps {
   onSubmit: (email: string, password: string, name: string) => Promise<void>;
   loading?: boolean;
+  onSignInClick: () => void;
 }
 
-export function RegisterForm({ onSubmit, loading = false }: RegisterFormProps) {
+export function RegisterForm({ onSubmit, loading = false, onSignInClick }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -70,6 +71,15 @@ export function RegisterForm({ onSubmit, loading = false }: RegisterFormProps) {
           {loading ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
+      <p className="text-center mt-6 text-sm text-gray-600">
+        Already have an account?{' '}
+        <button 
+          onClick={onSignInClick}
+          className="text-[#4ECDC4] hover:underline font-medium"
+        >
+          Sign in
+        </button>
+      </p>
     </Card>
   );
 }

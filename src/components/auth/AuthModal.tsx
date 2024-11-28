@@ -49,31 +49,17 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md p-0">
         {isLogin ? (
-          <>
-            <LoginForm onSubmit={handleLogin} loading={loading} />
-            <p className="text-center pb-6 text-sm text-gray-600">
-              Don't have an account?{' '}
-              <button 
-                onClick={() => setIsLogin(false)}
-                className="text-primary hover:underline font-medium"
-              >
-                Sign up
-              </button>
-            </p>
-          </>
+          <LoginForm 
+            onSubmit={handleLogin} 
+            loading={loading} 
+            onSignUpClick={() => setIsLogin(false)}
+          />
         ) : (
-          <>
-            <RegisterForm onSubmit={handleRegister} loading={loading} />
-            <p className="text-center pb-6 text-sm text-gray-600">
-              Already have an account?{' '}
-              <button 
-                onClick={() => setIsLogin(true)}
-                className="text-primary hover:underline font-medium"
-              >
-                Sign in
-              </button>
-            </p>
-          </>
+          <RegisterForm 
+            onSubmit={handleRegister} 
+            loading={loading} 
+            onSignInClick={() => setIsLogin(true)}
+          />
         )}
       </DialogContent>
     </Dialog>
