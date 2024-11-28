@@ -7,21 +7,22 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { saveRecipe } from "@/services/recipeOperations";
 import { Timestamp } from "firebase/firestore";
 import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
 import { RecipeHeader } from "@/components/recipe/RecipeHeader";
+import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
 
 export default function CreateRecipe() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const isEditing = !!id;
   const [openSections, setOpenSections] = useState<string[]>(["basic-info"]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [isStepBased, setIsStepBased] = useState(false);
+  const { handleSaveRecipe } = useRecipeSaveHandler(isEditing, id);
+  
   const [recipe, setRecipe] = useState<Recipe>({
     id: '',
     title: "",
@@ -87,29 +88,7 @@ export default function CreateRecipe() {
       return;
     }
 
-    try {
-      await saveRecipe(
-        { ...recipe, status: 'draft' },
-        user.uid,
-        user.displayName || "",
-        isEditing,
-        id
-      );
-      
-      toast({
-        title: "Success",
-        description: "Recipe saved as draft"
-      });
-
-      navigate("/profile");
-    } catch (error) {
-      console.error("Error saving draft:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save draft. Please try again.",
-        variant: "destructive"
-      });
-    }
+    await handleSaveRecipe(recipe, user.uid, user.displayName || "", true);
   };
 
   const handleSave = async () => {
@@ -141,29 +120,7 @@ export default function CreateRecipe() {
       return;
     }
 
-    try {
-      await saveRecipe(
-        { ...recipe, status: 'published' },
-        user.uid,
-        user.displayName || "",
-        isEditing,
-        id
-      );
-      
-      toast({
-        title: "Success",
-        description: `Recipe ${isEditing ? "updated" : "created"} successfully!`
-      });
-
-      navigate("/profile");
-    } catch (error) {
-      console.error("Error saving recipe:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save recipe. Please try again.",
-        variant: "destructive"
-      });
-    }
+    await handleSaveRecipe(recipe, user.uid, user.displayName || "", false);
   };
 
   const validateSection = (section: string) => {

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Recipe } from "@/types/recipe";
+import { Save } from "lucide-react";
 
 interface RecipeHeaderProps {
   isEditing: boolean;
@@ -49,7 +50,9 @@ export function RecipeHeader({
             <Button 
               variant="outline" 
               onClick={onSaveAsDraft}
+              className="flex items-center gap-2"
             >
+              <Save className="h-4 w-4" />
               Save as Draft
             </Button>
           )}
