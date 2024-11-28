@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Recipe } from "@/services/recipeService";
-import { fetchFirebaseRecipes } from "@/services/firebaseRecipes";
 import { TopBar } from "@/components/TopBar";
 import { Hero } from "@/components/home/Hero";
 import { SearchExamples } from "@/components/home/SearchExamples";
@@ -11,6 +10,8 @@ import { RecipeSections } from "@/components/home/RecipeSections";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface Filters {
   ingredients?: string[];
@@ -44,21 +45,50 @@ export default function Index() {
   const shouldShowExtraSections = !isSearching && !isFiltering;
 
   useEffect(() => {
-    const loadRecipes = async () => {
-      try {
-        const fetchedRecipes = await fetchFirebaseRecipes();
-        console.log('Fetched recipes:', fetchedRecipes.length);
-        setRecipes(fetchedRecipes);
-      } catch (err) {
-        console.error('Error loading recipes:', err);
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    console.log('Setting up real-time recipes listener');
+    setIsLoading(true);
 
-    loadRecipes();
-  }, []);
+    // Create query for published recipes
+    const recipesRef = collection(db, 'recipes');
+    const q = query(
+      recipesRef,
+      where('status', '==', 'published'),
+      orderBy('createdAt', 'desc')
+    );
+
+    // Set up real-time listener
+    const unsubscribe = onSnapshot(q, 
+      (snapshot) => {
+        console.log('Received recipe update:', snapshot.size, 'recipes');
+        const updatedRecipes = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().createdAt ? 
+            new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() 
+            : 'Recently added'
+        })) as Recipe[];
+        
+        setRecipes(updatedRecipes);
+        setIsLoading(false);
+      },
+      (err) => {
+        console.error('Error in recipe listener:', err);
+        setError(err as Error);
+        setIsLoading(false);
+        toast({
+          title: "Error loading recipes",
+          description: "Please try refreshing the page",
+          variant: "destructive"
+        });
+      }
+    );
+
+    // Cleanup listener on unmount
+    return () => {
+      console.log('Cleaning up recipe listener');
+      unsubscribe();
+    };
+  }, [toast]);
 
   const filterRecipes = (recipes: Recipe[]) => {
     console.log('Filtering recipes with query:', searchQuery);
