@@ -2,6 +2,7 @@ import { Recipe } from "@/types/recipe";
 import { createApi } from 'unsplash-js';
 import { parseIngredients } from './recipe/ingredientParser';
 import { parseSteps, mapIngredientsToSteps } from './recipe/stepParser';
+import { CUISINES, RECIPE_CATEGORIES, SEASONS, COST_CATEGORIES } from "@/types/recipe";
 
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const UNSPLASH_API_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
@@ -60,6 +61,42 @@ SERVINGS_UNIT: (unit only, e.g. servings, pieces)
 
 TOTAL_TIME: (total preparation and cooking time)`;
 
+const mapToClosestMatch = (value: string, options: string[]): string => {
+  if (!value) return options[0];
+  
+  // Convert to lowercase for comparison
+  const normalizedValue = value.toLowerCase();
+  
+  // First try exact match
+  const exactMatch = options.find(opt => opt.toLowerCase() === normalizedValue);
+  if (exactMatch) return exactMatch;
+  
+  // Then try includes match
+  const includesMatch = options.find(opt => 
+    normalizedValue.includes(opt.toLowerCase()) || 
+    opt.toLowerCase().includes(normalizedValue)
+  );
+  if (includesMatch) return includesMatch;
+  
+  // Default to first option if no match found
+  console.log(`No match found for ${value}, defaulting to ${options[0]}`);
+  return options[0];
+};
+
+const mapCostToCategory = (cost: string): string => {
+  if (!cost) return COST_CATEGORIES[0];
+  
+  const amount = cost.match(/\$(\d+)/)?.[1];
+  if (!amount) return COST_CATEGORIES[0];
+  
+  const numAmount = parseInt(amount);
+  if (numAmount <= 5) return "Under $5";
+  if (numAmount <= 10) return "$5-$10";
+  if (numAmount <= 20) return "$10-$20";
+  if (numAmount <= 30) return "$20-$30";
+  return "$30+";
+};
+
 export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) {
   if (!OPENAI_API_KEY) {
     throw new Error("OpenAI API key not configured");
@@ -75,7 +112,7 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
         'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           {
@@ -110,7 +147,7 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       dietaryInfo: aiResponse.match(/DIETARY_INFO:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
       categories: aiResponse.match(/CATEGORIES:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(c => c.trim()),
       estimatedCost: aiResponse.match(/ESTIMATED_COST:\s*([^\n]+)/)?.[1]?.trim(),
-      season: aiResponse.match(/SEASON:\s*([^\n]+)/)?.[1]?.trim() || "Summer",
+      season: aiResponse.match(/SEASON:\s*([^\n]+)/)?.[1]?.trim(),
       occasion: aiResponse.match(/OCCASION:\s*([^\n]+)/)?.[1]?.trim(),
       equipment: aiResponse.match(/EQUIPMENT:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(e => e.trim()),
       cookingMethods: aiResponse.match(/COOKING_METHODS:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(m => m.trim()),
@@ -124,6 +161,21 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
     const stepsWithIngredients = mapIngredientsToSteps(sections.steps, sections.ingredients);
 
     console.log("Parsed recipe sections:", sections);
+
+    // Map values to predefined options
+    const mappedCuisine = mapToClosestMatch(sections.cuisine || "", CUISINES);
+    console.log(`Mapped cuisine from ${sections.cuisine} to ${mappedCuisine}`);
+
+    const mappedCategories = sections.categories?.map(cat => 
+      mapToClosestMatch(cat, RECIPE_CATEGORIES)
+    ).filter((cat, index, self) => self.indexOf(cat) === index) || [];
+    console.log(`Mapped categories from ${sections.categories} to ${mappedCategories}`);
+
+    const mappedSeason = mapToClosestMatch(sections.season || "", SEASONS);
+    console.log(`Mapped season from ${sections.season} to ${mappedSeason}`);
+
+    const mappedCost = mapCostToCategory(sections.estimatedCost || "");
+    console.log(`Mapped cost from ${sections.estimatedCost} to ${mappedCost}`);
 
     // Fetch Unsplash images
     let suggestedImages: string[] = [];
@@ -152,17 +204,17 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       ingredients: sections.ingredients,
       steps: stepsWithIngredients,
       difficulty: sections.difficulty,
-      cuisine: sections.cuisine,
+      cuisine: mappedCuisine,
       dietaryInfo: {
         isVegetarian: sections.dietaryInfo?.toLowerCase().includes('vegetarian'),
         isVegan: sections.dietaryInfo?.toLowerCase().includes('vegan'),
-        isGlutenFree: sections.dietaryInfo?.toLowerCase().includes('gluten-free'),
-        isDairyFree: sections.dietaryInfo?.toLowerCase().includes('dairy-free'),
+        isGlutenFree: !sections.dietaryInfo?.toLowerCase().includes('gluten'),
+        isDairyFree: !sections.dietaryInfo?.toLowerCase().includes('dairy'),
         containsNuts: sections.dietaryInfo?.toLowerCase().includes('nuts')
       },
-      categories: sections.categories,
-      estimatedCost: sections.estimatedCost,
-      season: sections.season,
+      categories: mappedCategories,
+      estimatedCost: mappedCost,
+      season: mappedSeason,
       occasion: sections.occasion,
       equipment: sections.equipment,
       cookingMethods: sections.cookingMethods,
