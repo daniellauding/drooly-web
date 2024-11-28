@@ -52,7 +52,8 @@ export default function CreateRecipe() {
     categories: [],
     estimatedCost: "",
     equipment: [],
-    status: "draft",
+    status: 'published',
+    privacy: 'public',
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     stats: {
@@ -75,6 +76,41 @@ export default function CreateRecipe() {
       setRecipe(existingRecipe);
     }
   }, [existingRecipe]);
+
+  const handleSaveAsDraft = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save a recipe",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await saveRecipe(
+        { ...recipe, status: 'draft' },
+        user.uid,
+        user.displayName || "",
+        isEditing,
+        id
+      );
+      
+      toast({
+        title: "Success",
+        description: "Recipe saved as draft"
+      });
+
+      navigate("/profile");
+    } catch (error) {
+      console.error("Error saving draft:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save draft. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSave = async () => {
     if (!user) {
@@ -106,7 +142,13 @@ export default function CreateRecipe() {
     }
 
     try {
-      await saveRecipe(recipe, user.uid, user.displayName || "", isEditing, id);
+      await saveRecipe(
+        { ...recipe, status: 'published' },
+        user.uid,
+        user.displayName || "",
+        isEditing,
+        id
+      );
       
       toast({
         title: "Success",
@@ -167,10 +209,6 @@ export default function CreateRecipe() {
     }));
   };
 
-  if (isEditing && isLoading) {
-    return <div>Loading recipe...</div>;
-  }
-
   return (
     <div className="min-h-screen pb-20">
       <TopBar />
@@ -181,6 +219,7 @@ export default function CreateRecipe() {
           onRecipeChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
           isStepBased={isStepBased}
           onStepBasedChange={setIsStepBased}
+          onSaveAsDraft={handleSaveAsDraft}
         />
 
         <RecipeCreationOptions 
@@ -201,7 +240,7 @@ export default function CreateRecipe() {
 
         <div className="flex justify-end">
           <Button onClick={handleSave}>
-            {isEditing ? "Update Recipe" : "Create Recipe"}
+            {isEditing ? "Update Recipe" : "Publish Recipe"}
           </Button>
         </div>
       </main>

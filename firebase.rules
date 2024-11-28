@@ -2,8 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /recipes/{recipeId} {
-      // Allow reading public recipes even if not verified
-      allow read: if resource.data.status == 'published';
+      // Allow reading public recipes or private recipes if user is owner
+      allow read: if (resource.data.status == 'published' && 
+                     (resource.data.privacy == 'public' || 
+                      request.auth != null && resource.data.creatorId == request.auth.uid));
       
       // Only allow writing if authenticated and verified
       allow write: if request.auth != null && 
