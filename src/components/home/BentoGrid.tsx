@@ -24,7 +24,6 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     return imageUrl?.startsWith('blob:') ? '/placeholder.svg' : (imageUrl || '/placeholder.svg');
   };
 
-  // Simplified logic: recipe is featured if it has 10+ likes
   const isRecipeFeatured = (recipe: Recipe) => {
     return (recipe.stats?.likes?.length || 0) >= 10;
   };
@@ -35,28 +34,28 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     
     // First item is large if featured
     if (index === 0 && isFeatured) {
-      return "md:col-span-2 md:row-span-2";
+      return "md:col-span-2 md:row-span-2 min-h-[600px]";
     }
     
     // Every 5th item is tall
     if (index % 5 === 0) {
-      return "md:row-span-2";
+      return "md:row-span-2 min-h-[500px]";
     }
     
     // Every 7th item is wide
     if (index % 7 === 0) {
-      return "md:col-span-2";
+      return "md:col-span-2 min-h-[300px]";
     }
     
     // Every 3rd item has a different aspect ratio
     if (index % 3 === 0) {
-      return "aspect-square";
+      return "aspect-square min-h-[400px]";
     }
 
-    return "";
+    // Default size for other items
+    return "min-h-[350px]";
   };
 
-  // Interactive cards to be inserted between recipes
   const interactiveCards = [
     {
       title: "What's in your fridge?",
@@ -84,7 +83,6 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     }
   ];
 
-  // Insert interactive cards every 6 recipes
   const getGridItems = () => {
     const items = [];
     let interactiveIndex = 0;
@@ -119,28 +117,28 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const gridItems = getGridItems();
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
       {gridItems.map((item, index) => {
         if ('isInteractive' in item) {
           return (
             <Card
               key={`interactive-${index}`}
               className={cn(
-                "overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg",
+                "overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg min-h-[300px]",
                 item.color
               )}
               onClick={item.action}
             >
-              <div className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className={cn("p-3 rounded-full bg-white/80", item.textColor)}>
-                    <item.icon className="w-6 h-6" />
+              <div className="p-8 h-full flex items-center">
+                <div className="flex items-center gap-6">
+                  <div className={cn("p-4 rounded-full bg-white/80", item.textColor)}>
+                    <item.icon className="w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className={cn("text-lg font-semibold mb-1", item.textColor)}>
+                    <h3 className={cn("text-xl font-semibold mb-2", item.textColor)}>
                       {item.title}
                     </h3>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-600 text-lg">
                       {item.description}
                     </p>
                   </div>
@@ -171,39 +169,39 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               
-              <div className="absolute top-4 right-4 flex gap-2">
+              <div className="absolute top-6 right-6 flex gap-2">
                 {isFeatured && (
-                  <div className="bg-primary/90 text-white px-3 py-1 rounded-full flex items-center gap-1">
-                    <Trophy className="w-4 h-4" />
-                    <span className="text-sm">Popular</span>
+                  <div className="bg-primary/90 text-white px-4 py-2 rounded-full flex items-center gap-2">
+                    <Trophy className="w-5 h-5" />
+                    <span className="text-base">Popular</span>
                   </div>
                 )}
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                <h3 className="text-xl font-semibold mb-2">{recipe.title}</h3>
-                <div className="flex items-center gap-2 text-sm opacity-90">
-                  <ChefHat className="w-4 h-4" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <h3 className="text-2xl font-semibold mb-3">{recipe.title}</h3>
+                <div className="flex items-center gap-3 text-base opacity-90 mb-3">
+                  <ChefHat className="w-5 h-5" />
                   <span>{recipe.chef}</span>
                   <span className="opacity-60">•</span>
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-5 h-5" />
                   <span>{recipe.cookTime}</span>
                 </div>
                 
-                <div className="flex items-center gap-4 mt-2">
-                  <div className="flex items-center gap-1">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
                     <Heart className={cn(
-                      "w-4 h-4",
+                      "w-5 h-5",
                       recipe.stats?.likes?.length ? "fill-red-500 text-red-500" : "text-white"
                     )} />
-                    <span className="text-sm">{recipe.stats?.likes?.length || 0}</span>
+                    <span className="text-base">{recipe.stats?.likes?.length || 0}</span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Bookmark className={cn(
-                      "w-4 h-4",
+                      "w-5 h-5",
                       recipe.stats?.saves?.length ? "fill-white text-white" : "text-white"
                     )} />
-                    <span className="text-sm">{recipe.stats?.saves?.length || 0}</span>
+                    <span className="text-base">{recipe.stats?.saves?.length || 0}</span>
                   </div>
                 </div>
               </div>
