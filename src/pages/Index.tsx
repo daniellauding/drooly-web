@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { RecipeSections } from "@/components/home/RecipeSections";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 interface Filters {
   ingredients?: string[];
@@ -32,6 +33,7 @@ export default function Index() {
   const [error, setError] = useState<Error | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<Filters>({});
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const { toast } = useToast();
 
   const isSearching = searchQuery.length > 0;
@@ -63,7 +65,6 @@ export default function Index() {
     console.log('Active filters:', activeFilters);
     
     return recipes.filter(recipe => {
-      // Search query matching
       const searchMatch = !searchQuery || 
         recipe.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         recipe.chef?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -74,7 +75,6 @@ export default function Index() {
         return false;
       }
 
-      // Filter matching
       const filterMatches = Object.entries(activeFilters).every(([key, values]) => {
         if (!values || (Array.isArray(values) && values.length === 0)) {
           return true;
@@ -187,10 +187,19 @@ export default function Index() {
               </Button>
             </div>
           ) : (
-            <BentoGrid recipes={filteredRecipes} />
+            <BentoGrid 
+              recipes={filteredRecipes} 
+              onAuthModalOpen={() => setAuthModalOpen(true)}
+            />
           )}
         </section>
       </main>
+
+      <AuthModal 
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        defaultTab="login"
+      />
     </div>
   );
 }

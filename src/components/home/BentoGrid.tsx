@@ -1,15 +1,19 @@
 import { Recipe } from "@/services/recipeService";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Clock, ChefHat, Heart, Bookmark, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Clock, ChefHat, Heart, Bookmark, Trophy, Search, Plus, Utensils, Apple } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 interface BentoGridProps {
   recipes: Recipe[];
+  onAuthModalOpen?: () => void;
 }
 
-export function BentoGrid({ recipes }: BentoGridProps) {
+export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleRecipeClick = (id: string) => {
     console.log('Navigating to recipe:', id);
@@ -31,27 +35,105 @@ export function BentoGrid({ recipes }: BentoGridProps) {
     return likesScore + savesScore + viewsScore + isFeatured;
   };
 
-  // Sort recipes by score
-  const sortedRecipes = [...recipes].sort((a, b) => getRecipeScore(b) - getRecipeScore(a));
+  // Interactive cards to be inserted between recipes
+  const interactiveCards = [
+    {
+      title: "What's in your fridge?",
+      description: "Find recipes using ingredients you have",
+      icon: Apple,
+      action: () => navigate('/create-recipe?mode=ingredients'),
+      color: "bg-orange-50 hover:bg-orange-100",
+      textColor: "text-orange-700"
+    },
+    {
+      title: "Explore Cuisines",
+      description: "Discover recipes from around the world",
+      icon: Utensils,
+      action: () => navigate('/create-recipe?mode=cuisine'),
+      color: "bg-blue-50 hover:bg-blue-100",
+      textColor: "text-blue-700"
+    },
+    {
+      title: "Quick Search",
+      description: "Find exactly what you're looking for",
+      icon: Search,
+      action: () => navigate('/create-recipe?mode=search'),
+      color: "bg-purple-50 hover:bg-purple-100",
+      textColor: "text-purple-700"
+    }
+  ];
 
-  // Determine grid placement based on score
-  const getGridClass = (index: number, score: number) => {
-    // First item is always large if it has a good score
-    if (index === 0 && score > 50) {
-      return "md:col-span-2 md:row-span-2";
+  // Insert interactive cards every 6 recipes
+  const getGridItems = () => {
+    const items = [];
+    let interactiveIndex = 0;
+
+    recipes.forEach((recipe, index) => {
+      items.push(recipe);
+      
+      // Add interactive card after every 6 recipes
+      if ((index + 1) % 6 === 0 && interactiveIndex < interactiveCards.length) {
+        items.push({
+          isInteractive: true,
+          ...interactiveCards[interactiveIndex]
+        });
+        interactiveIndex++;
+      }
+    });
+
+    // Add "Create Recipe" or "Login" card if user isn't logged in
+    if (!user) {
+      items.splice(2, 0, {
+        isInteractive: true,
+        title: "Create Your Own",
+        description: "Login or register to start sharing recipes",
+        icon: Plus,
+        action: onAuthModalOpen,
+        color: "bg-green-50 hover:bg-green-100",
+        textColor: "text-green-700"
+      });
     }
-    // Every 5th item with good engagement gets medium size
-    if (index % 5 === 0 && score > 30) {
-      return "md:col-span-2";
-    }
-    return "";
+
+    return items;
   };
+
+  const gridItems = getGridItems();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-      {sortedRecipes.map((recipe, index) => {
+      {gridItems.map((item, index) => {
+        if ('isInteractive' in item) {
+          return (
+            <Card
+              key={`interactive-${index}`}
+              className={cn(
+                "overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg",
+                item.color
+              )}
+              onClick={item.action}
+            >
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className={cn("p-3 rounded-full bg-white/80", item.textColor)}>
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className={cn("text-lg font-semibold mb-1", item.textColor)}>
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          );
+        }
+
+        const recipe = item as Recipe;
         const score = getRecipeScore(recipe);
-        const gridClass = getGridClass(index, score);
+        const gridClass = index === 0 && score > 50 ? "md:col-span-2 md:row-span-2" : "";
         const isFeatured = recipe.status === 'featured';
 
         return (
@@ -71,7 +153,6 @@ export function BentoGrid({ recipes }: BentoGridProps) {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               
-              {/* Stats Overlay */}
               <div className="absolute top-4 right-4 flex gap-2">
                 {isFeatured && (
                   <div className="bg-primary/90 text-white px-3 py-1 rounded-full flex items-center gap-1">
@@ -91,7 +172,6 @@ export function BentoGrid({ recipes }: BentoGridProps) {
                   <span>{recipe.cookTime}</span>
                 </div>
                 
-                {/* Engagement Stats */}
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center gap-1">
                     <Heart className={cn(
