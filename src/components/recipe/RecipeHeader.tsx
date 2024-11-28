@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { AISuggestions } from "./AISuggestions";
 import { Recipe } from "@/types/recipe";
 import { useNavigate } from "react-router-dom";
 import { Switch } from "@/components/ui/switch";
@@ -24,15 +23,9 @@ export function RecipeHeader({
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">
-            {isEditing ? "Edit Recipe" : "Create New Recipe"}
-          </h1>
-          <AISuggestions
-            onSuggestionsApply={onRecipeChange}
-            currentRecipe={recipe}
-          />
-        </div>
+        <h1 className="text-2xl font-bold">
+          {isEditing ? "Edit Recipe" : "Create New Recipe"}
+        </h1>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Step-based creation</span>

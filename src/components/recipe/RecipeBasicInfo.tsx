@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Recipe } from "@/types/recipe";
+import { AISuggestions } from "./AISuggestions";
 
 interface RecipeBasicInfoProps {
   recipe: Recipe;
@@ -23,14 +24,22 @@ export function RecipeBasicInfo({ recipe, onChange }: RecipeBasicInfoProps) {
         }
       />
 
-      <div>
-        <Label htmlFor="title">Title</Label>
-        <Input
-          id="title"
-          value={recipe.title}
-          onChange={(e) => onChange({ title: e.target.value })}
-          placeholder="Recipe title"
-        />
+      <div className="flex items-center gap-2">
+        <div className="flex-1">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            value={recipe.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder="Recipe title"
+          />
+        </div>
+        <div className="pt-6">
+          <AISuggestions
+            onSuggestionsApply={onChange}
+            currentRecipe={recipe}
+          />
+        </div>
       </div>
 
       <div>
