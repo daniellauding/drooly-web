@@ -1,199 +1,280 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { MultiSelect } from "@/components/MultiSelect";
 import { Slider } from "@/components/ui/slider";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { CUISINES, COOKING_EQUIPMENT } from "@/types/recipe";
+  CUISINES,
+  COOKING_EQUIPMENT,
+  RECIPE_CATEGORIES,
+  OCCASIONS,
+  SEASONS,
+  COST_CATEGORIES,
+} from "@/types/recipe";
+import { COMMON_INGREDIENTS } from "@/components/ingredients/CommonIngredients";
+
+const COOKING_METHODS = [
+  "Baking",
+  "Frying",
+  "Grilling",
+  "Boiling",
+  "Steaming",
+  "Roasting",
+  "Sautéing"
+];
+
+const DISH_TYPES = [
+  "Main Course",
+  "Appetizer",
+  "Dessert",
+  "Soup",
+  "Salad",
+  "Breakfast",
+  "Snack"
+];
+
+const DIFFICULTY_LEVELS = ["Easy", "Medium", "Hard"];
+
+const DIETARY_OPTIONS = [
+  "Vegetarian",
+  "Vegan",
+  "Gluten Free",
+  "Dairy Free",
+  "Contains Nuts"
+];
+
+interface RecipeFilters {
+  ingredients: string[];
+  categories: string[];
+  dietary: string[];
+  difficulty: string[];
+  cuisine: string[];
+  estimatedCost: string[];
+  season: string[];
+  occasion: string[];
+  equipment: string[];
+  dishTypes: string[];
+  cookingMethods: string[];
+  cookingTime: number[];
+}
 
 interface RecipeFilterProps {
   onFilterChange: (filters: RecipeFilters) => void;
 }
 
-interface RecipeFilters {
-  cookingTime: number[];
-  difficulty: string;
-  cuisine: string[];
-  equipment: string[];
-  dietary: string[];
-}
-
 export function RecipeFilter({ onFilterChange }: RecipeFilterProps) {
+  const [open, setOpen] = React.useState(false);
   const [filters, setFilters] = React.useState<RecipeFilters>({
-    cookingTime: [0, 180],
-    difficulty: "",
-    cuisine: [],
-    equipment: [],
+    ingredients: [],
+    categories: [],
     dietary: [],
+    difficulty: [],
+    cuisine: [],
+    estimatedCost: [],
+    season: [],
+    occasion: [],
+    equipment: [],
+    dishTypes: [],
+    cookingMethods: [],
+    cookingTime: [0, 180],
   });
 
-  const handleTimeChange = (value: number[]) => {
-    setFilters((prev) => ({ ...prev, cookingTime: value }));
-    onFilterChange({ ...filters, cookingTime: value });
+  // Flatten ingredients array from CommonIngredients object
+  const allIngredients = React.useMemo(() => {
+    return Object.values(COMMON_INGREDIENTS).flat();
+  }, []);
+
+  const handleFilterChange = (key: keyof RecipeFilters, value: any) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    onFilterChange(newFilters);
   };
 
-  const handleDifficultyChange = (value: string) => {
-    setFilters((prev) => ({ ...prev, difficulty: value }));
-    onFilterChange({ ...filters, difficulty: value });
+  const resetFilters = () => {
+    const resetFilters = {
+      ingredients: [],
+      categories: [],
+      dietary: [],
+      difficulty: [],
+      cuisine: [],
+      estimatedCost: [],
+      season: [],
+      occasion: [],
+      equipment: [],
+      dishTypes: [],
+      cookingMethods: [],
+      cookingTime: [0, 180],
+    };
+    setFilters(resetFilters);
+    onFilterChange(resetFilters);
+    setOpen(false);
+  };
+
+  const applyFilters = () => {
+    onFilterChange(filters);
+    setOpen(false);
   };
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          Filters
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle className="flex justify-between items-center">
-            Filters
-            <Button variant="ghost" size="icon">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Filters</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex justify-between items-center">
+            Recipe Filters
+            <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
               <X className="h-4 w-4" />
             </Button>
-          </SheetTitle>
-        </SheetHeader>
+          </DialogTitle>
+        </DialogHeader>
 
-        <div className="py-6 space-y-8">
-          {/* Cooking Time */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
           <div className="space-y-4">
-            <h3 className="font-semibold">Cooking Time</h3>
-            <div className="px-2">
-              <Slider
-                defaultValue={[0, 180]}
-                max={180}
-                step={5}
-                value={filters.cookingTime}
-                onValueChange={handleTimeChange}
-                className="w-full"
+            <div>
+              <Label>Ingredients</Label>
+              <MultiSelect
+                options={allIngredients}
+                selected={filters.ingredients}
+                onChange={(value) => handleFilterChange("ingredients", value)}
+                placeholder="Select ingredients..."
               />
-              <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-                <span>{filters.cookingTime[0]} mins</span>
-                <span>{filters.cookingTime[1]} mins</span>
+            </div>
+
+            <div>
+              <Label>Categories</Label>
+              <MultiSelect
+                options={RECIPE_CATEGORIES}
+                selected={filters.categories}
+                onChange={(value) => handleFilterChange("categories", value)}
+                placeholder="Select categories..."
+              />
+            </div>
+
+            <div>
+              <Label>Dietary Requirements</Label>
+              <MultiSelect
+                options={DIETARY_OPTIONS}
+                selected={filters.dietary}
+                onChange={(value) => handleFilterChange("dietary", value)}
+                placeholder="Select dietary requirements..."
+              />
+            </div>
+
+            <div>
+              <Label>Difficulty Level</Label>
+              <MultiSelect
+                options={DIFFICULTY_LEVELS}
+                selected={filters.difficulty}
+                onChange={(value) => handleFilterChange("difficulty", value)}
+                placeholder="Select difficulty..."
+              />
+            </div>
+
+            <div>
+              <Label>Cuisine</Label>
+              <MultiSelect
+                options={CUISINES}
+                selected={filters.cuisine}
+                onChange={(value) => handleFilterChange("cuisine", value)}
+                placeholder="Select cuisine..."
+              />
+            </div>
+
+            <div>
+              <Label>Estimated Cost</Label>
+              <MultiSelect
+                options={COST_CATEGORIES}
+                selected={filters.estimatedCost}
+                onChange={(value) => handleFilterChange("estimatedCost", value)}
+                placeholder="Select cost range..."
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label>Season</Label>
+              <MultiSelect
+                options={SEASONS}
+                selected={filters.season}
+                onChange={(value) => handleFilterChange("season", value)}
+                placeholder="Select season..."
+              />
+            </div>
+
+            <div>
+              <Label>Occasion</Label>
+              <MultiSelect
+                options={OCCASIONS}
+                selected={filters.occasion}
+                onChange={(value) => handleFilterChange("occasion", value)}
+                placeholder="Select occasion..."
+              />
+            </div>
+
+            <div>
+              <Label>Required Equipment</Label>
+              <MultiSelect
+                options={COOKING_EQUIPMENT}
+                selected={filters.equipment}
+                onChange={(value) => handleFilterChange("equipment", value)}
+                placeholder="Select equipment..."
+              />
+            </div>
+
+            <div>
+              <Label>Dish Type</Label>
+              <MultiSelect
+                options={DISH_TYPES}
+                selected={filters.dishTypes}
+                onChange={(value) => handleFilterChange("dishTypes", value)}
+                placeholder="Select dish types..."
+              />
+            </div>
+
+            <div>
+              <Label>Cooking Methods</Label>
+              <MultiSelect
+                options={COOKING_METHODS}
+                selected={filters.cookingMethods}
+                onChange={(value) => handleFilterChange("cookingMethods", value)}
+                placeholder="Select cooking methods..."
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Cooking Time (minutes)</Label>
+              <div className="px-2">
+                <Slider
+                  defaultValue={[0, 180]}
+                  max={180}
+                  step={5}
+                  value={filters.cookingTime}
+                  onValueChange={(value) => handleFilterChange("cookingTime", value)}
+                  className="w-full"
+                />
+                <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                  <span>{filters.cookingTime[0]} mins</span>
+                  <span>{filters.cookingTime[1]} mins</span>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Difficulty Level */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Difficulty Level</h3>
-            <ToggleGroup
-              type="single"
-              value={filters.difficulty}
-              onValueChange={handleDifficultyChange}
-              className="flex flex-wrap gap-2"
-            >
-              {["Easy", "Medium", "Advanced"].map((level) => (
-                <ToggleGroupItem
-                  key={level}
-                  value={level.toLowerCase()}
-                  className="rounded-full"
-                >
-                  {level}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
-          </div>
-
-          {/* Cuisine Type */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Cuisine</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {CUISINES.slice(0, 8).map((cuisine) => (
-                <Button
-                  key={cuisine}
-                  variant={filters.cuisine.includes(cuisine) ? "default" : "outline"}
-                  className="justify-start"
-                  onClick={() => {
-                    const newCuisines = filters.cuisine.includes(cuisine)
-                      ? filters.cuisine.filter((c) => c !== cuisine)
-                      : [...filters.cuisine, cuisine];
-                    setFilters((prev) => ({ ...prev, cuisine: newCuisines }));
-                    onFilterChange({ ...filters, cuisine: newCuisines });
-                  }}
-                >
-                  {cuisine}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Equipment */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Equipment Needed</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {COOKING_EQUIPMENT.slice(0, 6).map((equipment) => (
-                <Button
-                  key={equipment}
-                  variant={filters.equipment.includes(equipment) ? "default" : "outline"}
-                  className="justify-start"
-                  onClick={() => {
-                    const newEquipment = filters.equipment.includes(equipment)
-                      ? filters.equipment.filter((e) => e !== equipment)
-                      : [...filters.equipment, equipment];
-                    setFilters((prev) => ({ ...prev, equipment: newEquipment }));
-                    onFilterChange({ ...filters, equipment: newEquipment });
-                  }}
-                >
-                  {equipment}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Dietary Requirements */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Dietary Requirements</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free"].map((diet) => (
-                <Button
-                  key={diet}
-                  variant={filters.dietary.includes(diet) ? "default" : "outline"}
-                  className="justify-start"
-                  onClick={() => {
-                    const newDietary = filters.dietary.includes(diet)
-                      ? filters.dietary.filter((d) => d !== diet)
-                      : [...filters.dietary, diet];
-                    setFilters((prev) => ({ ...prev, dietary: newDietary }));
-                    onFilterChange({ ...filters, dietary: newDietary });
-                  }}
-                >
-                  {diet}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-4 pt-4">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => {
-                const resetFilters = {
-                  cookingTime: [0, 180],
-                  difficulty: "",
-                  cuisine: [],
-                  equipment: [],
-                  dietary: [],
-                };
-                setFilters(resetFilters);
-                onFilterChange(resetFilters);
-              }}
-            >
-              Clear
-            </Button>
-            <Button className="flex-1">
-              See recipes
-            </Button>
-          </div>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        <div className="flex justify-end gap-4 mt-6">
+          <Button variant="outline" onClick={resetFilters}>
+            Reset Filters
+          </Button>
+          <Button onClick={applyFilters}>
+            Apply Filters
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

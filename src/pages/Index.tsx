@@ -28,8 +28,8 @@ export default function Index() {
   }, []);
 
   const handleFilterChange = (filters: any) => {
-    console.log("Filters changed:", filters);
-    // TODO: Implement filter logic
+    console.log("Applied filters:", filters);
+    // TODO: Implement filter logic to filter recipes based on selected criteria
   };
 
   return (
