@@ -12,7 +12,7 @@ import { saveRecipe } from "@/services/recipeOperations";
 import { Timestamp } from "firebase/firestore";
 import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
-import { AISuggestions } from "@/components/recipe/AISuggestions";
+import { RecipeHeader } from "@/components/recipe/RecipeHeader";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -170,24 +170,11 @@ export default function CreateRecipe() {
     <div className="min-h-screen pb-20">
       <TopBar />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">
-            {isEditing ? "Edit Recipe" : "Create New Recipe"}
-          </h1>
-          <div className="flex items-center gap-4">
-            <AISuggestions
-              onSuggestionsApply={handleAISuggestions}
-              currentRecipe={recipe}
-            />
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600">Step-based creation</span>
-              <Switch
-                checked={isStepBased}
-                onCheckedChange={setIsStepBased}
-              />
-            </div>
-          </div>
-        </div>
+        <RecipeHeader
+          isEditing={isEditing}
+          recipe={recipe}
+          onRecipeChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+        />
 
         <RecipeCreationOptions 
           onRecipeImported={(importedRecipe) => {
@@ -206,12 +193,6 @@ export default function CreateRecipe() {
         />
 
         <div className="flex justify-end gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate(-1)}
-          >
-            Cancel
-          </Button>
           <Button onClick={handleSave}>
             {isEditing ? "Update Recipe" : "Create Recipe"}
           </Button>
