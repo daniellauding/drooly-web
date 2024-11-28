@@ -24,6 +24,8 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
   `;
 
   try {
+    console.log("Making OpenAI API request with key:", apiKey.substring(0, 3) + "...");
+    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -31,7 +33,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4-1106-preview', // Updated to latest model
         messages: [
           { role: 'system', content: OPENAI_SYSTEM_PROMPT },
           { role: 'user', content: `Please enhance this recipe while keeping its core concept:\n${recipeContext}` }
@@ -44,7 +46,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
     if (!response.ok) {
       const error = await response.json();
       console.error("OpenAI API error:", error);
-      throw new Error('Failed to generate suggestions');
+      throw new Error(error.error?.message || 'Failed to generate suggestions');
     }
 
     const data = await response.json();
