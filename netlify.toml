@@ -7,6 +7,12 @@
   NPM_VERSION = "9.8.1"
 
 [[redirects]]
+  from = "https://drooly.firebaseapp.com/*"
+  to = "https://droo.ly/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200 
+  status = 200

@@ -3,6 +3,7 @@ import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { User, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -58,6 +59,12 @@ export function LoginForm({ onSubmit, loading = false }: LoginFormProps) {
           {loading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
+      <p className="text-center mt-6 text-sm text-gray-600">
+        Don't have an account?{' '}
+        <Link to="/signup" className="text-[#4ECDC4] hover:underline font-medium">
+          Sign up
+        </Link>
+      </p>
     </Card>
   );
 }
