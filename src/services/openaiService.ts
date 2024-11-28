@@ -16,34 +16,47 @@ const unsplash = createApi({
   accessKey: UNSPLASH_API_KEY || ''
 });
 
-const SYSTEM_PROMPT = `You are a professional chef and culinary AI assistant. When analyzing recipes, provide detailed suggestions including:
-- A list of ingredients with precise quantities and units
-- Detailed cooking steps with timing
-- Cuisine categorization and difficulty level
-- Dietary considerations
-- Required equipment and cooking methods
-- Seasonal recommendations and occasions
-- Cost estimates
-- Serving suggestions
-Always maintain the original concept while enhancing it with professional culinary expertise.
-IMPORTANT: Format your response in a structured way that can be easily parsed, using clear section markers like:
-TITLE:
-DESCRIPTION:
-INGREDIENTS: (one per line with amount, unit, and name clearly separated)
-STEPS: (numbered with timing)
-DIFFICULTY:
-CUISINE:
-DIETARY_INFO:
-CATEGORIES:
-ESTIMATED_COST:
-SEASON:
-OCCASION:
-EQUIPMENT:
-COOKING_METHODS:
-DISH_TYPES:
-SERVINGS_AMOUNT:
-SERVINGS_UNIT:
-TOTAL_TIME:`;
+const SYSTEM_PROMPT = `You are a professional chef and culinary AI assistant. When analyzing recipes, provide detailed suggestions in this EXACT format:
+
+TITLE: (recipe name)
+
+DESCRIPTION: (detailed description)
+
+INGREDIENTS: (list each ingredient in format: {amount} {unit} {name}, NO dashes or bullets)
+400 gram shrimp
+2 cup jasmine rice
+etc.
+
+STEPS: (list each step in format: {number}. [{duration}] {instruction}, NO bullets or asterisks)
+1. [5 min] Prepare ingredients by peeling shrimp and chopping herbs
+2. [3 min] Heat oil in wok over medium-high heat
+etc.
+
+DIFFICULTY: (easy/medium/hard)
+
+CUISINE: (specific cuisine type)
+
+DIETARY_INFO: (list all dietary considerations)
+
+CATEGORIES: (comma-separated categories)
+
+ESTIMATED_COST: (use format: $X-$Y or "Budget-friendly", "Moderate", "Expensive")
+
+SEASON: (specify best season(s) to make this dish)
+
+OCCASION: (list suitable occasions)
+
+EQUIPMENT: (comma-separated list, NO bullets)
+
+COOKING_METHODS: (comma-separated list)
+
+DISH_TYPES: (comma-separated list)
+
+SERVINGS_AMOUNT: (number only)
+
+SERVINGS_UNIT: (unit only, e.g. servings, pieces)
+
+TOTAL_TIME: (total preparation and cooking time)`;
 
 export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) {
   if (!OPENAI_API_KEY) {
@@ -90,27 +103,79 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
     const aiResponse = data.choices[0]?.message?.content;
     
     // Parse sections using regex
+    const parseIngredients = (ingredientsText: string): { name: string; amount: string; unit: string }[] => {
+      return ingredientsText.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => {
+          const match = line.match(/^(\d+(?:[,.]\d+)?)\s*(\w+)\s+(.+)$/);
+          if (match) {
+            return {
+              amount: match[1],
+              unit: match[2],
+              name: match[3].trim()
+            };
+          }
+          return {
+            name: line,
+            amount: "1",
+            unit: "piece"
+          };
+        });
+    };
+
+    const parseSteps = (stepsText: string): { title: string; instructions: string; duration: string }[] => {
+      return stepsText.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map((step, index) => {
+          const durationMatch = step.match(/\[(\d+\s*(?:min|minutes))\]/i);
+          const duration = durationMatch ? durationMatch[1] : "";
+          const instructions = step
+            .replace(/^\d+\.\s*/, '')
+            .replace(/\[\d+\s*(?:min|minutes)\]/i, '')
+            .trim();
+
+          return {
+            title: `Step ${index + 1}`,
+            instructions,
+            duration
+          };
+        });
+    };
+
     const sections = {
       title: aiResponse.match(/TITLE:\s*([^\n]+)/)?.[1]?.trim(),
       description: aiResponse.match(/DESCRIPTION:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
-      ingredients: aiResponse.match(/INGREDIENTS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim()?.split('\n'),
-      steps: aiResponse.match(/STEPS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim()?.split('\n'),
-      difficulty: aiResponse.match(/DIFFICULTY:\s*([^\n]+)/)?.[1]?.trim(),
+      ingredients: parseIngredients(aiResponse.match(/INGREDIENTS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim() || ""),
+      steps: parseSteps(aiResponse.match(/STEPS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim() || ""),
+      difficulty: aiResponse.match(/DIFFICULTY:\s*([^\n]+)/)?.[1]?.trim()?.toLowerCase(),
       cuisine: aiResponse.match(/CUISINE:\s*([^\n]+)/)?.[1]?.trim(),
       dietaryInfo: aiResponse.match(/DIETARY_INFO:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
-      categories: aiResponse.match(/CATEGORIES:\s*([^\n]+)/)?.[1]?.trim()?.split(','),
+      categories: aiResponse.match(/CATEGORIES:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(c => c.trim()),
       estimatedCost: aiResponse.match(/ESTIMATED_COST:\s*([^\n]+)/)?.[1]?.trim(),
-      season: aiResponse.match(/SEASON:\s*([^\n]+)/)?.[1]?.trim(),
+      season: aiResponse.match(/SEASON:\s*([^\n]+)/)?.[1]?.trim() || "Summer",  // Default to Summer for Thai dishes
       occasion: aiResponse.match(/OCCASION:\s*([^\n]+)/)?.[1]?.trim(),
-      equipment: aiResponse.match(/EQUIPMENT:\s*([^\n]+)/)?.[1]?.trim()?.split(','),
-      cookingMethods: aiResponse.match(/COOKING_METHODS:\s*([^\n]+)/)?.[1]?.trim()?.split(','),
-      dishTypes: aiResponse.match(/DISH_TYPES:\s*([^\n]+)/)?.[1]?.trim()?.split(','),
+      equipment: aiResponse.match(/EQUIPMENT:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(e => e.trim()),
+      cookingMethods: aiResponse.match(/COOKING_METHODS:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(m => m.trim()),
+      dishTypes: aiResponse.match(/DISH_TYPES:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(t => t.trim()),
       servingsAmount: parseInt(aiResponse.match(/SERVINGS_AMOUNT:\s*(\d+)/)?.[1] || "4"),
-      servingsUnit: aiResponse.match(/SERVINGS_UNIT:\s*([^\n]+)/)?.[1]?.trim(),
+      servingsUnit: aiResponse.match(/SERVINGS_UNIT:\s*([^\n]+)/)?.[1]?.trim() || "servings",
       totalTime: aiResponse.match(/TOTAL_TIME:\s*([^\n]+)/)?.[1]?.trim(),
     };
 
-    console.log("Parsed recipe sections:", sections);
+    console.log("Parsed recipe sections:", {
+      title: sections.title,
+      ingredients: sections.ingredients,
+      steps: sections.steps,
+      servings: {
+        amount: sections.servingsAmount,
+        unit: sections.servingsUnit
+      },
+      cuisine: sections.cuisine,
+      estimatedCost: sections.estimatedCost,
+      season: sections.season
+    });
 
     // Fetch relevant images from Unsplash
     let suggestedImages: string[] = [];
@@ -124,7 +189,6 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
         });
 
         if (unsplashResponse.response?.results) {
-          // Extract only the URLs from the Unsplash response
           suggestedImages = unsplashResponse.response.results.map(photo => photo.urls.regular);
           console.log("Fetched Unsplash image URLs:", suggestedImages);
         }
@@ -133,24 +197,23 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       }
     }
 
-    // Return enhanced recipe with parsed sections and images
     return {
       ...currentRecipe,
       title: sections.title || currentRecipe.title,
       description: sections.description,
-      ingredients: sections.ingredients?.map(ing => ({
-        name: ing.trim(),
-        amount: "1",
-        unit: "piece"
+      ingredients: sections.ingredients.map(ing => ({
+        name: ing.name,
+        amount: ing.amount,
+        unit: ing.unit
       })) || [],
-      steps: sections.steps?.map((step, index) => ({
-        title: `Step ${index + 1}`,
-        instructions: step.trim(),
-        duration: "",
+      steps: sections.steps.map((step, index) => ({
+        title: step.title,
+        instructions: step.instructions,
+        duration: step.duration,
         media: [],
         ingredients: []
       })) || [],
-      difficulty: sections.difficulty?.toLowerCase(),
+      difficulty: sections.difficulty,
       cuisine: sections.cuisine,
       dietaryInfo: {
         isVegetarian: sections.dietaryInfo?.toLowerCase().includes('vegetarian'),
