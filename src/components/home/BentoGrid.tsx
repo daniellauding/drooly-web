@@ -29,6 +29,33 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     return (recipe.stats?.likes?.length || 0) >= 10;
   };
 
+  // Get layout class based on index and recipe properties
+  const getLayoutClass = (index: number, recipe: Recipe) => {
+    const isFeatured = isRecipeFeatured(recipe);
+    
+    // First item is large if featured
+    if (index === 0 && isFeatured) {
+      return "md:col-span-2 md:row-span-2";
+    }
+    
+    // Every 5th item is tall
+    if (index % 5 === 0) {
+      return "md:row-span-2";
+    }
+    
+    // Every 7th item is wide
+    if (index % 7 === 0) {
+      return "md:col-span-2";
+    }
+    
+    // Every 3rd item has a different aspect ratio
+    if (index % 3 === 0) {
+      return "aspect-square";
+    }
+
+    return "";
+  };
+
   // Interactive cards to be inserted between recipes
   const interactiveCards = [
     {
@@ -65,7 +92,6 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     recipes.forEach((recipe, index) => {
       items.push(recipe);
       
-      // Add interactive card after every 6 recipes
       if ((index + 1) % 6 === 0 && interactiveIndex < interactiveCards.length) {
         items.push({
           isInteractive: true,
@@ -75,7 +101,6 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       }
     });
 
-    // Add "Create Recipe" or "Login" card if user isn't logged in
     if (!user) {
       items.splice(2, 0, {
         isInteractive: true,
@@ -127,19 +152,18 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
 
         const recipe = item as Recipe;
         const isFeatured = isRecipeFeatured(recipe);
-        // Apply larger size only if recipe has 10+ likes and is first in grid
-        const gridClass = index === 0 && isFeatured ? "md:col-span-2 md:row-span-2" : "";
+        const layoutClass = getLayoutClass(index, recipe);
 
         return (
           <Card
             key={recipe.id}
             className={cn(
-              "overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg",
-              gridClass
+              "overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg group",
+              layoutClass
             )}
             onClick={() => handleRecipeClick(recipe.id)}
           >
-            <div className="relative aspect-[4/3] group">
+            <div className="relative h-full group">
               <img
                 src={getValidImageUrl(recipe)}
                 alt={recipe.title}
