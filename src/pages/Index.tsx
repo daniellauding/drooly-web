@@ -59,15 +59,20 @@ export default function Index() {
     // Set up real-time listener
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
-        console.log('Received recipe update:', snapshot.size, 'recipes');
-        const updatedRecipes = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          date: doc.data().createdAt ? 
-            new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() 
-            : 'Recently added'
-        })) as Recipe[];
+        console.log('Received recipe update. Total recipes:', snapshot.size);
+        const updatedRecipes = snapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('Processing recipe:', doc.id, data.title);
+          return {
+            id: doc.id,
+            ...doc.data(),
+            date: data.createdAt ? 
+              new Date(data.createdAt.seconds * 1000).toLocaleDateString() 
+              : 'Recently added'
+          };
+        }) as Recipe[];
         
+        console.log('Processed recipes count:', updatedRecipes.length);
         setRecipes(updatedRecipes);
         setIsLoading(false);
       },
@@ -83,7 +88,6 @@ export default function Index() {
       }
     );
 
-    // Cleanup listener on unmount
     return () => {
       console.log('Cleaning up recipe listener');
       unsubscribe();
@@ -91,8 +95,7 @@ export default function Index() {
   }, [toast]);
 
   const filterRecipes = (recipes: Recipe[]) => {
-    console.log('Filtering recipes with query:', searchQuery);
-    console.log('Active filters:', activeFilters);
+    console.log('Filtering recipes. Total before filter:', recipes.length);
     
     return recipes.filter(recipe => {
       const searchMatch = !searchQuery || 
@@ -100,17 +103,12 @@ export default function Index() {
         recipe.chef?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         recipe.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      if (!searchMatch) {
-        console.log('Recipe did not match search:', recipe.title);
-        return false;
-      }
+      if (!searchMatch) return false;
 
       const filterMatches = Object.entries(activeFilters).every(([key, values]) => {
         if (!values || (Array.isArray(values) && values.length === 0)) {
           return true;
         }
-
-        console.log(`Checking filter ${key} for recipe:`, recipe.title);
 
         switch (key) {
           case 'ingredients':
@@ -150,7 +148,6 @@ export default function Index() {
         }
       });
 
-      console.log(`Recipe ${recipe.title} matches filters:`, filterMatches);
       return filterMatches;
     });
   };

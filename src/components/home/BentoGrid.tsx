@@ -15,7 +15,8 @@ interface BentoGridProps {
 export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  console.log('BentoGrid received recipes:', recipes.length);
+  console.log('BentoGrid received recipes count:', recipes.length);
+  console.log('Raw recipes data:', recipes);
 
   const interactiveCards = [
     {
@@ -50,6 +51,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
 
     // Add all recipes first
     items.push(...recipes);
+    console.log('Initial items array length:', items.length);
     
     // Add interactive cards every 6 recipes
     for (let i = 0; i < items.length; i += 6) {
@@ -75,11 +77,11 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       });
     }
 
+    console.log('Final items array length (with interactive cards):', items.length);
     return items;
   };
 
   const gridItems = getGridItems();
-  console.log('Total grid items (including interactive):', gridItems.length);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
