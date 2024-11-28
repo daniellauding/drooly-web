@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Globe, Bot, Instagram, Youtube, ChevronDown, Camera, Trello } from "lucide-react";
+import { Globe, Bot, Instagram, Youtube, ChevronDown, Camera, Trello, Clipboard } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,7 @@ import { RecipeUrlDialog } from "./RecipeUrlDialog";
 import { ImageRecognitionDialog } from "./ImageRecognitionDialog";
 import { TrelloImportDialog } from "./TrelloImportDialog";
 import { InstagramImportDialog } from "./InstagramImportDialog";
+import { ClipboardImportDialog } from "./ClipboardImportDialog";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeCreationOptionsProps {
@@ -22,6 +23,7 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
   const [showImageRecognitionDialog, setShowImageRecognitionDialog] = useState(false);
   const [showTrelloDialog, setShowTrelloDialog] = useState(false);
   const [showInstagramDialog, setShowInstagramDialog] = useState(false);
+  const [showClipboardDialog, setShowClipboardDialog] = useState(false);
 
   return (
     <>
@@ -44,6 +46,10 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
             <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
               <Camera className="mr-2 h-4 w-4" />
               Take Photo & Scan
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowClipboardDialog(true)}>
+              <Clipboard className="mr-2 h-4 w-4" />
+              Paste from Clipboard
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Bot className="mr-2 h-4 w-4" />
@@ -82,6 +88,12 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
       <InstagramImportDialog
         open={showInstagramDialog}
         onOpenChange={setShowInstagramDialog}
+        onRecipeImported={onRecipeImported}
+      />
+
+      <ClipboardImportDialog
+        open={showClipboardDialog}
+        onOpenChange={setShowClipboardDialog}
         onRecipeImported={onRecipeImported}
       />
     </>
