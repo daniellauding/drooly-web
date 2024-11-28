@@ -1,68 +1,54 @@
 import { Recipe } from "@/types/recipe";
-import { parseAIResponse } from "@/utils/recipeAIParser";
 
-const OPENAI_SYSTEM_PROMPT = `You are a culinary AI assistant. Your task is to enhance recipes by suggesting improvements and additions while maintaining the original concept. Consider:
-- Ingredient combinations and proportions
-- Cooking techniques
-- Flavor profiles
-- Nutritional balance
-- Presentation suggestions`;
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
-export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promise<Partial<Recipe>> => {
-  console.log("Generating recipe suggestions for:", recipe);
+if (!OPENAI_API_KEY) {
+  console.error("OpenAI API key not found. Please add VITE_OPENAI_API_KEY to your .env file");
+}
 
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  
-  if (!apiKey) {
-    console.error("OpenAI API key not found in environment variables");
-    throw new Error(
-      "OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file. " +
-      "If you don't have an API key, you can get one from https://platform.openai.com/api-keys"
-    );
+const model = "gpt-3.5-turbo";
+
+export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) {
+  if (!OPENAI_API_KEY) {
+    throw new Error("OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env file");
   }
 
-  const recipeContext = `
-    Title: ${recipe.title || ''}
-    Description: ${recipe.description || ''}
-    Ingredients: ${recipe.ingredients?.map(i => `${i.amount} ${i.unit} ${i.name}`).join(', ') || ''}
-    Steps: ${recipe.steps?.map(s => s.instructions).join(' ') || ''}
-  `;
+  console.log("Generating recipe suggestions for:", currentRecipe.title);
 
   try {
-    console.log("Making OpenAI API request with model: gpt-4o-mini");
-    
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: model,
         messages: [
-          { role: 'system', content: OPENAI_SYSTEM_PROMPT },
-          { role: 'user', content: `Please enhance this recipe while keeping its core concept:\n${recipeContext}` }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
+          {
+            role: "system",
+            content: "You are a helpful cooking assistant that provides recipe suggestions and improvements."
+          },
+          {
+            role: "user",
+            content: `Please analyze this recipe and suggest improvements:\n${JSON.stringify(currentRecipe, null, 2)}`
+          }
+        ]
       })
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error("OpenAI API error:", error);
-      throw new Error(error.error?.message || 'Failed to generate suggestions');
+      throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log("OpenAI API response:", data);
+    console.log("Received OpenAI response:", data);
 
-    const aiResponse = data.choices[0].message.content;
-    console.log("Parsing AI response to recipe format");
-    const parsedRecipe = parseAIResponse(aiResponse);
-    console.log("Parsed recipe:", parsedRecipe);
-
-    return parsedRecipe;
+    // Process the response and return suggestions
+    return {
+      description: data.choices[0]?.message?.content || "No suggestions available",
+      // Add other recipe fields as needed
+    };
   } catch (error) {
     console.error("Error generating recipe suggestions:", error);
     throw error;
