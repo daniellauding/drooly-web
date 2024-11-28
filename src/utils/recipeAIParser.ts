@@ -3,78 +3,78 @@ import { Recipe } from "@/types/recipe";
 export const parseAIResponse = (aiResponse: string): Partial<Recipe> => {
   console.log("Parsing AI response:", aiResponse);
 
-  // Extract title (after "Enhanced Recipe:" or from the first heading)
-  const titleMatch = aiResponse.match(/Enhanced Recipe: (.*?)(\n|$)/) || 
-                    aiResponse.match(/# (.*?)(\n|$)/);
-  const title = titleMatch ? titleMatch[1].trim() : "";
+  // Extract sections using regex
+  const sections = {
+    description: aiResponse.match(/Description:(.*?)(?=\n\n|\n[A-Z]|$)/s)?.[1]?.trim(),
+    ingredients: aiResponse.match(/Ingredients?:(.*?)(?=\n\n|\n[A-Z]|$)/s)?.[1]?.trim(),
+    steps: aiResponse.match(/Instructions?:(.*?)(?=\n\n|\n[A-Z]|$)/s)?.[1]?.trim(),
+    difficulty: aiResponse.match(/Difficulty:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    cuisine: aiResponse.match(/Cuisine:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    dietary: aiResponse.match(/Dietary Information:(.*?)(?=\n\n|\n[A-Z]|$)/s)?.[1]?.trim(),
+    categories: aiResponse.match(/Categories:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    cost: aiResponse.match(/Estimated Cost:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    season: aiResponse.match(/Season:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    occasion: aiResponse.match(/Occasion:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    equipment: aiResponse.match(/Equipment:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    cookingMethods: aiResponse.match(/Cooking Methods:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    dishTypes: aiResponse.match(/Dish Types?:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    servings: aiResponse.match(/Servings?:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+    totalTime: aiResponse.match(/Total Time:(.*?)(?=\n|\n\n|$)/)?.[1]?.trim(),
+  };
 
-  // Extract description (between Description: and the next section)
-  const descriptionMatch = aiResponse.match(/\*\*Description:\*\* (.*?)(\n|$)/);
-  const description = descriptionMatch ? descriptionMatch[1].trim() : "";
-
-  // Extract ingredients
-  const ingredientsSection = aiResponse.match(/#### Ingredients:([\s\S]*?)(?=####|$)/);
-  const ingredients = ingredientsSection ? ingredientsSection[1]
-    .split('\n')
-    .filter(line => line.trim().startsWith('-'))
+  // Parse ingredients into structured format
+  const ingredients = sections.ingredients?.split('\n')
     .map(line => {
-      const cleanLine = line.replace(/^-\s*\*\*/, '').replace(/\*\*/, '');
-      const matches = cleanLine.match(/([\d.]+)\s*(cup|tablespoon|teaspoon|clove|large|small|pieces?)\s+(.+?)(?:\(|$)/i);
-      
-      if (matches) {
+      const match = line.match(/^[-•]?\s*(\d*\.?\d*)\s*(\w+)\s+(.+)$/);
+      if (match) {
         return {
-          amount: matches[1],
-          unit: matches[2].toLowerCase(),
-          name: matches[3].trim(),
+          amount: match[1],
+          unit: match[2],
+          name: match[3].trim(),
           group: "Main Ingredients"
         };
       }
+      return null;
+    })
+    .filter(Boolean) || [];
 
-      // Fallback for ingredients without clear measurements
-      const namePart = cleanLine.trim();
-      return {
-        amount: "1",
-        unit: "piece",
-        name: namePart,
-        group: "Main Ingredients"
-      };
-    }) : [];
+  // Parse steps into structured format
+  const steps = sections.steps?.split(/\d+\.\s+/)
+    .filter(Boolean)
+    .map((step, index) => ({
+      title: `Step ${index + 1}`,
+      instructions: step.trim(),
+      duration: "",
+      media: []
+    })) || [];
 
-  // Extract steps
-  const stepsSection = aiResponse.match(/#### Steps:([\s\S]*?)(?=###|$)/);
-  const steps = stepsSection ? stepsSection[1]
-    .split('\n')
-    .filter(line => /^\d+\./.test(line.trim()))
-    .map(line => {
-      const stepText = line.replace(/^\d+\.\s*\*\*/, '').replace(/\*\*:?\s*/, '');
-      return {
-        title: `Step ${steps.length + 1}`,
-        instructions: stepText.trim(),
-        duration: "",
-        media: []
-      };
-    }) : [];
-
-  // Try to determine cuisine from title or content
-  let cuisine = "";
-  if (aiResponse.toLowerCase().includes("bangkok") || aiResponse.toLowerCase().includes("thai")) {
-    cuisine = "thai";
-  } else if (aiResponse.toLowerCase().includes("chinese")) {
-    cuisine = "chinese";
-  }
-  // Add more cuisine detection rules as needed
+  // Parse dietary information
+  const dietaryInfo = {
+    isVegetarian: sections.dietary?.toLowerCase().includes('vegetarian') || false,
+    isVegan: sections.dietary?.toLowerCase().includes('vegan') || false,
+    isGlutenFree: sections.dietary?.toLowerCase().includes('gluten-free') || false,
+    isDairyFree: sections.dietary?.toLowerCase().includes('dairy-free') || false,
+    containsNuts: sections.dietary?.toLowerCase().includes('nuts') || false
+  };
 
   return {
-    title,
-    description,
+    description: sections.description,
     ingredients,
     steps,
-    cuisine,
-    difficulty: "Medium", // Default value
-    totalTime: "30", // Default value
+    difficulty: sections.difficulty?.toLowerCase(),
+    cuisine: sections.cuisine?.toLowerCase(),
+    dietaryInfo,
+    categories: sections.categories?.split(',').map(c => c.trim()),
+    estimatedCost: sections.cost,
+    season: sections.season,
+    occasion: sections.occasion,
+    equipment: sections.equipment?.split(',').map(e => e.trim()),
+    cookingMethods: sections.cookingMethods?.split(',').map(m => m.trim()),
+    dishTypes: sections.dishTypes?.split(',').map(t => t.trim()),
     servings: {
-      amount: 4,
-      unit: "serving"
-    }
+      amount: parseInt(sections.servings?.match(/\d+/)?.[0] || "4"),
+      unit: sections.servings?.replace(/\d+\s*/, '').trim() || "serving"
+    },
+    totalTime: sections.totalTime
   };
 };
