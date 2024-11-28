@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Clock, ChefHat, Heart, Bookmark, Trophy, Search, Plus, Utensils, Apple } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 
 interface BentoGridProps {
   recipes: Recipe[];
@@ -25,14 +24,9 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     return imageUrl?.startsWith('blob:') ? '/placeholder.svg' : (imageUrl || '/placeholder.svg');
   };
 
-  // Calculate recipe importance score
-  const getRecipeScore = (recipe: Recipe) => {
-    const likesScore = (recipe.stats?.likes?.length || 0) * 2;
-    const savesScore = (recipe.stats?.saves?.length || 0) * 3;
-    const viewsScore = (recipe.stats?.views || 0);
-    const isFeatured = recipe.status === 'featured' ? 100 : 0;
-    
-    return likesScore + savesScore + viewsScore + isFeatured;
+  // Simplified logic: recipe is featured if it has 10+ likes
+  const isRecipeFeatured = (recipe: Recipe) => {
+    return (recipe.stats?.likes?.length || 0) >= 10;
   };
 
   // Interactive cards to be inserted between recipes
@@ -132,9 +126,9 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
         }
 
         const recipe = item as Recipe;
-        const score = getRecipeScore(recipe);
-        const gridClass = index === 0 && score > 50 ? "md:col-span-2 md:row-span-2" : "";
-        const isFeatured = recipe.status === 'featured';
+        const isFeatured = isRecipeFeatured(recipe);
+        // Apply larger size only if recipe has 10+ likes and is first in grid
+        const gridClass = index === 0 && isFeatured ? "md:col-span-2 md:row-span-2" : "";
 
         return (
           <Card
@@ -157,7 +151,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
                 {isFeatured && (
                   <div className="bg-primary/90 text-white px-3 py-1 rounded-full flex items-center gap-1">
                     <Trophy className="w-4 h-4" />
-                    <span className="text-sm">Featured</span>
+                    <span className="text-sm">Popular</span>
                   </div>
                 )}
               </div>
