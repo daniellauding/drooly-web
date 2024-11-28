@@ -1,5 +1,7 @@
 import { Recipe } from "@/types/recipe";
 import { createApi } from 'unsplash-js';
+import { parseIngredients } from './recipe/ingredientParser';
+import { parseSteps, mapIngredientsToSteps } from './recipe/stepParser';
 
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 const UNSPLASH_API_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
@@ -75,10 +77,7 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [
-          {
-            role: "system",
-            content: SYSTEM_PROMPT
-          },
+          { role: "system", content: SYSTEM_PROMPT },
           {
             role: "user",
             content: `Please enhance this recipe with detailed suggestions:
@@ -97,53 +96,10 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
     }
 
     const data = await response.json();
-    console.log("Raw OpenAI response:", data.choices[0]?.message?.content);
-
-    // Parse the AI response
     const aiResponse = data.choices[0]?.message?.content;
-    
+    console.log("Raw OpenAI response:", aiResponse);
+
     // Parse sections using regex
-    const parseIngredients = (ingredientsText: string): { name: string; amount: string; unit: string }[] => {
-      return ingredientsText.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0)
-        .map(line => {
-          const match = line.match(/^(\d+(?:[,.]\d+)?)\s*(\w+)\s+(.+)$/);
-          if (match) {
-            return {
-              amount: match[1],
-              unit: match[2],
-              name: match[3].trim()
-            };
-          }
-          return {
-            name: line,
-            amount: "1",
-            unit: "piece"
-          };
-        });
-    };
-
-    const parseSteps = (stepsText: string): { title: string; instructions: string; duration: string }[] => {
-      return stepsText.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0)
-        .map((step, index) => {
-          const durationMatch = step.match(/\[(\d+\s*(?:min|minutes))\]/i);
-          const duration = durationMatch ? durationMatch[1] : "";
-          const instructions = step
-            .replace(/^\d+\.\s*/, '')
-            .replace(/\[\d+\s*(?:min|minutes)\]/i, '')
-            .trim();
-
-          return {
-            title: `Step ${index + 1}`,
-            instructions,
-            duration
-          };
-        });
-    };
-
     const sections = {
       title: aiResponse.match(/TITLE:\s*([^\n]+)/)?.[1]?.trim(),
       description: aiResponse.match(/DESCRIPTION:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
@@ -154,7 +110,7 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       dietaryInfo: aiResponse.match(/DIETARY_INFO:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
       categories: aiResponse.match(/CATEGORIES:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(c => c.trim()),
       estimatedCost: aiResponse.match(/ESTIMATED_COST:\s*([^\n]+)/)?.[1]?.trim(),
-      season: aiResponse.match(/SEASON:\s*([^\n]+)/)?.[1]?.trim() || "Summer",  // Default to Summer for Thai dishes
+      season: aiResponse.match(/SEASON:\s*([^\n]+)/)?.[1]?.trim() || "Summer",
       occasion: aiResponse.match(/OCCASION:\s*([^\n]+)/)?.[1]?.trim(),
       equipment: aiResponse.match(/EQUIPMENT:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(e => e.trim()),
       cookingMethods: aiResponse.match(/COOKING_METHODS:\s*([^\n]+)/)?.[1]?.trim()?.split(',').map(m => m.trim()),
@@ -164,23 +120,16 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       totalTime: aiResponse.match(/TOTAL_TIME:\s*([^\n]+)/)?.[1]?.trim(),
     };
 
-    console.log("Parsed recipe sections:", {
-      title: sections.title,
-      ingredients: sections.ingredients,
-      steps: sections.steps,
-      servings: {
-        amount: sections.servingsAmount,
-        unit: sections.servingsUnit
-      },
-      cuisine: sections.cuisine,
-      estimatedCost: sections.estimatedCost,
-      season: sections.season
-    });
+    // Map ingredients to steps
+    const stepsWithIngredients = mapIngredientsToSteps(sections.steps, sections.ingredients);
 
-    // Fetch relevant images from Unsplash
+    console.log("Parsed recipe sections:", sections);
+
+    // Fetch Unsplash images
     let suggestedImages: string[] = [];
     if (UNSPLASH_API_KEY) {
       try {
+        const unsplash = createApi({ accessKey: UNSPLASH_API_KEY });
         const searchTerm = `${sections.title || currentRecipe.title} food recipe`;
         const unsplashResponse = await unsplash.search.getPhotos({
           query: searchTerm,
@@ -190,7 +139,6 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
 
         if (unsplashResponse.response?.results) {
           suggestedImages = unsplashResponse.response.results.map(photo => photo.urls.regular);
-          console.log("Fetched Unsplash image URLs:", suggestedImages);
         }
       } catch (error) {
         console.error("Error fetching Unsplash images:", error);
@@ -201,18 +149,8 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       ...currentRecipe,
       title: sections.title || currentRecipe.title,
       description: sections.description,
-      ingredients: sections.ingredients.map(ing => ({
-        name: ing.name,
-        amount: ing.amount,
-        unit: ing.unit
-      })) || [],
-      steps: sections.steps.map((step, index) => ({
-        title: step.title,
-        instructions: step.instructions,
-        duration: step.duration,
-        media: [],
-        ingredients: []
-      })) || [],
+      ingredients: sections.ingredients,
+      steps: stepsWithIngredients,
       difficulty: sections.difficulty,
       cuisine: sections.cuisine,
       dietaryInfo: {
@@ -231,7 +169,7 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
       dishTypes: sections.dishTypes,
       servings: {
         amount: sections.servingsAmount,
-        unit: sections.servingsUnit || "servings"
+        unit: sections.servingsUnit
       },
       totalTime: sections.totalTime,
       images: suggestedImages
