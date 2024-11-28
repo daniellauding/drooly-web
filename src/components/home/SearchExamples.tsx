@@ -1,4 +1,4 @@
-import { Kitchen, Utensils, Globe, Link } from "lucide-react";
+import { CookingPot, Utensils, Globe, Link } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -17,7 +17,7 @@ export function SearchExamples() {
           className="h-auto p-6 flex flex-col items-start space-y-2"
           onClick={() => handleExampleClick('kitchen')}
         >
-          <Kitchen className="h-6 w-6 text-primary" />
+          <CookingPot className="h-6 w-6 text-primary" />
           <div className="text-left">
             <p className="font-medium">What's in your kitchen?</p>
             <p className="text-sm text-muted-foreground">Find recipes using ingredients you have</p>
