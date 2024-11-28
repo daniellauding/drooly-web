@@ -12,6 +12,7 @@ import { saveRecipe } from "@/services/recipeOperations";
 import { Timestamp } from "firebase/firestore";
 import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
+import { AISuggestions } from "@/components/recipe/AISuggestions";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -153,6 +154,14 @@ export default function CreateRecipe() {
     }));
   };
 
+  const handleAISuggestions = (suggestions: Partial<Recipe>) => {
+    console.log("Applying AI suggestions to recipe:", suggestions);
+    setRecipe(prev => ({
+      ...prev,
+      ...suggestions
+    }));
+  };
+
   if (isEditing && isLoading) {
     return <div>Loading recipe...</div>;
   }
@@ -165,12 +174,18 @@ export default function CreateRecipe() {
           <h1 className="text-2xl font-bold">
             {isEditing ? "Edit Recipe" : "Create New Recipe"}
           </h1>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Step-based creation</span>
-            <Switch
-              checked={isStepBased}
-              onCheckedChange={setIsStepBased}
+          <div className="flex items-center gap-4">
+            <AISuggestions
+              onSuggestionsApply={handleAISuggestions}
+              currentRecipe={recipe}
             />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Step-based creation</span>
+              <Switch
+                checked={isStepBased}
+                onCheckedChange={setIsStepBased}
+              />
+            </div>
           </div>
         </div>
 
