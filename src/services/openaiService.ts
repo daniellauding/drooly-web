@@ -24,7 +24,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
   `;
 
   try {
-    console.log("Making OpenAI API request with model: gpt-4o");
+    console.log("Making OpenAI API request with model: gpt-4");
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -33,7 +33,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',  // Using the latest recommended model
+        model: 'gpt-4',  // Using standard GPT-4 model name
         messages: [
           { role: 'system', content: OPENAI_SYSTEM_PROMPT },
           { role: 'user', content: `Please enhance this recipe while keeping its core concept:\n${recipeContext}` }
@@ -50,12 +50,12 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
     }
 
     const data = await response.json();
-    console.log("OpenAI response:", data);
+    console.log("OpenAI API response:", data);
 
     const suggestions = {
       title: recipe.title,
       description: data.choices[0].message.content,
-      // ... other recipe fields
+      // other recipe fields can be added here if needed
     };
 
     return suggestions;
