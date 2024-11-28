@@ -1,4 +1,5 @@
 import { Recipe } from "@/types/recipe";
+import { parseAIResponse } from "@/utils/recipeAIParser";
 
 const OPENAI_SYSTEM_PROMPT = `You are a culinary AI assistant. Your task is to enhance recipes by suggesting improvements and additions while maintaining the original concept. Consider:
 - Ingredient combinations and proportions
@@ -52,13 +53,12 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
     const data = await response.json();
     console.log("OpenAI API response:", data);
 
-    const suggestions = {
-      title: recipe.title,
-      description: data.choices[0].message.content,
-      // other recipe fields can be added here if needed
-    };
+    const aiResponse = data.choices[0].message.content;
+    console.log("Parsing AI response to recipe format");
+    const parsedRecipe = parseAIResponse(aiResponse);
+    console.log("Parsed recipe:", parsedRecipe);
 
-    return suggestions;
+    return parsedRecipe;
   } catch (error) {
     console.error("Error generating recipe suggestions:", error);
     throw error;
