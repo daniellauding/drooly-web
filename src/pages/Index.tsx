@@ -31,6 +31,13 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<Filters>({});
 
+  const isSearching = searchQuery.length > 0;
+  const isFiltering = Object.values(activeFilters).some(value => 
+    Array.isArray(value) ? value.length > 0 : value !== undefined
+  );
+
+  const shouldShowExtraSections = !isSearching && !isFiltering;
+
   useEffect(() => {
     const loadRecipes = async () => {
       try {
@@ -101,16 +108,20 @@ export default function Index() {
           <RecipeFilter onFilterChange={handleFilterChange} />
         </div>
       </div>
-      <SearchExamples />
+      {shouldShowExtraSections && <SearchExamples />}
       <main className="container mx-auto px-4 py-12">
-        <RecipeSections 
-          isLoading={isLoading} 
-          error={error} 
-          recipes={filteredRecipes} 
-        />
-        <Separator className="my-12" />
+        {shouldShowExtraSections && (
+          <RecipeSections 
+            isLoading={isLoading} 
+            error={error} 
+            recipes={filteredRecipes} 
+          />
+        )}
+        {shouldShowExtraSections && <Separator className="my-12" />}
         <section>
-          <h2 className="text-2xl font-bold mb-6">All Recipes</h2>
+          <h2 className="text-2xl font-bold mb-6">
+            {isSearching || isFiltering ? "Search Results" : "All Recipes"}
+          </h2>
           <BentoGrid recipes={filteredRecipes} />
         </section>
       </main>
