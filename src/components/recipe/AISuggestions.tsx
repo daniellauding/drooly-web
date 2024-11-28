@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Wand2, Loader2 } from "lucide-react";
+import { Wand2, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -17,6 +17,7 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
   const [isGenerating, setIsGenerating] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<Partial<Recipe> | null>(null);
+  const [showRemixButton, setShowRemixButton] = useState(false);
   const { toast } = useToast();
 
   const hasExistingData = !!(
@@ -26,17 +27,32 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
     (currentRecipe.steps && currentRecipe.steps.length > 0)
   );
 
+  const capitalizeIngredients = (suggestions: Partial<Recipe>) => {
+    if (suggestions.ingredients) {
+      return {
+        ...suggestions,
+        ingredients: suggestions.ingredients.map(ing => ({
+          ...ing,
+          name: ing.name.charAt(0).toUpperCase() + ing.name.slice(1)
+        }))
+      };
+    }
+    return suggestions;
+  };
+
   const handleGenerateSuggestions = async () => {
     setIsGenerating(true);
     try {
       const suggestions = await generateRecipeSuggestions(currentRecipe);
+      const capitalizedSuggestions = capitalizeIngredients(suggestions);
       
       if (hasExistingData) {
-        setAiSuggestions(suggestions);
+        setAiSuggestions(capitalizedSuggestions);
         setShowConfirmDialog(true);
       } else {
-        onSuggestionsApply(suggestions);
+        onSuggestionsApply(capitalizedSuggestions);
         setIsOpen(false);
+        setShowRemixButton(true);
         toast({
           title: "Success",
           description: "AI suggestions have been applied to your recipe"
@@ -59,6 +75,7 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
       onSuggestionsApply(aiSuggestions);
       setShowConfirmDialog(false);
       setIsOpen(false);
+      setShowRemixButton(true);
       toast({
         title: "Success",
         description: "AI suggestions have been applied to your recipe"
@@ -68,14 +85,28 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => setIsOpen(true)}
-        className="w-8 h-8"
-      >
-        <Wand2 className="h-4 w-4" />
-      </Button>
+      {showRemixButton ? (
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => {
+            setIsOpen(true);
+            setShowRemixButton(false);
+          }}
+          className="w-8 h-8"
+        >
+          <RefreshCw className="h-4 w-4" />
+        </Button>
+      ) : (
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsOpen(true)}
+          className="w-8 h-8"
+        >
+          <Wand2 className="h-4 w-4" />
+        </Button>
+      )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-3xl">
