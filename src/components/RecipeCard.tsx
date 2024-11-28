@@ -39,12 +39,20 @@ export function RecipeCard({
   const navigate = useNavigate();
 
   const handleClick = () => {
+    if (!id) {
+      console.error('Recipe ID is missing');
+      return;
+    }
     console.log('Navigating to recipe:', id);
     navigate(`/recipe/${id}`);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!id) {
+      console.error('Recipe ID is missing');
+      return;
+    }
     console.log('Navigating to edit recipe:', id);
     navigate(`/recipe/edit/${id}`);
   };
