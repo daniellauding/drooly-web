@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Ingredient } from "@/services/recipeService";
 
 interface AISuggestionsProps {
   onSuggestionsApply: (suggestions: Partial<Recipe>) => void;
@@ -70,25 +71,36 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
             title: "Prep Vegetables",
             instructions: "Wash and chop all vegetables into bite-sized pieces.",
             duration: "15 min",
-            ingredients: ["Cherry Tomatoes", "Zucchini", "Bell Peppers"]
+            ingredients: [
+              { name: "Cherry Tomatoes", amount: "2", unit: "cup", group: "Main Ingredients" },
+              { name: "Zucchini", amount: "2", unit: "piece", group: "Main Ingredients" },
+              { name: "Bell Peppers", amount: "2", unit: "piece", group: "Main Ingredients" }
+            ]
           },
           {
             title: "Cook Pasta",
             instructions: "Bring a large pot of salted water to boil. Cook pasta according to package instructions.",
             duration: "12 min",
-            ingredients: ["Whole Grain Pasta"]
+            ingredients: [
+              { name: "Whole Grain Pasta", amount: "16", unit: "oz", group: "Main Ingredients" }
+            ]
           },
           {
             title: "Sauté Vegetables",
             instructions: "In a large skillet, sauté vegetables in olive oil until tender-crisp.",
             duration: "10 min",
-            ingredients: ["Olive Oil"]
+            ingredients: [
+              { name: "Olive Oil", amount: "1/4", unit: "cup", group: "Sauce" }
+            ]
           },
           {
             title: "Combine and Garnish",
             instructions: "Toss pasta with vegetables, drizzle with remaining olive oil, and garnish with fresh basil and pine nuts.",
             duration: "5 min",
-            ingredients: ["Fresh Basil", "Pine Nuts"]
+            ingredients: [
+              { name: "Fresh Basil", amount: "1", unit: "cup", group: "Garnish" },
+              { name: "Pine Nuts", amount: "1/4", unit: "cup", group: "Garnish" }
+            ]
           }
         ],
         estimatedCost: "$15-$20"
