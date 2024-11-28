@@ -4,7 +4,6 @@ import { fetchRecipeById, Recipe } from "@/services/recipeService";
 import { validateRecipe } from "@/types/recipe";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -174,6 +173,8 @@ export default function CreateRecipe() {
           isEditing={isEditing}
           recipe={recipe}
           onRecipeChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+          isStepBased={isStepBased}
+          onStepBasedChange={setIsStepBased}
         />
 
         <RecipeCreationOptions 
@@ -192,7 +193,7 @@ export default function CreateRecipe() {
           onAddStep={handleAddStep}
         />
 
-        <div className="flex justify-end gap-4">
+        <div className="flex justify-end">
           <Button onClick={handleSave}>
             {isEditing ? "Update Recipe" : "Create Recipe"}
           </Button>
