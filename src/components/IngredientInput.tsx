@@ -17,13 +17,9 @@ import {
 } from "@/components/ui/collapsible";
 import { IngredientSuggestions } from "./ingredients/IngredientSuggestions";
 import { AdvancedIngredientSection } from "./ingredients/AdvancedIngredientSection";
+import { Ingredient } from "@/services/recipeService"; // Updated import
 
-interface Ingredient {
-  name: string;
-  amount: string;
-  unit: string;
-  group?: string;
-}
+// Remove the local Ingredient interface since we're now importing it
 
 interface IngredientInputProps {
   ingredients: Ingredient[];

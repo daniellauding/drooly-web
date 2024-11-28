@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchRecipeById } from "@/services/recipeService";
-import { Recipe, validateRecipe } from "@/types/recipe";
+import { fetchRecipeById, Recipe, Ingredient } from "@/services/recipeService"; // Updated import
+import { validateRecipe } from "@/types/recipe";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
 import { RecipeBasicInfo } from "@/components/recipe/RecipeBasicInfo";

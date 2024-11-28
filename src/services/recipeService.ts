@@ -5,7 +5,7 @@ export interface Ingredient {
   name: string;
   amount: string;
   unit: string;
-  group: string;
+  group?: string; // Made optional to match existing usage
 }
 
 export interface RecipeStep {
