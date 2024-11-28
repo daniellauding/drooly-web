@@ -24,7 +24,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
   `;
 
   try {
-    console.log("Making OpenAI API request with key:", apiKey.substring(0, 3) + "...");
+    console.log("Making OpenAI API request...");
     
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -33,7 +33,7 @@ export const generateRecipeSuggestions = async (recipe: Partial<Recipe>): Promis
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'gpt-4',  // Using standard gpt-4 model instead of preview
+        model: 'gpt-3.5-turbo',  // Using GPT-3.5-turbo which is more widely available
         messages: [
           { role: 'system', content: OPENAI_SYSTEM_PROMPT },
           { role: 'user', content: `Please enhance this recipe while keeping its core concept:\n${recipeContext}` }
