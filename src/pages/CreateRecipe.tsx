@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { saveRecipe } from "@/services/recipeOperations";
 import { Timestamp } from "firebase/firestore";
 import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
+import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -69,25 +70,6 @@ export default function CreateRecipe() {
     }
   }, [existingRecipe]);
 
-  const validateSection = (section: string) => {
-    const errors: string[] = [];
-    
-    switch(section) {
-      case "basic-info":
-        if (!recipe.title?.trim()) errors.push("Title is required");
-        if (!recipe.description?.trim()) errors.push("Description is required");
-        break;
-      case "ingredients":
-        if (!recipe.ingredients?.length) errors.push("At least one ingredient is required");
-        break;
-      case "details":
-        if (!recipe.difficulty) errors.push("Difficulty is required");
-        break;
-    }
-
-    return errors;
-  };
-
   const handleSave = async () => {
     if (!user) {
       toast({
@@ -136,6 +118,25 @@ export default function CreateRecipe() {
     }
   };
 
+  const validateSection = (section: string) => {
+    const errors: string[] = [];
+    
+    switch(section) {
+      case "basic-info":
+        if (!recipe.title?.trim()) errors.push("Title is required");
+        if (!recipe.description?.trim()) errors.push("Description is required");
+        break;
+      case "ingredients":
+        if (!recipe.ingredients?.length) errors.push("At least one ingredient is required");
+        break;
+      case "details":
+        if (!recipe.difficulty) errors.push("Difficulty is required");
+        break;
+    }
+
+    return errors;
+  };
+
   const handleAddStep = () => {
     setRecipe(prev => ({
       ...prev,
@@ -172,6 +173,12 @@ export default function CreateRecipe() {
             />
           </div>
         </div>
+
+        <RecipeCreationOptions 
+          onRecipeImported={(importedRecipe) => {
+            setRecipe(prev => ({ ...prev, ...importedRecipe }));
+          }} 
+        />
 
         <RecipeAccordions
           recipe={recipe}
