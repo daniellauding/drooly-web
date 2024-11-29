@@ -6,8 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
-import { AIRecipeSwiper } from "../recipe/ai/AIRecipeSwiper";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { MinimizableRecipeResults } from "../recipe/MinimizableRecipeResults";
 
 interface IngredientSearchModalProps {
   open: boolean;
@@ -51,12 +51,24 @@ export function IngredientSearchModal({
     setIsGenerating(true);
     try {
       console.log("Generating recipes for ingredients:", selectedIngredients);
+      const recipes = await generateDetailedRecipes(selectedIngredients);
+      setGeneratedRecipes(recipes);
       onRecipesGenerated(selectedIngredients);
       
+      if (recipes.length === 0) {
+        toast({
+          title: "No recipes found",
+          description: "Try selecting different ingredients",
+          variant: "destructive"
+        });
+        return;
+      }
+
       toast({
-        title: "Finding recipes...",
-        description: `Searching for recipes using your ingredients`,
+        title: "Recipes found!",
+        description: `Found ${recipes.length} recipes using your ingredients`,
       });
+      onOpenChange(false);
     } catch (error) {
       console.error("Error generating recipes:", error);
       toast({
@@ -80,6 +92,10 @@ export function IngredientSearchModal({
   const handleConfirmClose = () => {
     setShowConfirmClose(false);
     onOpenChange(false);
+  };
+
+  const handleClearResults = () => {
+    setGeneratedRecipes([]);
   };
 
   return (
@@ -144,6 +160,11 @@ export function IngredientSearchModal({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <MinimizableRecipeResults 
+        recipes={generatedRecipes} 
+        onClose={handleClearResults}
+      />
     </>
   );
 }
