@@ -2,7 +2,7 @@ import { Recipe } from "@/types/recipe";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Apple, Search, Plus, Utensils } from "lucide-react";
+import { Apple, Search, Plus, Utensils, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -83,18 +83,23 @@ export function BentoInteractiveCard({
       <Card
         className={cn(
           "overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-lg min-h-[350px] flex flex-col items-center justify-center p-8 text-center gap-4",
-          item.color
+          item.color,
+          isGenerating && "pointer-events-none opacity-70"
         )}
         onClick={handleCardClick}
       >
         <div className={cn("p-4 rounded-full", item.color)}>
-          <Icon className={cn("w-8 h-8", item.textColor)} />
+          {isGenerating ? (
+            <Loader2 className={cn("w-8 h-8 animate-spin", item.textColor)} />
+          ) : (
+            <Icon className={cn("w-8 h-8", item.textColor)} />
+          )}
         </div>
         <h3 className={cn("text-xl font-semibold", item.textColor)}>
-          {item.title}
+          {isGenerating ? "Generating Recipes..." : item.title}
         </h3>
         <p className={cn("text-sm", item.textColor)}>
-          {item.description}
+          {isGenerating ? "Please wait while we find recipes for you" : item.description}
         </p>
       </Card>
 
