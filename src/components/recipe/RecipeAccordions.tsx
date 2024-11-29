@@ -8,6 +8,8 @@ import { IngredientInput } from "../IngredientInput";
 import { RecipeStepInput } from "../RecipeStepInput";
 import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface RecipeAccordionsProps {
   recipe: Recipe;
@@ -17,6 +19,7 @@ interface RecipeAccordionsProps {
   onOpenSectionsChange: (sections: string[]) => void;
   onRecipeChange: (updates: Partial<Recipe>) => void;
   onAddStep: () => void;
+  onStepBasedChange: (value: boolean) => void;
 }
 
 export function RecipeAccordions({
@@ -26,7 +29,8 @@ export function RecipeAccordions({
   isStepBased,
   onOpenSectionsChange,
   onRecipeChange,
-  onAddStep
+  onAddStep,
+  onStepBasedChange
 }: RecipeAccordionsProps) {
   return (
     <Accordion
@@ -122,7 +126,19 @@ export function RecipeAccordions({
       </AccordionItem>
 
       <AccordionItem value="steps" className="border rounded-lg">
-        <AccordionTrigger className="px-4">Recipe Steps</AccordionTrigger>
+        <AccordionTrigger className="px-4">
+          <div className="flex items-center justify-between w-full pr-4">
+            <span>Recipe Steps</span>
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <Switch
+                checked={isStepBased}
+                onCheckedChange={onStepBasedChange}
+                id="step-based"
+              />
+              <Label htmlFor="step-based">Step-based Recipe</Label>
+            </div>
+          </div>
+        </AccordionTrigger>
         <AccordionContent className="px-4 pb-4">
           <div className="space-y-4">
             {recipe.steps.map((step, index) => (
