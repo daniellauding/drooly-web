@@ -5,6 +5,7 @@ import { CookieConsent } from "./components/CookieConsent";
 import { Toaster } from "./components/ui/toaster";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { MobileNav } from "./components/navigation/MobileNav";
+import { BetaStrip } from "./components/home/BetaStrip";
 import CreateRecipe from "./pages/CreateRecipe";
 import RecipeDetail from "./pages/RecipeDetail";
 import Home from "./pages/Index";
@@ -24,6 +25,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
+          <BetaStrip />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/create" element={<Create />} />

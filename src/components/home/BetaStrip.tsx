@@ -1,40 +1,26 @@
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MessageSquarePlus } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export function BetaStrip() {
-  const handleFeedback = () => {
-    window.open("https://forms.gle/YourFeedbackFormURL", "_blank");
-  };
-
-  const handleJoin = () => {
-    window.open("https://discord.gg/YourDiscordInvite", "_blank");
+  const handleProductHunt = () => {
+    window.open("https://www.producthunt.com/posts/drooly", "_blank");
   };
 
   return (
-    <div className="bg-accent/30 border-b">
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          🚀 Welcome to Drooly Beta! We're cooking up something special.
-        </p>
-        <div className="flex items-center gap-2">
+    <div className="bg-[#FF4742] text-white py-1">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-center gap-2 text-sm">
+          <span>We're live on</span>
           <Button
-            variant="ghost"
-            size="sm"
-            className="text-xs"
-            onClick={handleFeedback}
+            variant="link"
+            className="text-white p-0 h-auto font-semibold hover:no-underline"
+            onClick={handleProductHunt}
           >
-            <MessageSquarePlus className="h-4 w-4 mr-1" />
-            Give Feedback
+            Product Hunt
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="text-xs"
-            onClick={handleJoin}
-          >
-            <ExternalLink className="h-4 w-4 mr-1" />
-            Join Community
-          </Button>
+          <span>!</span>
+          <span>Support us by visiting & commenting!</span>
+          <ExternalLink className="h-4 w-4" />
         </div>
       </div>
     </div>
