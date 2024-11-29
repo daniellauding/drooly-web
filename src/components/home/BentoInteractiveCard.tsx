@@ -36,7 +36,7 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
     }
   };
 
-  const handleRecipesGenerated = async (ingredients: string[]) => {
+  const handleIngredientSelection = async (ingredients: string[]) => {
     if (ingredients.length === 0) {
       toast({
         title: "No ingredients selected",
@@ -119,7 +119,7 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
       <IngredientSearchModal
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
-        onRecipesGenerated={handleRecipesGenerated}
+        onRecipesGenerated={handleIngredientSelection}
         isLoading={isLoading}
       />
 

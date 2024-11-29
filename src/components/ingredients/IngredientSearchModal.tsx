@@ -11,7 +11,7 @@ import { AIRecipeSwiper } from "../recipe/ai/AIRecipeSwiper";
 interface IngredientSearchModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRecipesGenerated: (recipes: Recipe[]) => void;
+  onRecipesGenerated: (ingredients: string[]) => void;
   isLoading?: boolean;
 }
 
@@ -49,15 +49,11 @@ export function IngredientSearchModal({
     setIsGenerating(true);
     try {
       console.log("Generating recipes for ingredients:", selectedIngredients);
-      const recipes = await generateDetailedRecipes(selectedIngredients);
-      console.log("Generated recipes:", recipes);
-      
-      setGeneratedRecipes(recipes);
-      onRecipesGenerated(recipes);
+      onRecipesGenerated(selectedIngredients);
       
       toast({
         title: "Recipes generated!",
-        description: `Found ${recipes.length} recipes using your ingredients`,
+        description: `Finding recipes using your ingredients`,
       });
     } catch (error) {
       console.error("Error generating recipes:", error);
