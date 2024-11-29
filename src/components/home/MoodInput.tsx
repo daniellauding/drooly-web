@@ -3,7 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Coffee, Cookie, UtensilsCrossed, Pizza, Beer, Sandwich, Soup } from "lucide-react";
+import { Coffee, Cookie, UtensilsCrossed, Pizza, Beer, Sandwich, Soup, Apple } from "lucide-react";
+import { IngredientSuggestions } from "../ingredients/IngredientSuggestions";
+import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
+import { useToast } from "@/hooks/use-toast";
+import { Recipe } from "@/types/recipe";
 
 type Mood = {
   icon: React.ElementType;
@@ -19,6 +23,7 @@ const moods: Mood[] = [
   { icon: Pizza, label: "Craving", filterCategory: "comfort-food" },
   { icon: Beer, label: "Party Food", filterCategory: "party" },
   { icon: Soup, label: "Comfort Food", filterCategory: "comfort-food" },
+  { icon: Apple, label: "What's in your kitchen?", filterCategory: "ingredients" },
 ];
 
 interface MoodInputProps {
@@ -29,12 +34,59 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [customMood, setCustomMood] = useState("");
+  const [showIngredientSearch, setShowIngredientSearch] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
 
-  const handleMoodSelect = (mood: Mood) => {
+  const handleMoodSelect = async (mood: Mood) => {
+    if (mood.label === "What's in your kitchen?") {
+      setShowIngredientSearch(true);
+      return;
+    }
+
     if (mood.filterCategory && onFilterChange) {
       onFilterChange(mood.filterCategory);
     }
     setOpen(false);
+  };
+
+  const handleIngredientSelect = async (ingredient: string) => {
+    console.log("Selected ingredient:", ingredient);
+    setIsGenerating(true);
+    try {
+      const recipes = await generateDetailedRecipes([ingredient]);
+      console.log("Generated recipes:", recipes);
+      
+      if (recipes.length === 0) {
+        toast({
+          title: "No recipes found",
+          description: "Try selecting different ingredients",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (onFilterChange) {
+        onFilterChange(`ingredient:${ingredient}`);
+      }
+      
+      toast({
+        title: "Recipes found!",
+        description: `Found ${recipes.length} recipes using your ingredients`,
+      });
+      
+      setShowIngredientSearch(false);
+      setOpen(false);
+    } catch (error) {
+      console.error("Error generating recipes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate recipes. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   if (!user) return null;
@@ -58,38 +110,57 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
         <DialogHeader>
           <DialogTitle>How are you feeling?</DialogTitle>
         </DialogHeader>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-          {moods.map((mood) => (
+        {!showIngredientSearch ? (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+              {moods.map((mood) => (
+                <Button
+                  key={mood.label}
+                  variant="outline"
+                  className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-accent"
+                  onClick={() => handleMoodSelect(mood)}
+                  disabled={isGenerating}
+                >
+                  <mood.icon className="h-6 w-6" />
+                  <span className="text-sm">{mood.label}</span>
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 px-4 pb-4">
+              <Input
+                placeholder="Or type something else..."
+                value={customMood}
+                onChange={(e) => setCustomMood(e.target.value)}
+                className="flex-1"
+              />
+              <Button 
+                onClick={() => {
+                  if (customMood.trim()) {
+                    if (onFilterChange) onFilterChange(customMood.toLowerCase());
+                    setOpen(false);
+                  }
+                }}
+                disabled={!customMood.trim()}
+              >
+                Share
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="p-4">
+            <IngredientSuggestions
+              onSelect={handleIngredientSelect}
+              onClose={() => setShowIngredientSearch(false)}
+            />
             <Button
-              key={mood.label}
               variant="outline"
-              className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-accent"
-              onClick={() => handleMoodSelect(mood)}
+              className="w-full mt-4"
+              onClick={() => setShowIngredientSearch(false)}
             >
-              <mood.icon className="h-6 w-6" />
-              <span className="text-sm">{mood.label}</span>
+              Back to moods
             </Button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2 px-4 pb-4">
-          <Input
-            placeholder="Or type something else..."
-            value={customMood}
-            onChange={(e) => setCustomMood(e.target.value)}
-            className="flex-1"
-          />
-          <Button 
-            onClick={() => {
-              if (customMood.trim()) {
-                if (onFilterChange) onFilterChange(customMood.toLowerCase());
-                setOpen(false);
-              }
-            }}
-            disabled={!customMood.trim()}
-          >
-            Share
-          </Button>
-        </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
