@@ -23,12 +23,19 @@ interface FeedbackModalProps {
 }
 
 export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
+  const { user } = useAuth();
   const [subject, setSubject] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(user?.email || "");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+
+  // Update email when user changes
+  React.useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +62,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       });
 
       setSubject("");
-      setEmail("");
+      setEmail(user?.email || "");
       setMessage("");
       onOpenChange(false);
     } catch (error) {
