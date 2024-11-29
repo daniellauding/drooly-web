@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
 import { AIRecipeSwiper } from "../recipe/ai/AIRecipeSwiper";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface IngredientSearchModalProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function IngredientSearchModal({
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
   const { toast } = useToast();
 
   const handleIngredientSelect = (ingredient: string) => {
@@ -67,51 +69,81 @@ export function IngredientSearchModal({
     }
   };
 
+  const handleCloseAttempt = (open: boolean) => {
+    if (!open && isGenerating) {
+      setShowConfirmClose(true);
+      return;
+    }
+    onOpenChange(open);
+  };
+
+  const handleConfirmClose = () => {
+    setShowConfirmClose(false);
+    onOpenChange(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>What's in your kitchen?</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleCloseAttempt}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>What's in your kitchen?</DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <h3 className="text-sm font-medium">Selected Ingredients:</h3>
-            <div className="flex flex-wrap gap-2">
-              {selectedIngredients.map(ingredient => (
-                <Button
-                  key={ingredient}
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => handleRemoveIngredient(ingredient)}
-                >
-                  {ingredient} ×
-                </Button>
-              ))}
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Selected Ingredients:</h3>
+              <div className="flex flex-wrap gap-2">
+                {selectedIngredients.map(ingredient => (
+                  <Button
+                    key={ingredient}
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleRemoveIngredient(ingredient)}
+                  >
+                    {ingredient} ×
+                  </Button>
+                ))}
+              </div>
             </div>
+
+            <IngredientSuggestions
+              onSelect={handleIngredientSelect}
+              onClose={() => {}}
+            />
+
+            <Button 
+              onClick={handleGenerateRecipes} 
+              className="w-full"
+              disabled={isGenerating || isLoading}
+            >
+              {isGenerating || isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Finding Recipes...
+                </>
+              ) : (
+                "Find Recipes"
+              )}
+            </Button>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <IngredientSuggestions
-            onSelect={handleIngredientSelect}
-            onClose={() => {}}
-          />
-
-          <Button 
-            onClick={handleGenerateRecipes} 
-            className="w-full"
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Finding Recipes...
-              </>
-            ) : (
-              "Find Recipes"
-            )}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <AlertDialog open={showConfirmClose} onOpenChange={setShowConfirmClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Recipes are still being generated. If you close now, the process will be cancelled.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue Generating</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmClose}>Yes, Close</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
