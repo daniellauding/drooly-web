@@ -24,7 +24,6 @@ export function IngredientSearchModal({
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showConfirmClose, setShowConfirmClose] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -51,7 +50,7 @@ export function IngredientSearchModal({
     setIsGenerating(true);
     try {
       console.log("Generating recipes for ingredients:", selectedIngredients);
-      onRecipesGenerated(selectedIngredients);
+      await onRecipesGenerated(selectedIngredients);
     } catch (error) {
       console.error("Error generating recipes:", error);
       toast({
@@ -66,8 +65,16 @@ export function IngredientSearchModal({
 
   const handleRecipeClick = (recipeId: string) => {
     console.log('Navigating to recipe:', recipeId);
+    onOpenChange(false); // Close the modal before navigation
     navigate(`/recipe/${recipeId}`);
-    onOpenChange(false);
+  };
+
+  const handleRegenerateRecipes = async () => {
+    await handleGenerateRecipes();
+    toast({
+      title: "Generating new recipes",
+      description: "Finding new recipe combinations with your ingredients..."
+    });
   };
 
   return (
@@ -117,7 +124,7 @@ export function IngredientSearchModal({
             {generatedRecipes.length > 0 && (
               <Button
                 variant="outline"
-                onClick={handleGenerateRecipes}
+                onClick={handleRegenerateRecipes}
                 disabled={isGenerating || isLoading}
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
@@ -131,18 +138,22 @@ export function IngredientSearchModal({
               <h3 className="font-medium">Generated Recipes:</h3>
               <div className="grid gap-4">
                 {generatedRecipes.map((recipe) => (
-                  <RecipeCard
+                  <div 
                     key={recipe.id}
-                    id={recipe.id}
-                    title={recipe.title}
-                    images={recipe.images}
-                    cookTime={recipe.totalTime}
-                    difficulty={recipe.difficulty}
-                    chef="AI Generated"
-                    date={new Date().toLocaleDateString()}
-                    stats={recipe.stats}
-                    onDismiss={() => {}}
-                  />
+                    className="cursor-pointer"
+                    onClick={() => handleRecipeClick(recipe.id)}
+                  >
+                    <RecipeCard
+                      id={recipe.id}
+                      title={recipe.title}
+                      images={recipe.images}
+                      cookTime={recipe.totalTime}
+                      difficulty={recipe.difficulty}
+                      chef="AI Generated"
+                      date={new Date().toLocaleDateString()}
+                      stats={recipe.stats}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
