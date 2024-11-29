@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -44,10 +44,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       console.log("Submitting feedback...");
       
       const feedbackData = {
-        email,
+        email: email || null,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
         message,
-        createdAt: new Date().toISOString(),
+        createdAt: serverTimestamp(),
         userId: user?.uid || null,
         status: 'new'
       };
