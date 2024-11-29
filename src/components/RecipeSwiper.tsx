@@ -17,16 +17,16 @@ import { useState } from "react";
 
 interface RecipeSwiperProps {
   recipes: Recipe[];
+  onAuthRequired?: () => void;
 }
 
-export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
+export function RecipeSwiper({ recipes, onAuthRequired }: RecipeSwiperProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const [dismissedRecipes, setDismissedRecipes] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  // Filter out recipes that the user has already liked
   const visibleRecipes = recipes.filter(recipe => 
     !dismissedRecipes.includes(recipe.id) && 
     !recipe.stats?.likes?.includes(user?.uid || '')
@@ -35,11 +35,15 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
   const handleLike = async (e: React.MouseEvent, recipe: Recipe) => {
     e.stopPropagation();
     if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to like recipes",
-        variant: "destructive"
-      });
+      if (onAuthRequired) {
+        onAuthRequired();
+      } else {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to like recipes",
+          variant: "destructive"
+        });
+      }
       return;
     }
 
@@ -54,7 +58,6 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
         description: "Added to your liked recipes"
       });
       
-      // Hide the recipe after liking
       setDismissedRecipes(prev => [...prev, recipe.id]);
       handleNext();
     } catch (error) {
@@ -70,11 +73,15 @@ export function RecipeSwiper({ recipes }: RecipeSwiperProps) {
   const handleSave = async (e: React.MouseEvent, recipe: Recipe) => {
     e.stopPropagation();
     if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to save recipes",
-        variant: "destructive"
-      });
+      if (onAuthRequired) {
+        onAuthRequired();
+      } else {
+        toast({
+          title: "Sign in required",
+          description: "Please sign in to save recipes",
+          variant: "destructive"
+        });
+      }
       return;
     }
 
