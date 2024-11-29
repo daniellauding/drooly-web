@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,20 +11,30 @@ interface ImageCropDialogProps {
   onCropComplete: (croppedImageUrl: string) => void;
 }
 
+const initialCrop: Crop = {
+  unit: '%',
+  width: 90,
+  height: 90,
+  x: 5,
+  y: 5
+};
+
 export function ImageCropDialog({ 
   open, 
   onOpenChange, 
   imageUrl, 
   onCropComplete 
 }: ImageCropDialogProps) {
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    width: 90,
-    height: 90,
-    x: 5,
-    y: 5
-  });
+  const [crop, setCrop] = useState<Crop>(initialCrop);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
+
+  // Reset crop when dialog opens with new image
+  useEffect(() => {
+    if (open) {
+      console.log("Resetting crop to initial state");
+      setCrop(initialCrop);
+    }
+  }, [open, imageUrl]);
 
   const getCroppedImg = (image: HTMLImageElement, crop: PixelCrop): string => {
     const canvas = document.createElement('canvas');
@@ -69,13 +79,8 @@ export function ImageCropDialog({
   };
 
   const handleReset = () => {
-    setCrop({
-      unit: '%',
-      width: 90,
-      height: 90,
-      x: 5,
-      y: 5
-    });
+    console.log("Manually resetting crop to initial state");
+    setCrop(initialCrop);
   };
 
   return (
