@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { X, Edit } from "lucide-react";
+import { X, Edit, Star } from "lucide-react";
 
 interface ImageGridProps {
   images: string[];
@@ -38,8 +38,9 @@ export function ImageGrid({
                 e.stopPropagation();
                 onSetFeatured(index);
               }}
+              className={index === featuredImageIndex ? "text-primary" : ""}
             >
-              Set as Featured
+              <Star className={`w-4 h-4 ${index === featuredImageIndex ? "fill-primary" : ""}`} />
             </Button>
             <Button
               size="sm"
