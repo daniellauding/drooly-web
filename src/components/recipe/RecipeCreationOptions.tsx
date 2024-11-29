@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Globe, Bot, Instagram, Youtube, ChevronDown, Camera, Trello, Clipboard } from "lucide-react";
+import { Globe, Camera, Instagram, Youtube, ChevronDown, Trello, Clipboard } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,15 +45,11 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
               <Camera className="mr-2 h-4 w-4" />
-              Take Photo & Scan
+              Recipe from Photo
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowClipboardDialog(true)}>
               <Clipboard className="mr-2 h-4 w-4" />
               Paste from Clipboard
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Bot className="mr-2 h-4 w-4" />
-              AI Assistant
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowInstagramDialog(true)}>
               <Instagram className="mr-2 h-4 w-4" />
