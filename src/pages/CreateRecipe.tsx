@@ -16,6 +16,8 @@ import { Save } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
 import { BetaStrip } from "@/components/home/BetaStrip";
 import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
+import { updateAchievementProgress, achievements } from "@/services/achievementService";
+import { AchievementToast } from "@/components/achievements/AchievementToast";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -144,6 +146,24 @@ export default function CreateRecipe() {
     }
 
     await handleSaveRecipe(recipe, user.uid, user.displayName || "", false);
+    
+    // Check for first recipe and recipe streak achievements
+    const firstRecipeAchieved = await updateAchievementProgress(user.uid, 'firstRecipe', 1);
+    if (firstRecipeAchieved) {
+      toast({
+        title: "Achievement Unlocked!",
+        description: <AchievementToast achievement={achievements.firstRecipe} />,
+      });
+    }
+    
+    const streakAchieved = await updateAchievementProgress(user.uid, 'recipeStreak', 1);
+    if (streakAchieved) {
+      toast({
+        title: "Achievement Unlocked!",
+        description: <AchievementToast achievement={achievements.recipeStreak} />,
+      });
+    }
+    
     setHasUnsavedChanges(false);
   };
 

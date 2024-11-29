@@ -14,6 +14,9 @@ import { Recipe } from "@/services/recipeService";
 import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useState } from "react";
+import { updateAchievementProgress } from "@/services/achievementService";
+import { AchievementToast } from "./achievements/AchievementToast";
+import { achievements } from "@/services/achievementService";
 
 interface RecipeSwiperProps {
   recipes: Recipe[];
@@ -52,6 +55,15 @@ export function RecipeSwiper({ recipes, onAuthRequired }: RecipeSwiperProps) {
       await updateDoc(recipeRef, {
         "stats.likes": arrayUnion(user.uid)
       });
+      
+      // Check for first like achievement
+      const achieved = await updateAchievementProgress(user.uid, 'firstLike', 1);
+      if (achieved) {
+        toast({
+          title: "Achievement Unlocked!",
+          description: <AchievementToast achievement={achievements.firstLike} />,
+        });
+      }
       
       toast({
         title: "Recipe liked",
