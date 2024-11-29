@@ -2,14 +2,12 @@ import { Search, Link, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { MoodInput } from "./MoodInput";
 
 interface HeroProps {
   onSearch?: (query: string) => void;
-  onMoodFilter?: (category: string) => void;
 }
 
-export function Hero({ onSearch, onMoodFilter }: HeroProps) {
+export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
 
   const handleCreateRecipe = () => {
@@ -26,8 +24,6 @@ export function Hero({ onSearch, onMoodFilter }: HeroProps) {
     <div className="relative bg-[#F7F9FC] py-20 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center space-y-8">
-          <MoodInput onFilterChange={onMoodFilter} />
-          
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
             Search for <span className="italic">almost</span> anything
           </h1>
