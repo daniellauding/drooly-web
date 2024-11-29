@@ -8,6 +8,14 @@ import { Loader2 } from "lucide-react";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const SUBJECT_OPTIONS = [
+  { value: "help", label: "I wanna help" },
+  { value: "idea", label: "I have an idea" },
+  { value: "issue", label: "Issue related" },
+  { value: "feedback", label: "General feedback" }
+];
 
 interface FeedbackModalProps {
   open: boolean;
@@ -31,10 +39,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       await addDoc(mailCollection, {
         to: "daniel@lauding.se",
         message: {
-          subject: subject,
+          subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
           html: `
             <p><strong>From:</strong> ${email}</p>
-            <p><strong>Subject:</strong> ${subject}</p>
+            <p><strong>Subject:</strong> ${SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject}</p>
             <p><strong>Message:</strong></p>
             <p>${message}</p>
           `,
@@ -80,24 +88,29 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
             <Input
               id="email"
               type="email"
-              value={email || user?.email || ''}
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="your@email.com"
+              placeholder="Your Email"
             />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="subject" className="text-sm font-medium">
+            <label className="text-sm font-medium">
               Subject
             </label>
-            <Input
-              id="subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              required
-              placeholder="What's this about?"
-            />
+            <Select value={subject} onValueChange={setSubject} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a subject" />
+              </SelectTrigger>
+              <SelectContent>
+                {SUBJECT_OPTIONS.map(option => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
