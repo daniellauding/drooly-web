@@ -10,7 +10,13 @@ const COMMON_RECIPE_WORDS = [
 
 const isLikelyRecipeText = (text: string): boolean => {
   const normalizedText = text.toLowerCase();
-  return COMMON_RECIPE_WORDS.some(word => normalizedText.includes(word));
+  // Check if the text contains a minimum number of recognizable words
+  const recipeWordCount = COMMON_RECIPE_WORDS.filter(word => 
+    normalizedText.includes(word)
+  ).length;
+  
+  // Text should have at least 3 recipe-related words and be reasonably long
+  return recipeWordCount >= 3 && text.length > 50;
 };
 
 const cleanOCRText = (text: string): string => {
@@ -21,21 +27,25 @@ const cleanOCRText = (text: string): string => {
 };
 
 export const analyzeRecipeText = async (text: string): Promise<Partial<Recipe>> => {
-  console.log("Analyzing text:", text);
+  console.log("Analyzing OCR text:", text);
   
   const cleanedText = cleanOCRText(text);
-  
-  // If the OCR result doesn't look like a recipe, try to get AI suggestions
+  console.log("Cleaned OCR text:", cleanedText);
+
+  // If the OCR result doesn't look like a recipe or is too garbled,
+  // immediately try to get AI suggestions
   if (!isLikelyRecipeText(cleanedText)) {
+    console.log("OCR text appears garbled or unclear, requesting AI assistance");
     try {
-      console.log("OCR text doesn't look like a recipe, getting AI suggestions");
       const suggestions = await generateRecipeSuggestions({
         title: "Recipe from Photo",
-        description: cleanedText
+        description: "Please analyze this image and suggest a recipe that might match what's shown: " + cleanedText
       });
+      console.log("Received AI suggestions:", suggestions);
       return suggestions;
     } catch (error) {
       console.error("Error getting AI suggestions:", error);
+      throw new Error("Could not generate recipe suggestions. Please try taking another photo with better lighting and focus.");
     }
   }
 
