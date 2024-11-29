@@ -5,7 +5,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { generateRecipeSuggestions } from "@/services/openaiService";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 interface AISuggestionsProps {
   onSuggestionsApply: (suggestions: Partial<Recipe>) => void;
@@ -18,6 +20,7 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<Partial<Recipe> | null>(null);
   const [showRemixButton, setShowRemixButton] = useState(false);
+  const [mergeOption, setMergeOption] = useState<'keep' | 'replace' | 'merge'>('keep');
   const { toast } = useToast();
 
   const hasExistingData = !!(
@@ -38,6 +41,20 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
       };
     }
     return suggestions;
+  };
+
+  const mergeRecipes = (current: Partial<Recipe>, ai: Partial<Recipe>): Partial<Recipe> => {
+    return {
+      ...current,
+      title: current.title || ai.title,
+      description: `${current.description || ''}\n${ai.description || ''}`.trim(),
+      ingredients: [...(current.ingredients || []), ...(ai.ingredients || [])],
+      steps: [...(current.steps || []), ...(ai.steps || [])],
+      categories: [...new Set([...(current.categories || []), ...(ai.categories || [])])],
+      cookingMethods: [...new Set([...(current.cookingMethods || []), ...(ai.cookingMethods || [])])],
+      equipment: [...new Set([...(current.equipment || []), ...(ai.equipment || [])])],
+      tags: [...new Set([...(current.tags || []), ...(ai.tags || [])])],
+    };
   };
 
   const handleGenerateSuggestions = async () => {
@@ -70,17 +87,31 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
     }
   };
 
-  const handleConfirmOverwrite = () => {
-    if (aiSuggestions) {
-      onSuggestionsApply(aiSuggestions);
-      setShowConfirmDialog(false);
-      setIsOpen(false);
-      setShowRemixButton(true);
-      toast({
-        title: "Success",
-        description: "AI suggestions have been applied to your recipe"
-      });
+  const handleConfirmChoice = () => {
+    if (!aiSuggestions) return;
+
+    let finalRecipe: Partial<Recipe>;
+    switch (mergeOption) {
+      case 'keep':
+        return;
+      case 'replace':
+        finalRecipe = aiSuggestions;
+        break;
+      case 'merge':
+        finalRecipe = mergeRecipes(currentRecipe, aiSuggestions);
+        break;
+      default:
+        return;
     }
+
+    onSuggestionsApply(finalRecipe);
+    setShowConfirmDialog(false);
+    setIsOpen(false);
+    setShowRemixButton(true);
+    toast({
+      title: "Success",
+      description: `Recipe has been ${mergeOption === 'merge' ? 'merged with' : 'replaced by'} AI suggestions`
+    });
   };
 
   return (
@@ -141,14 +172,30 @@ export function AISuggestions({ onSuggestionsApply, currentRecipe }: AISuggestio
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Keep Existing Data?</AlertDialogTitle>
+            <AlertDialogTitle>How would you like to use the AI suggestions?</AlertDialogTitle>
             <AlertDialogDescription>
-              You have existing recipe data. Would you like to keep your current data or replace it with AI suggestions?
+              Choose how to incorporate the AI-generated suggestions into your recipe.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
+          <RadioGroup value={mergeOption} onValueChange={(value: 'keep' | 'replace' | 'merge') => setMergeOption(value)} className="gap-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="keep" id="keep" />
+              <Label htmlFor="keep">Keep current data</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="replace" id="replace" />
+              <Label htmlFor="replace">Use AI suggestions</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="merge" id="merge" />
+              <Label htmlFor="merge">Merge current data with AI suggestions</Label>
+            </div>
+          </RadioGroup>
+
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>Keep Current Data</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmOverwrite}>Use AI Suggestions</AlertDialogAction>
+            <Button variant="outline" onClick={() => setShowConfirmDialog(false)}>Cancel</Button>
+            <Button onClick={handleConfirmChoice}>Confirm</Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
