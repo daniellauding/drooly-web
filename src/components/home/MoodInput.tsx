@@ -8,6 +8,7 @@ import { IngredientSuggestions } from "../ingredients/IngredientSuggestions";
 import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { Recipe } from "@/types/recipe";
+import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
 
 type Mood = {
   icon: React.ElementType;
@@ -34,13 +35,14 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [customMood, setCustomMood] = useState("");
-  const [showIngredientSearch, setShowIngredientSearch] = useState(false);
+  const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const handleMoodSelect = async (mood: Mood) => {
     if (mood.label === "What's in your kitchen?") {
-      setShowIngredientSearch(true);
+      setIsKitchenModalOpen(true);
+      setOpen(false);
       return;
     }
 
@@ -50,11 +52,11 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
     setOpen(false);
   };
 
-  const handleIngredientSelect = async (ingredient: string) => {
-    console.log("Selected ingredient:", ingredient);
+  const handleGenerateRecipes = async (ingredients: string[]) => {
+    console.log("Generating recipes for ingredients:", ingredients);
     setIsGenerating(true);
     try {
-      const recipes = await generateDetailedRecipes([ingredient]);
+      const recipes = await generateDetailedRecipes(ingredients);
       console.log("Generated recipes:", recipes);
       
       if (recipes.length === 0) {
@@ -67,7 +69,7 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
       }
 
       if (onFilterChange) {
-        onFilterChange(`ingredient:${ingredient}`);
+        onFilterChange(`ingredients:${ingredients.join(',')}`);
       }
       
       toast({
@@ -75,8 +77,7 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
         description: `Found ${recipes.length} recipes using your ingredients`,
       });
       
-      setShowIngredientSearch(false);
-      setOpen(false);
+      setIsKitchenModalOpen(false);
     } catch (error) {
       console.error("Error generating recipes:", error);
       toast({
@@ -92,76 +93,67 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
   if (!user) return null;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          className="w-full flex items-center gap-2 h-12 justify-start px-4 text-muted-foreground hover:text-foreground"
-        >
-          <img 
-            src={user.photoURL || "/placeholder.svg"} 
-            alt="Profile" 
-            className="w-8 h-8 rounded-full"
-          />
-          <span className="truncate">What are you craving today, {user.displayName?.split(' ')[0] || 'there'}?</span>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>How are you feeling?</DialogTitle>
-        </DialogHeader>
-        {!showIngredientSearch ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-              {moods.map((mood) => (
-                <Button
-                  key={mood.label}
-                  variant="outline"
-                  className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-accent"
-                  onClick={() => handleMoodSelect(mood)}
-                  disabled={isGenerating}
-                >
-                  <mood.icon className="h-6 w-6" />
-                  <span className="text-sm">{mood.label}</span>
-                </Button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2 px-4 pb-4">
-              <Input
-                placeholder="Or type something else..."
-                value={customMood}
-                onChange={(e) => setCustomMood(e.target.value)}
-                className="flex-1"
-              />
-              <Button 
-                onClick={() => {
-                  if (customMood.trim()) {
-                    if (onFilterChange) onFilterChange(customMood.toLowerCase());
-                    setOpen(false);
-                  }
-                }}
-                disabled={!customMood.trim()}
-              >
-                Share
-              </Button>
-            </div>
-          </>
-        ) : (
-          <div className="p-4">
-            <IngredientSuggestions
-              onSelect={handleIngredientSelect}
-              onClose={() => setShowIngredientSearch(false)}
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full flex items-center gap-2 h-12 justify-start px-4 text-muted-foreground hover:text-foreground"
+          >
+            <img 
+              src={user.photoURL || "/placeholder.svg"} 
+              alt="Profile" 
+              className="w-8 h-8 rounded-full"
             />
-            <Button
-              variant="outline"
-              className="w-full mt-4"
-              onClick={() => setShowIngredientSearch(false)}
+            <span className="truncate">What are you craving today, {user.displayName?.split(' ')[0] || 'there'}?</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>How are you feeling?</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+            {moods.map((mood) => (
+              <Button
+                key={mood.label}
+                variant="outline"
+                className="flex flex-col items-center gap-2 h-auto py-4 hover:bg-accent"
+                onClick={() => handleMoodSelect(mood)}
+                disabled={isGenerating}
+              >
+                <mood.icon className="h-6 w-6" />
+                <span className="text-sm">{mood.label}</span>
+              </Button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 px-4 pb-4">
+            <Input
+              placeholder="Or type something else..."
+              value={customMood}
+              onChange={(e) => setCustomMood(e.target.value)}
+              className="flex-1"
+            />
+            <Button 
+              onClick={() => {
+                if (customMood.trim()) {
+                  if (onFilterChange) onFilterChange(customMood.toLowerCase());
+                  setOpen(false);
+                }
+              }}
+              disabled={!customMood.trim()}
             >
-              Back to moods
+              Share
             </Button>
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <IngredientSearchModal
+        open={isKitchenModalOpen}
+        onOpenChange={setIsKitchenModalOpen}
+        onRecipesGenerated={handleGenerateRecipes}
+        isLoading={isGenerating}
+      />
+    </>
   );
 }
