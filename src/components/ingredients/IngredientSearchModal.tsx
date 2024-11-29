@@ -3,11 +3,10 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { IngredientSuggestions } from "./IngredientSuggestions";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { Recipe } from "@/types/recipe";
-import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { MinimizableRecipeResults } from "../recipe/MinimizableRecipeResults";
+import { useNavigate } from "react-router-dom";
+import { RecipeCard } from "../RecipeCard";
 
 interface IngredientSearchModalProps {
   open: boolean;
@@ -27,6 +26,7 @@ export function IngredientSearchModal({
   const [isGenerating, setIsGenerating] = useState(false);
   const [showConfirmClose, setShowConfirmClose] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleIngredientSelect = (ingredient: string) => {
     if (!selectedIngredients.includes(ingredient)) {
@@ -51,24 +51,7 @@ export function IngredientSearchModal({
     setIsGenerating(true);
     try {
       console.log("Generating recipes for ingredients:", selectedIngredients);
-      const recipes = await generateDetailedRecipes(selectedIngredients);
-      setGeneratedRecipes(recipes);
       onRecipesGenerated(selectedIngredients);
-      
-      if (recipes.length === 0) {
-        toast({
-          title: "No recipes found",
-          description: "Try selecting different ingredients",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      toast({
-        title: "Recipes found!",
-        description: `Found ${recipes.length} recipes using your ingredients`,
-      });
-      onOpenChange(false);
     } catch (error) {
       console.error("Error generating recipes:", error);
       toast({
@@ -81,56 +64,45 @@ export function IngredientSearchModal({
     }
   };
 
-  const handleCloseAttempt = (open: boolean) => {
-    if (!open && isGenerating) {
-      setShowConfirmClose(true);
-      return;
-    }
-    onOpenChange(open);
-  };
-
-  const handleConfirmClose = () => {
-    setShowConfirmClose(false);
+  const handleRecipeClick = (recipeId: string) => {
+    console.log('Navigating to recipe:', recipeId);
+    navigate(`/recipe/${recipeId}`);
     onOpenChange(false);
   };
 
-  const handleClearResults = () => {
-    setGeneratedRecipes([]);
-  };
-
   return (
-    <>
-      <Dialog open={open} onOpenChange={handleCloseAttempt}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>What's in your kitchen?</DialogTitle>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>What's in your kitchen?</DialogTitle>
+        </DialogHeader>
 
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Selected Ingredients:</h3>
-              <div className="flex flex-wrap gap-2">
-                {selectedIngredients.map(ingredient => (
-                  <Button
-                    key={ingredient}
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleRemoveIngredient(ingredient)}
-                  >
-                    {ingredient} ×
-                  </Button>
-                ))}
-              </div>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Selected Ingredients:</h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedIngredients.map(ingredient => (
+                <Button
+                  key={ingredient}
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleRemoveIngredient(ingredient)}
+                >
+                  {ingredient} ×
+                </Button>
+              ))}
             </div>
+          </div>
 
-            <IngredientSuggestions
-              onSelect={handleIngredientSelect}
-              onClose={() => {}}
-            />
+          <IngredientSuggestions
+            onSelect={handleIngredientSelect}
+            onClose={() => {}}
+          />
 
+          <div className="flex gap-2">
             <Button 
               onClick={handleGenerateRecipes} 
-              className="w-full"
+              className="flex-1"
               disabled={isGenerating || isLoading}
             >
               {isGenerating || isLoading ? (
@@ -142,29 +114,41 @@ export function IngredientSearchModal({
                 "Find Recipes"
               )}
             </Button>
+            {generatedRecipes.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={handleGenerateRecipes}
+                disabled={isGenerating || isLoading}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Generate New
+              </Button>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
 
-      <AlertDialog open={showConfirmClose} onOpenChange={setShowConfirmClose}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Recipes are still being generated. If you close now, the process will be cancelled.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Continue Generating</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmClose}>Yes, Close</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <MinimizableRecipeResults 
-        recipes={generatedRecipes} 
-        onClose={handleClearResults}
-      />
-    </>
+          {generatedRecipes.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-medium">Generated Recipes:</h3>
+              <div className="grid gap-4">
+                {generatedRecipes.map((recipe) => (
+                  <RecipeCard
+                    key={recipe.id}
+                    id={recipe.id}
+                    title={recipe.title}
+                    images={recipe.images}
+                    cookTime={recipe.totalTime}
+                    difficulty={recipe.difficulty}
+                    chef="AI Generated"
+                    date={new Date().toLocaleDateString()}
+                    stats={recipe.stats}
+                    onDismiss={() => {}}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
