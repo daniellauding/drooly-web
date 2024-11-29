@@ -41,7 +41,7 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
         throw new Error("Not enough text detected in the image");
       }
 
-      const analyzed = analyzeRecipeText(text);
+      const analyzed = await analyzeRecipeText(text);
       console.log("Recipe analysis complete:", analyzed);
       
       if (!analyzed.title && !analyzed.ingredients?.length) {

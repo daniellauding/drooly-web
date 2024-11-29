@@ -71,12 +71,12 @@ export interface Recipe {
     containsNuts: boolean;
   };
   energyInfo?: {
-    calories?: number;
-    kilojoules?: number;
-    proteinGrams?: number;
-    carbsGrams?: number;
-    fatGrams?: number;
-    fiberGrams?: number;
+    calories: number;
+    kilojoules: number;
+    protein: number;
+    carbohydrates: number;
+    fat: number;
+    fiber: number;
   };
 }
 
@@ -202,4 +202,3 @@ export interface ValidationResult {
     message: string;
   }[];
 }
-

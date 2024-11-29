@@ -9,16 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Info } from "lucide-react";
 
+interface EnergyInfo {
+  calories: number;
+  kilojoules: number;
+  protein: number;
+  carbohydrates: number;
+  fat: number;
+  fiber: number;
+}
+
 interface EnergyInfoProps {
-  energyInfo: {
-    calories: number;
-    kilojoules: number;
-    protein: number;
-    carbohydrates: number;
-    fat: number;
-    fiber: number;
-  };
-  onChange: (updates: Partial<typeof energyInfo>) => void;
+  energyInfo: EnergyInfo;
+  onChange: (updates: Partial<EnergyInfo>) => void;
 }
 
 export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {

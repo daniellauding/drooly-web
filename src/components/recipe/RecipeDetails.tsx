@@ -207,7 +207,14 @@ export function RecipeDetails({ recipe, onChange }: RecipeDetailsProps) {
       />
 
       <EnergyInfoSection
-        value={recipe.energyInfo || {}}
+        energyInfo={recipe.energyInfo || {
+          calories: 0,
+          kilojoules: 0,
+          protein: 0,
+          carbohydrates: 0,
+          fat: 0,
+          fiber: 0
+        }}
         onChange={(energyInfo) => onChange({ energyInfo })}
       />
     </div>
