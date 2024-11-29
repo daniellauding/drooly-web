@@ -2,6 +2,7 @@ import { Recipe } from "@/types/recipe";
 import { parseIngredients } from "./ingredientParser";
 import { parseSteps } from "./stepParser";
 import { CUISINES, RECIPE_CATEGORIES, SEASONS, COST_CATEGORIES } from "@/types/recipe";
+import { Timestamp } from 'firebase/firestore';
 
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
@@ -74,14 +75,24 @@ export async function generateRecipesByIngredients(ingredients: string[]): Promi
         description: sections.description || "",
         ingredients: sections.ingredients || [],
         steps: sections.steps || [],
+        instructions: [],
         difficulty: sections.difficulty || "medium",
         cuisine: sections.cuisine || "International",
         totalTime: sections.totalTime || "30 minutes",
         images: [],
         featuredImageIndex: 0,
         status: 'generated',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        cookingMethods: [],
+        dishTypes: [],
+        servings: { amount: 4, unit: 'servings' },
+        tags: [],
+        categories: [],
+        equipment: [],
+        worksWith: [],
+        serveWith: [],
+        stats: { views: 0, likes: [], saves: [], comments: 0 }
       } as Recipe;
     });
   } catch (error) {

@@ -47,7 +47,7 @@ export interface Recipe {
   occasion?: string;
   creatorId?: string;
   creatorName?: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'generated';
   createdAt: Timestamp;
   updatedAt: Timestamp;
   stats: {
