@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const { toast } = useToast();
 
   // Update email when user changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (user?.email) {
       setEmail(user.email);
     }
