@@ -10,23 +10,10 @@ import { RecipeSections } from "@/components/home/RecipeSections";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { BetaStrip } from "@/components/home/BetaStrip";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-
-interface Filters {
-  ingredients?: string[];
-  categories?: string[];
-  dietary?: string[];
-  difficulty?: string[];
-  cuisine?: string[];
-  estimatedCost?: string[];
-  season?: string[];
-  occasion?: string[];
-  equipment?: string[];
-  dishTypes?: string[];
-  cookingMethods?: string[];
-  cookingTime?: number[];
-}
+import { filterRecipes, Filters } from "@/utils/recipeFilters";
 
 export default function Index() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -48,7 +35,6 @@ export default function Index() {
     console.log('Setting up real-time recipes listener');
     setIsLoading(true);
 
-    // Create query for published recipes
     const recipesRef = collection(db, 'recipes');
     const q = query(
       recipesRef,
@@ -56,21 +42,16 @@ export default function Index() {
       orderBy('createdAt', 'desc')
     );
 
-    // Set up real-time listener
     const unsubscribe = onSnapshot(q, 
       (snapshot) => {
         console.log('Received recipe update. Total recipes:', snapshot.size);
-        const updatedRecipes = snapshot.docs.map(doc => {
-          const data = doc.data();
-          console.log('Processing recipe:', doc.id, data.title);
-          return {
-            id: doc.id,
-            ...doc.data(),
-            date: data.createdAt ? 
-              new Date(data.createdAt.seconds * 1000).toLocaleDateString() 
-              : 'Recently added'
-          };
-        }) as Recipe[];
+        const updatedRecipes = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().createdAt ? 
+            new Date(doc.data().createdAt.seconds * 1000).toLocaleDateString() 
+            : 'Recently added'
+        })) as Recipe[];
         
         console.log('Processed recipes count:', updatedRecipes.length);
         setRecipes(updatedRecipes);
@@ -94,64 +75,6 @@ export default function Index() {
     };
   }, [toast]);
 
-  const filterRecipes = (recipes: Recipe[]) => {
-    console.log('Filtering recipes. Total before filter:', recipes.length);
-    
-    return recipes.filter(recipe => {
-      const searchMatch = !searchQuery || 
-        recipe.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        recipe.chef?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        recipe.description?.toLowerCase().includes(searchQuery.toLowerCase());
-
-      if (!searchMatch) return false;
-
-      const filterMatches = Object.entries(activeFilters).every(([key, values]) => {
-        if (!values || (Array.isArray(values) && values.length === 0)) {
-          return true;
-        }
-
-        switch (key) {
-          case 'ingredients':
-            return values.some(ingredient => 
-              recipe.ingredients?.some(ri => 
-                ri.name.toLowerCase().includes(ingredient.toLowerCase())
-              )
-            );
-          case 'cookingTime':
-            if (Array.isArray(values) && values.length === 2) {
-              const time = parseInt(recipe.cookTime || '0');
-              return time >= values[0] && time <= values[1];
-            }
-            return true;
-          case 'difficulty':
-            return values.includes(recipe.difficulty);
-          case 'cuisine':
-            return values.includes(recipe.cuisine);
-          case 'categories':
-            return values.some(category => 
-              recipe.categories?.includes(category)
-            );
-          case 'dietary':
-            return values.every(requirement => 
-              recipe.dietaryInfo?.[requirement as keyof typeof recipe.dietaryInfo] || false
-            );
-          case 'equipment':
-            return values.some(equipment => 
-              recipe.equipment?.includes(equipment)
-            );
-          case 'dishTypes':
-            return values.some(dishType => 
-              recipe.dishTypes?.includes(dishType)
-            );
-          default:
-            return true;
-        }
-      });
-
-      return filterMatches;
-    });
-  };
-
   const handleFilterChange = (filters: Filters) => {
     console.log("Applied filters:", filters);
     setActiveFilters(filters);
@@ -166,11 +89,12 @@ export default function Index() {
     });
   };
 
-  const filteredRecipes = filterRecipes(recipes);
+  const filteredRecipes = filterRecipes(recipes, searchQuery, activeFilters);
   console.log("Filtered recipes count:", filteredRecipes.length);
 
   return (
     <div className="min-h-screen bg-background">
+      <BetaStrip />
       <TopBar />
       <Hero onSearch={setSearchQuery} />
       <div className="container mx-auto px-4 py-4">
