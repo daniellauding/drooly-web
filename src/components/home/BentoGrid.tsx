@@ -15,15 +15,22 @@ interface BentoGridProps {
 export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
+  
   console.log('BentoGrid received recipes count:', recipes.length);
   console.log('Raw recipes data:', recipes);
 
+  const handleRecipesFound = (newRecipes: Recipe[]) => {
+    console.log("Received AI generated recipes:", newRecipes);
+    setGeneratedRecipes(newRecipes);
+  };
+
   const interactiveCards = [
     {
-      title: "What's in your fridge?",
+      title: "What's in your kitchen?",
       description: "Find recipes using ingredients you have",
       icon: Apple,
-      action: () => navigate('/create-recipe?mode=ingredients'),
+      action: () => {},
       color: "bg-orange-50 hover:bg-orange-100",
       textColor: "text-orange-700"
     },
@@ -50,7 +57,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     let interactiveIndex = 0;
 
     // Add all recipes first
-    items.push(...recipes);
+    items.push(...recipes, ...generatedRecipes);
     console.log('Initial items array length:', items.length);
     
     // Add interactive cards every 6 recipes
@@ -91,6 +98,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
             <BentoInteractiveCard
               key={`interactive-${index}`}
               item={item}
+              onRecipesFound={handleRecipesFound}
             />
           );
         }
