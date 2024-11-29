@@ -16,7 +16,11 @@ import { Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 
-export function TopBar() {
+interface TopBarProps {
+  onBack?: () => void;
+}
+
+export function TopBar({ onBack }: TopBarProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -94,11 +98,17 @@ export function TopBar() {
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto">
         <div className="flex items-center gap-6">
           <Logo />
-          <Link to="/">
-            <Button variant="ghost" size="icon">
+          {onBack ? (
+            <Button variant="ghost" size="icon" onClick={onBack}>
               <Home className="h-5 w-5 text-gray-600 hover:text-gray-900" />
             </Button>
-          </Link>
+          ) : (
+            <Link to="/">
+              <Button variant="ghost" size="icon">
+                <Home className="h-5 w-5 text-gray-600 hover:text-gray-900" />
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className="hidden md:block flex-1 max-w-4xl mx-auto px-6">
