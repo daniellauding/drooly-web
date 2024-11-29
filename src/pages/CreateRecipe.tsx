@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipeById, Recipe } from "@/services/recipeService";
 import { validateRecipe } from "@/types/recipe";
@@ -13,17 +13,21 @@ import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions
 import { RecipeHeader } from "@/components/recipe/RecipeHeader";
 import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
 import { Save } from "lucide-react";
+import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
 
 export default function CreateRecipe() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const isEditing = !!id;
   const [openSections, setOpenSections] = useState<string[]>(["basic-info"]);
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [isStepBased, setIsStepBased] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showExitPrompt, setShowExitPrompt] = useState(false);
   const { handleSaveRecipe } = useRecipeSaveHandler(isEditing, id);
-  
+
   const [recipe, setRecipe] = useState<Recipe>({
     id: '',
     title: "",
@@ -76,20 +80,34 @@ export default function CreateRecipe() {
     if (existingRecipe) {
       console.log("Setting existing recipe data:", existingRecipe);
       setRecipe(existingRecipe);
+      setHasUnsavedChanges(false);
     }
   }, [existingRecipe]);
 
-  const handleSaveAsDraft = async () => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to save a recipe",
-        variant: "destructive"
-      });
-      return;
-    }
+  // Add navigation prompt
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
 
-    await handleSaveRecipe(recipe, user.uid, user.displayName || "", true);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const handleRecipeChange = (updates: Partial<Recipe>) => {
+    setRecipe(prev => ({ ...prev, ...updates }));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleNavigateAway = () => {
+    if (hasUnsavedChanges) {
+      setShowExitPrompt(true);
+    } else {
+      navigate(-1);
+    }
   };
 
   const handleSave = async () => {
@@ -122,6 +140,21 @@ export default function CreateRecipe() {
     }
 
     await handleSaveRecipe(recipe, user.uid, user.displayName || "", false);
+    setHasUnsavedChanges(false);
+  };
+
+  const handleSaveAsDraft = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save a recipe",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    await handleSaveRecipe(recipe, user.uid, user.displayName || "", true);
+    setHasUnsavedChanges(false);
   };
 
   const validateSection = (section: string) => {
@@ -169,19 +202,19 @@ export default function CreateRecipe() {
 
   return (
     <div className="min-h-screen pb-20">
-      <TopBar />
+      <TopBar onBack={handleNavigateAway} />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
         <RecipeHeader
           isEditing={isEditing}
           recipe={recipe}
-          onRecipeChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+          onRecipeChange={handleRecipeChange}
           isStepBased={isStepBased}
           onStepBasedChange={setIsStepBased}
         />
 
         <RecipeCreationOptions 
           onRecipeImported={(importedRecipe) => {
-            setRecipe(prev => ({ ...prev, ...importedRecipe }));
+            handleRecipeChange(importedRecipe);
           }} 
         />
 
@@ -191,7 +224,7 @@ export default function CreateRecipe() {
           validationErrors={validationErrors}
           isStepBased={isStepBased}
           onOpenSectionsChange={setOpenSections}
-          onRecipeChange={(updates) => setRecipe(prev => ({ ...prev, ...updates }))}
+          onRecipeChange={handleRecipeChange}
           onAddStep={handleAddStep}
         />
 
@@ -209,6 +242,19 @@ export default function CreateRecipe() {
           </Button>
         </div>
       </main>
+
+      <DeleteConfirmationDialog
+        open={showExitPrompt}
+        onOpenChange={setShowExitPrompt}
+        onConfirm={() => {
+          setShowExitPrompt(false);
+          navigate(-1);
+        }}
+        title="Unsaved Changes"
+        description="You have unsaved changes. Are you sure you want to leave? Your changes will be lost."
+        confirmText="Leave"
+        cancelText="Stay"
+      />
     </div>
   );
 }
