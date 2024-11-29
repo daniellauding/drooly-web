@@ -3,11 +3,9 @@ import { MessageSquare, Bell, Calendar, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfileDropdown } from "./ProfileDropdown";
-import { SearchBar } from "./SearchBar";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { CreateOptions } from "../create/CreateOptions";
 import { useAuth } from "@/contexts/AuthContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface DesktopNavProps {
   unreadNotifications: number;
@@ -16,7 +14,7 @@ interface DesktopNavProps {
   handleNotificationsClick: () => void;
   handleCreateClick: () => void;
   onAuthModalOpen: () => void;
-  onSearchClick: () => void;
+  onSearchClick?: () => void;  // Made optional with ?
 }
 
 export function DesktopNav({
@@ -26,16 +24,11 @@ export function DesktopNav({
   handleNotificationsClick,
   handleCreateClick,
   onAuthModalOpen,
-  onSearchClick,
 }: DesktopNavProps) {
   const { user } = useAuth();
 
   return (
     <div className="flex items-center gap-6 w-full">
-      <div className="flex-1 max-w-xl mx-auto">
-        <SearchBar onSearchClick={onSearchClick} />
-      </div>
-
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
