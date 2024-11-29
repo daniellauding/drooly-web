@@ -80,6 +80,13 @@ export interface Recipe {
   };
 }
 
+export const DIFFICULTY_OPTIONS = [
+  "Easy",
+  "Medium",
+  "Hard",
+  "Expert"
+];
+
 export const CUISINES = [
   "American", "Italian", "Japanese", "Mexican", "Indian", "French", "Thai", 
   "Mediterranean", "Chinese", "Korean", "Vietnamese", "Greek", "Spanish", 
@@ -202,3 +209,4 @@ export interface ValidationResult {
     message: string;
   }[];
 }
+

@@ -22,7 +22,7 @@ export function BasicInfoSection({ recipe, onChange }: BasicInfoSectionProps) {
           </SelectTrigger>
           <SelectContent>
             {DIFFICULTY_OPTIONS.map(option => (
-              <SelectItem key={option} value={option.toLowerCase()}>
+              <SelectItem key={option.toLowerCase()} value={option.toLowerCase()}>
                 {option}
               </SelectItem>
             ))}
@@ -41,7 +41,7 @@ export function BasicInfoSection({ recipe, onChange }: BasicInfoSectionProps) {
           </SelectTrigger>
           <SelectContent>
             {CUISINES.map(cuisine => (
-              <SelectItem key={cuisine} value={cuisine.toLowerCase()}>
+              <SelectItem key={cuisine.toLowerCase()} value={cuisine.toLowerCase()}>
                 {cuisine}
               </SelectItem>
             ))}
