@@ -6,6 +6,8 @@ import { Clock, ChefHat, Heart, Bookmark, Trophy, Search, Plus, Utensils, Apple 
 import { useAuth } from "@/contexts/AuthContext";
 import { BentoGridItem } from "./BentoGridItem";
 import { BentoInteractiveCard } from "./BentoInteractiveCard";
+import { SeasonalRecipes } from "./SeasonalRecipes";
+import { FlavorQuiz } from "./FlavorQuiz";
 import { useState } from "react";
 
 interface BentoGridProps {
@@ -19,7 +21,6 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   
   console.log('BentoGrid received recipes count:', recipes.length);
-  console.log('Raw recipes data:', recipes);
 
   const handleRecipesFound = (newRecipes: Recipe[]) => {
     console.log("Received AI generated recipes:", newRecipes);
@@ -57,9 +58,12 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     const items = [];
     let interactiveIndex = 0;
 
-    // Add all recipes first
+    // Add seasonal recipes and quiz at the beginning
+    items.push({ isSpecial: true, type: 'seasonal' });
+    items.push({ isSpecial: true, type: 'quiz' });
+
+    // Add all recipes
     items.push(...recipes, ...generatedRecipes);
-    console.log('Initial items array length:', items.length);
     
     // Add interactive cards every 6 recipes
     for (let i = 0; i < items.length; i += 6) {
@@ -85,7 +89,6 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       });
     }
 
-    console.log('Final items array length (with interactive cards):', items.length);
     return items;
   };
 
@@ -94,6 +97,15 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
       {gridItems.map((item, index) => {
+        if (item.isSpecial) {
+          if (item.type === 'seasonal') {
+            return <SeasonalRecipes key="seasonal" recipes={recipes} />;
+          }
+          if (item.type === 'quiz') {
+            return <FlavorQuiz key="quiz" />;
+          }
+        }
+
         if ('isInteractive' in item) {
           return (
             <BentoInteractiveCard
