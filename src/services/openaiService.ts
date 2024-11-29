@@ -143,3 +143,81 @@ export async function generateRecipesByIngredients(ingredients: string[]): Promi
     throw error;
   }
 }
+
+export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>): Promise<Recipe> {
+  if (!OPENAI_API_KEY) {
+    throw new Error("OpenAI API key not configured");
+  }
+
+  console.log("Generating suggestions for recipe:", currentRecipe.title);
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Analyze and enhance this recipe: ${JSON.stringify(currentRecipe)}`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices[0]?.message?.content;
+    console.log("Raw OpenAI response:", aiResponse);
+
+    // Parse the AI response
+    const sections = {
+      title: aiResponse.match(/TITLE:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
+      description: aiResponse.match(/DESCRIPTION:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
+      ingredients: parseIngredients(aiResponse.match(/INGREDIENTS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim() || ""),
+      steps: parseSteps(aiResponse.match(/STEPS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim() || ""),
+      difficulty: aiResponse.match(/DIFFICULTY:\s*([^\n]+)/)?.[1]?.trim()?.toLowerCase(),
+      cuisine: aiResponse.match(/CUISINE:\s*([^\n]+)/)?.[1]?.trim(),
+      totalTime: aiResponse.match(/TOTAL_TIME:\s*([^\n]+)/)?.[1]?.trim(),
+    };
+
+    return {
+      id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: sections.title || currentRecipe.title || "Enhanced Recipe",
+      description: sections.description || currentRecipe.description || "",
+      ingredients: sections.ingredients || [],
+      steps: sections.steps || [],
+      instructions: currentRecipe.instructions || [],
+      difficulty: sections.difficulty || "medium",
+      cuisine: sections.cuisine || "International",
+      totalTime: sections.totalTime || "30 minutes",
+      images: currentRecipe.images || [],
+      featuredImageIndex: currentRecipe.featuredImageIndex || 0,
+      status: "draft",
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      cookingMethods: currentRecipe.cookingMethods || [],
+      dishTypes: currentRecipe.dishTypes || [],
+      servings: currentRecipe.servings || { amount: 4, unit: 'servings' },
+      tags: currentRecipe.tags || [],
+      categories: currentRecipe.categories || [],
+      equipment: currentRecipe.equipment || [],
+      worksWith: currentRecipe.worksWith || [],
+      serveWith: currentRecipe.serveWith || [],
+      stats: currentRecipe.stats || { views: 0, likes: [], saves: [], comments: 0 }
+    } as Recipe;
+  } catch (error) {
+    console.error("Error generating recipe suggestions:", error);
+    throw error;
+  }
+}
