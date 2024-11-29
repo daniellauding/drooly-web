@@ -89,6 +89,18 @@ export default function Index() {
     });
   };
 
+  const handleMoodFilter = (category: string) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      categories: [...(prev.categories || []), category]
+    }));
+    
+    toast({
+      title: "Filters updated",
+      description: `Showing recipes for "${category}"`,
+    });
+  };
+
   const filteredRecipes = filterRecipes(recipes, searchQuery, activeFilters);
   console.log("Filtered recipes count:", filteredRecipes.length);
 
@@ -96,7 +108,7 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       <BetaStrip />
       <TopBar />
-      <Hero onSearch={setSearchQuery} />
+      <Hero onSearch={setSearchQuery} onMoodFilter={handleMoodFilter} />
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-end gap-4">
           {(isSearching || isFiltering) && (
