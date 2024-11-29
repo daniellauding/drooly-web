@@ -25,31 +25,56 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
   const { toast } = useToast();
 
   const processImage = async (file: File) => {
+    console.log("Starting image processing for:", file.name);
     const imageUrl = URL.createObjectURL(file);
     setCapturedImages(prev => [...prev, imageUrl]);
 
     setLoading(true);
     try {
       const worker = await createWorker();
+      console.log("OCR worker created, starting text recognition");
+      
       const { data: { text } } = await worker.recognize(imageUrl);
-      console.log("Recognized text:", text);
+      console.log("Text extracted from image:", text);
+
+      if (!text || text.trim().length < 10) {
+        throw new Error("Not enough text detected in the image");
+      }
 
       const analyzed = analyzeRecipeText(text);
-      setExtractedData(analyzed);
+      console.log("Recipe analysis complete:", analyzed);
       
+      if (!analyzed.title && !analyzed.ingredients?.length) {
+        throw new Error("Could not identify recipe content");
+      }
+
+      setExtractedData(analyzed);
       await worker.terminate();
       
       toast({
-        title: "Text extracted from image",
+        title: "Recipe successfully extracted",
         description: "Please review the extracted information below.",
       });
     } catch (error) {
-      console.error("Error scanning recipe:", error);
+      console.error("Error processing image:", error);
+      let errorMessage = "Please try taking another photo with better lighting and focus";
+      
+      if (error instanceof Error) {
+        if (error.message.includes("Not enough text")) {
+          errorMessage = "The image doesn't contain enough readable text. Try taking a clearer photo.";
+        } else if (error.message.includes("Could not identify")) {
+          errorMessage = "Couldn't identify recipe content. Make sure the image contains recipe text.";
+        }
+      }
+      
       toast({
-        title: "Couldn't read the image clearly",
-        description: "Try taking another photo with better lighting and focus.",
+        title: "Image processing failed",
+        description: errorMessage,
         variant: "destructive",
       });
+      
+      // Remove the failed image
+      setCapturedImages(prev => prev.filter(img => img !== imageUrl));
     } finally {
       setLoading(false);
     }
@@ -84,7 +109,7 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
           <DialogHeader>
             <DialogTitle>Take a Photo of Your Recipe</DialogTitle>
             <DialogDescription>
-              Take photos of your recipe book or upload images. We'll help extract the information.
+              Take a clear photo of your recipe or upload an image. Make sure the text is well-lit and in focus.
             </DialogDescription>
           </DialogHeader>
 
@@ -94,18 +119,27 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
                 <Button
                   onClick={() => cameraInputRef.current?.click()}
                   className="h-32 flex flex-col gap-2"
+                  disabled={loading}
                 >
                   <Camera className="h-8 w-8" />
-                  Take Photo
+                  {loading ? "Processing..." : "Take Photo"}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   className="h-32 flex flex-col gap-2"
+                  disabled={loading}
                 >
                   <Upload className="h-8 w-8" />
                   Upload Image
                 </Button>
+              </div>
+            )}
+
+            {loading && (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                <span className="ml-2">Processing image...</span>
               </div>
             )}
 
@@ -175,7 +209,10 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={handleFileUpload}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) processImage(file);
+            }}
           />
           <input
             ref={cameraInputRef}
@@ -183,7 +220,10 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
             accept="image/*"
             capture="environment"
             className="hidden"
-            onChange={handleFileUpload}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) processImage(file);
+            }}
           />
         </DialogContent>
       </Dialog>
