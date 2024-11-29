@@ -4,6 +4,8 @@ import { LucideIcon } from "lucide-react";
 import { useState } from "react";
 import { IngredientSearchModal } from "../ingredients/IngredientSearchModal";
 import { Recipe } from "@/types/recipe";
+import { useToast } from "@/components/ui/use-toast";
+import { generateRecipesByIngredients } from "@/services/recipe/ingredientBasedGenerator";
 
 interface BentoInteractiveCardProps {
   item: {
@@ -19,6 +21,8 @@ interface BentoInteractiveCardProps {
 
 export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveCardProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleClick = () => {
     if (item.title === "What's in your kitchen?") {
@@ -28,9 +32,50 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
     }
   };
 
-  const handleRecipesGenerated = (recipes: Recipe[]) => {
-    if (onRecipesFound) {
-      onRecipesFound(recipes);
+  const handleRecipesGenerated = async (ingredients: string[]) => {
+    if (ingredients.length === 0) {
+      toast({
+        title: "No ingredients selected",
+        description: "Please select at least one ingredient to find recipes",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      console.log("Generating recipes for ingredients:", ingredients);
+      const recipes = await generateRecipesByIngredients(ingredients);
+      console.log("Generated recipes:", recipes);
+      
+      if (recipes.length === 0) {
+        toast({
+          title: "No recipes found",
+          description: "Try selecting different ingredients",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (onRecipesFound) {
+        onRecipesFound(recipes);
+      }
+      
+      toast({
+        title: "Recipes found!",
+        description: `Found ${recipes.length} recipes using your ingredients`,
+      });
+      
+      setIsSearchOpen(false);
+    } catch (error) {
+      console.error("Error generating recipes:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate recipes. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,6 +109,7 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
         onRecipesGenerated={handleRecipesGenerated}
+        isLoading={isLoading}
       />
     </>
   );
