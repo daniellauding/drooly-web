@@ -3,13 +3,11 @@ import { Logo } from "./navigation/Logo";
 import { DesktopNav } from "./navigation/DesktopNav";
 import { MobileMenu } from "./navigation/MobileMenu";
 import { useState } from "react";
-import { SearchDialog } from "./navigation/SearchDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "./auth/AuthModal";
 import { MoodInput } from "./home/MoodInput";
 
 export function TopBar() {
-  const [searchOpen, setSearchOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,7 +48,6 @@ export function TopBar() {
               handleNotificationsClick={handleNotificationsClick}
               handleCreateClick={handleCreateClick}
               onAuthModalOpen={() => setAuthModalOpen(true)}
-              onSearchClick={() => setSearchOpen(true)}
             />
           </div>
 
@@ -58,7 +55,6 @@ export function TopBar() {
             <MobileMenu 
               onAuthModalOpen={() => setAuthModalOpen(true)}
               onEditProfileOpen={() => {}}
-              onSearchClick={() => setSearchOpen(true)}
               unreadNotifications={unreadNotifications}
               unreadMessages={unreadMessages}
               isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
@@ -68,11 +64,6 @@ export function TopBar() {
           </div>
         </div>
       </div>
-
-      <SearchDialog 
-        open={searchOpen} 
-        onOpenChange={setSearchOpen} 
-      />
 
       <AuthModal 
         open={authModalOpen}
