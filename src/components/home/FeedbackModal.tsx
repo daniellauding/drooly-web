@@ -25,7 +25,7 @@ interface FeedbackModalProps {
 export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const { user } = useAuth();
   const [subject, setSubject] = useState("");
-  const [email, setEmail] = useState(user?.email || "");
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
@@ -42,10 +42,9 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
     try {
       console.log("Starting feedback submission process...");
-      console.log("Current user:", user?.uid);
       
       const feedbackData = {
-        email: email || null,
+        email: email,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
         message,
         createdAt: serverTimestamp(),
@@ -63,24 +62,21 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       console.log("Feedback successfully saved with ID:", feedbackRef.id);
 
       toast({
-        title: "Feedback sent",
-        description: "Thank you for your feedback! We'll get back to you soon.",
+        title: "Thank you for your feedback!",
+        description: "We appreciate your input and will review it soon.",
       });
 
       setSubject("");
-      setEmail(user?.email || "");
+      setEmail("");
       setMessage("");
       onOpenChange(false);
     } catch (error) {
-      console.error("Detailed error when sending feedback:", error);
-      console.error("Error name:", (error as Error).name);
-      console.error("Error message:", (error as Error).message);
-      console.error("Error stack:", (error as Error).stack);
+      console.error("Error sending feedback:", error);
       
       toast({
         variant: "destructive",
         title: "Error sending feedback",
-        description: `Failed to send feedback: ${(error as Error).message}. Please try again later.`,
+        description: "Please try again later.",
       });
     } finally {
       setSending(false);
@@ -109,6 +105,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="Your Email"
+              className="bg-background"
             />
           </div>
 
@@ -140,7 +137,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               onChange={(e) => setMessage(e.target.value)}
               required
               placeholder="Tell us what you think..."
-              className="h-32"
+              className="h-32 bg-background"
             />
           </div>
 
