@@ -1,14 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { ExternalLink, MessageSquarePlus } from "lucide-react";
+import { MessageSquarePlus } from "lucide-react";
+import { useState } from "react";
+import { FeedbackModal } from "./FeedbackModal";
 
 export function BetaStrip() {
-  const handleFeedback = () => {
-    window.open("https://forms.gle/YourFeedbackFormURL", "_blank");
-  };
-
-  const handleJoin = () => {
-    window.open("https://discord.gg/YourDiscordInvite", "_blank");
-  };
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   return (
     <div className="bg-accent/30 border-b z-50 relative">
@@ -21,22 +17,17 @@ export function BetaStrip() {
             variant="ghost"
             size="sm"
             className="text-xs"
-            onClick={handleFeedback}
+            onClick={() => setFeedbackOpen(true)}
           >
             <MessageSquarePlus className="h-4 w-4 mr-1" />
             Give Feedback
           </Button>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="text-xs"
-            onClick={handleJoin}
-          >
-            <ExternalLink className="h-4 w-4 mr-1" />
-            Join Community
-          </Button>
         </div>
       </div>
+      <FeedbackModal 
+        open={feedbackOpen} 
+        onOpenChange={setFeedbackOpen} 
+      />
     </div>
   );
 }
