@@ -6,13 +6,15 @@ interface ImageGridProps {
   featuredImageIndex: number;
   onRemoveImage: (index: number) => void;
   onSetFeatured: (index: number) => void;
+  onImageClick: (imageUrl: string) => void;
 }
 
 export function ImageGrid({ 
   images, 
   featuredImageIndex, 
   onRemoveImage, 
-  onSetFeatured 
+  onSetFeatured,
+  onImageClick
 }: ImageGridProps) {
   if (images.length === 0) return null;
 
@@ -23,8 +25,9 @@ export function ImageGrid({
           <img
             src={image}
             alt={`Upload ${index + 1}`}
-            className={`w-full h-32 object-cover rounded-lg 
+            className={`w-full h-32 object-cover rounded-lg cursor-pointer
               ${index === featuredImageIndex ? "ring-2 ring-primary" : ""}`}
+            onClick={() => onImageClick(image)}
             onError={() => onRemoveImage(index)}
           />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
