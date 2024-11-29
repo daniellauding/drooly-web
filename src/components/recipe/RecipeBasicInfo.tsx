@@ -5,6 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { ImageUpload } from "@/components/ImageUpload";
 import { Recipe } from "@/types/recipe";
 import { AISuggestions } from "./AISuggestions";
+import { useState } from "react";
+import { ImageCropDialog } from "@/components/image/ImageCropDialog";
 
 interface RecipeBasicInfoProps {
   recipe: Recipe;
@@ -12,6 +14,29 @@ interface RecipeBasicInfoProps {
 }
 
 export function RecipeBasicInfo({ recipe, onChange }: RecipeBasicInfoProps) {
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const handleImageClick = (imageUrl: string) => {
+    console.log("Opening crop dialog for existing image:", imageUrl);
+    setSelectedImage(imageUrl);
+  };
+
+  const handleCropComplete = (croppedImageUrl: string) => {
+    console.log("Crop completed, updating image:", croppedImageUrl);
+    if (selectedImage) {
+      const imageIndex = recipe.images.indexOf(selectedImage);
+      if (imageIndex !== -1) {
+        const newImages = [...recipe.images];
+        newImages[imageIndex] = croppedImageUrl;
+        onChange({
+          images: newImages,
+          featuredImageIndex: recipe.featuredImageIndex
+        });
+      }
+    }
+    setSelectedImage(null);
+  };
+
   return (
     <div className="space-y-6">
       <ImageUpload
@@ -23,6 +48,7 @@ export function RecipeBasicInfo({ recipe, onChange }: RecipeBasicInfoProps) {
             featuredImageIndex: featuredIndex
           })
         }
+        onImageClick={handleImageClick}
       />
 
       <div className="flex items-center gap-2">
@@ -67,6 +93,13 @@ export function RecipeBasicInfo({ recipe, onChange }: RecipeBasicInfoProps) {
           }
         />
       </div>
+
+      <ImageCropDialog
+        open={!!selectedImage}
+        onOpenChange={(open) => !open && setSelectedImage(null)}
+        imageUrl={selectedImage || ''}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 }
