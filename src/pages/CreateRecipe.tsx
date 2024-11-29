@@ -14,6 +14,7 @@ import { RecipeHeader } from "@/components/recipe/RecipeHeader";
 import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
 import { Save } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
+import { BetaStrip } from "@/components/home/BetaStrip";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -202,7 +203,8 @@ export default function CreateRecipe() {
 
   return (
     <div className="min-h-screen pb-20">
-      <TopBar onBack={handleNavigateAway} />
+      <BetaStrip />
+      <TopBar />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
         <RecipeHeader
           isEditing={isEditing}

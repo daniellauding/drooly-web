@@ -11,7 +11,7 @@ export function BetaStrip() {
   };
 
   return (
-    <div className="bg-accent/30 border-b">
+    <div className="bg-accent/30 border-b z-50 relative">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           🚀 Welcome to Drooly Beta! We're cooking up something special.
