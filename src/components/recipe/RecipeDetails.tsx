@@ -13,6 +13,7 @@ import { Recipe, CUISINES, RECIPE_CATEGORIES, OCCASIONS, SEASONS, COOKING_EQUIPM
 import { CookingTimeInput } from "./CookingTimeInput";
 import { DietaryInfo } from "./DietaryInfo";
 import { RecipeCategories } from "./RecipeCategories";
+import { EnergyInfoSection } from "./EnergyInfoSection";
 
 const DIFFICULTY_OPTIONS = ["Easy", "Medium", "Hard"];
 const COOKING_METHODS = ["Baking", "Frying", "Grilling", "Boiling", "Steaming", "Roasting", "Sautéing"];
@@ -203,6 +204,11 @@ export function RecipeDetails({ recipe, onChange }: RecipeDetailsProps) {
       <CookingTimeInput
         value={recipe.totalTime}
         onChange={(time) => onChange({ totalTime: time })}
+      />
+
+      <EnergyInfoSection
+        value={recipe.energyInfo || {}}
+        onChange={(energyInfo) => onChange({ energyInfo })}
       />
     </div>
   );

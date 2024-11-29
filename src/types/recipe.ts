@@ -70,6 +70,14 @@ export interface Recipe {
     isDairyFree: boolean;
     containsNuts: boolean;
   };
+  energyInfo?: {
+    calories?: number;
+    kilojoules?: number;
+    proteinGrams?: number;
+    carbsGrams?: number;
+    fatGrams?: number;
+    fiberGrams?: number;
+  };
 }
 
 export const CUISINES = [
@@ -194,3 +202,4 @@ export interface ValidationResult {
     message: string;
   }[];
 }
+
