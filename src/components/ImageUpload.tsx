@@ -9,6 +9,7 @@ import { searchPhotos, triggerPhotoDownload, UnsplashPhoto } from "@/services/un
 import { UnsplashAttribution } from "./recipe/UnsplashAttribution";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
+import { ImageCropDialog } from "./image/ImageCropDialog";
 
 interface ImageUploadProps {
   images: string[];
@@ -22,6 +23,7 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
   const [unsplashPhotos, setUnsplashPhotos] = useState<UnsplashPhoto[]>([]);
   const [showUnsplashDialog, setShowUnsplashDialog] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleImageError = (error: string) => {
@@ -33,41 +35,41 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
     });
   };
 
+  const handleImageProcessing = async (file: File) => {
+    console.log("Processing image:", file.name);
+    const imageUrl = await processFile(file);
+    if (imageUrl) {
+      setCropImage(imageUrl);
+    }
+  };
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     console.log("Files dropped:", acceptedFiles.length);
-    
-    const processedUrls = await Promise.all(
-      acceptedFiles.map(processFile)
-    );
-
-    const validUrls = processedUrls.filter((url): url is string => url !== null);
-    
-    if (validUrls.length > 0) {
-      onChange([...images, ...validUrls], featuredImageIndex);
+    if (acceptedFiles.length > 0) {
+      await handleImageProcessing(acceptedFiles[0]);
     }
-  }, [images, featuredImageIndex, onChange]);
+  }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp']
     },
-    multiple: true,
+    multiple: false,
     maxSize: 5 * 1024 * 1024
   });
 
   const handleCameraCapture = async (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log("Camera capture triggered");
     const file = event.target.files?.[0];
-    
     if (file) {
-      console.log("Captured image:", file.name, file.type, file.size);
-      const imageUrl = await processFile(file);
-      
-      if (imageUrl) {
-        onChange([...images, imageUrl], featuredImageIndex);
-      }
+      await handleImageProcessing(file);
     }
+  };
+
+  const handleCropComplete = (croppedImageUrl: string) => {
+    onChange([...images, croppedImageUrl], featuredImageIndex);
+    setCropImage(null);
   };
 
   const handleUnsplashSearch = async () => {
@@ -115,8 +117,8 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
             <ImageIcon className="w-8 h-8 text-gray-400" />
             <p className="text-sm text-gray-600">
               {isDragActive
-                ? "Drop the images here"
-                : "Tap to select images or use camera"}
+                ? "Drop the image here"
+                : "Tap to select image or use camera"}
             </p>
           </div>
         </div>
@@ -135,7 +137,7 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
           className="flex-none flex gap-2 items-center"
           onClick={() => setShowUnsplashDialog(true)}
         >
-          <Search className="w-4 h-4" />
+          <Search className="w-4 w-4" />
           Search Photos
         </Button>
       </div>
@@ -197,6 +199,13 @@ export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploa
           </div>
         </DialogContent>
       </Dialog>
+
+      <ImageCropDialog
+        open={!!cropImage}
+        onOpenChange={(open) => !open && setCropImage(null)}
+        imageUrl={cropImage || ''}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 }
