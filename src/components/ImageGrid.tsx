@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { X, Edit } from "lucide-react";
 
 interface ImageGridProps {
   images: string[];
@@ -34,14 +34,30 @@ export function ImageGrid({
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => onSetFeatured(index)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSetFeatured(index);
+              }}
             >
               Set as Featured
             </Button>
             <Button
               size="sm"
+              variant="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                onImageClick(image);
+              }}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              size="sm"
               variant="destructive"
-              onClick={() => onRemoveImage(index)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveImage(index);
+              }}
             >
               <X className="w-4 h-4" />
             </Button>

@@ -64,6 +64,16 @@ export function ImageCropDialog({
     }
   };
 
+  const handleReset = () => {
+    setCrop({
+      unit: '%',
+      width: 90,
+      height: 90,
+      x: 5,
+      y: 5
+    });
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -84,6 +94,9 @@ export function ImageCropDialog({
             />
           </ReactCrop>
           <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={handleReset}>
+              Reset Crop
+            </Button>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
