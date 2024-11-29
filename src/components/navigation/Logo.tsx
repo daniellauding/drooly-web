@@ -9,7 +9,7 @@ export function Logo() {
         className="h-8 w-8" 
       />
       <h1 className="text-2xl font-bold text-[#2C3E50] hidden sm:block">
-        Yummy
+        Drooly
       </h1>
     </Link>
   );
