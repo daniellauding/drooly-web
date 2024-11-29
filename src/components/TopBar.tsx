@@ -34,33 +34,35 @@ export function TopBar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between gap-4">
-          <Logo />
+        <div className="flex h-16 items-center gap-4">
+          <div className="flex items-center gap-4">
+            <Logo />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/')}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Home className="h-5 w-5" />
+            </Button>
+          </div>
           
-          <div className="hidden md:flex flex-1 items-center justify-end gap-4">
+          <div className="flex flex-1 items-center justify-between gap-4">
             {user && (
-              <div className="flex flex-1 max-w-3xl items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate('/')}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Home className="h-5 w-5" />
-                </Button>
-                <div className="flex-1">
-                  <MoodInput onFilterChange={handleMoodFilter} />
-                </div>
+              <div className="flex-1">
+                <MoodInput onFilterChange={handleMoodFilter} />
               </div>
             )}
-            <DesktopNav 
-              unreadNotifications={unreadNotifications}
-              unreadMessages={unreadMessages}
-              isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
-              handleNotificationsClick={handleNotificationsClick}
-              handleCreateClick={handleCreateClick}
-              onAuthModalOpen={() => setAuthModalOpen(true)}
-            />
+            <div className="hidden md:flex items-center gap-4">
+              <DesktopNav 
+                unreadNotifications={unreadNotifications}
+                unreadMessages={unreadMessages}
+                isVerifiedOrSuperadmin={isVerifiedOrSuperadmin}
+                handleNotificationsClick={handleNotificationsClick}
+                handleCreateClick={handleCreateClick}
+                onAuthModalOpen={() => setAuthModalOpen(true)}
+              />
+            </div>
           </div>
 
           <div className="md:hidden">
