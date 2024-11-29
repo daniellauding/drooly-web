@@ -1,4 +1,4 @@
-import { Edit3, Users, Camera } from "lucide-react";
+import { Edit3, Users, Camera, ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const createOptions = [
@@ -7,6 +7,12 @@ export const createOptions = [
     description: "Keep all your recipes in one place and share them with friends.",
     icon: Edit3,
     path: "/create-recipe"
+  },
+  {
+    title: "Recipe from Photo",
+    description: "Take a photo of any dish and let AI suggest a recipe.",
+    icon: ImageIcon,
+    path: "/create-recipe?mode=photo"
   },
   {
     title: "Plan Together",

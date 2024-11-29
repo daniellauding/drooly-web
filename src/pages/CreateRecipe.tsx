@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipeById, Recipe } from "@/services/recipeService";
 import { validateRecipe } from "@/types/recipe";
@@ -15,9 +15,12 @@ import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
 import { Save } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
 import { BetaStrip } from "@/components/home/BetaStrip";
+import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
 
 export default function CreateRecipe() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -27,8 +30,8 @@ export default function CreateRecipe() {
   const [isStepBased, setIsStepBased] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showExitPrompt, setShowExitPrompt] = useState(false);
+  const [showImageRecognition, setShowImageRecognition] = useState(mode === 'photo');
   const { handleSaveRecipe } = useRecipeSaveHandler(isEditing, id);
-
   const [recipe, setRecipe] = useState<Recipe>({
     id: '',
     title: "",
@@ -201,6 +204,15 @@ export default function CreateRecipe() {
     }));
   };
 
+  const handleRecipeScanned = (scannedRecipe: Partial<Recipe>) => {
+    handleRecipeChange(scannedRecipe);
+    setShowImageRecognition(false);
+    toast({
+      title: "Recipe created from photo",
+      description: "You can now edit and customize the recipe details."
+    });
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <BetaStrip />
@@ -242,20 +254,26 @@ export default function CreateRecipe() {
             {isEditing ? "Update Recipe" : "Publish Recipe"}
           </Button>
         </div>
-      </main>
 
-      <DeleteConfirmationDialog
-        open={showExitPrompt}
-        onOpenChange={setShowExitPrompt}
-        onConfirm={() => {
-          setShowExitPrompt(false);
-          navigate(-1);
-        }}
-        title="Unsaved Changes"
-        description="You have unsaved changes. Are you sure you want to leave? Your changes will be lost."
-        confirmText="Leave"
-        cancelText="Stay"
-      />
+        <ImageRecognitionDialog
+          open={showImageRecognition}
+          onOpenChange={setShowImageRecognition}
+          onRecipeScanned={handleRecipeScanned}
+        />
+
+        <DeleteConfirmationDialog
+          open={showExitPrompt}
+          onOpenChange={setShowExitPrompt}
+          onConfirm={() => {
+            setShowExitPrompt(false);
+            navigate(-1);
+          }}
+          title="Unsaved Changes"
+          description="You have unsaved changes. Are you sure you want to leave? Your changes will be lost."
+          confirmText="Leave"
+          cancelText="Stay"
+        />
+      </main>
     </div>
   );
 }
