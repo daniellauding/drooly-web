@@ -37,7 +37,7 @@ export function TopBar() {
           
           <div className="hidden md:flex flex-1 items-center justify-end gap-4">
             {user && (
-              <div className="flex-1 max-w-xl">
+              <div className="flex-1 max-w-3xl">
                 <MoodInput onFilterChange={handleMoodFilter} />
               </div>
             )}
