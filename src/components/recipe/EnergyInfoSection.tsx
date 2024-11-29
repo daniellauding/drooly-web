@@ -19,11 +19,22 @@ interface EnergyInfo {
 }
 
 interface EnergyInfoProps {
-  energyInfo: EnergyInfo;
+  energyInfo: Partial<EnergyInfo>;
   onChange: (updates: Partial<EnergyInfo>) => void;
 }
 
+const defaultEnergyInfo: EnergyInfo = {
+  calories: 0,
+  kilojoules: 0,
+  protein: 0,
+  carbohydrates: 0,
+  fat: 0,
+  fiber: 0,
+};
+
 export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
+  const currentValues = { ...defaultEnergyInfo, ...energyInfo };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -44,7 +55,7 @@ export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
           <Input
             id="calories"
             type="number"
-            value={energyInfo.calories}
+            value={currentValues.calories}
             onChange={(e) => onChange({ calories: Number(e.target.value) })}
           />
         </div>
@@ -66,7 +77,7 @@ export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
           <Input
             id="kilojoules"
             type="number"
-            value={energyInfo.kilojoules}
+            value={currentValues.kilojoules}
             onChange={(e) => onChange({ kilojoules: Number(e.target.value) })}
           />
         </div>
@@ -90,7 +101,7 @@ export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
           <Input
             id="protein"
             type="number"
-            value={energyInfo.protein}
+            value={currentValues.protein}
             onChange={(e) => onChange({ protein: Number(e.target.value) })}
           />
         </div>
@@ -112,7 +123,7 @@ export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
           <Input
             id="carbohydrates"
             type="number"
-            value={energyInfo.carbohydrates}
+            value={currentValues.carbohydrates}
             onChange={(e) => onChange({ carbohydrates: Number(e.target.value) })}
           />
         </div>
@@ -136,7 +147,7 @@ export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
           <Input
             id="fat"
             type="number"
-            value={energyInfo.fat}
+            value={currentValues.fat}
             onChange={(e) => onChange({ fat: Number(e.target.value) })}
           />
         </div>
@@ -158,7 +169,7 @@ export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
           <Input
             id="fiber"
             type="number"
-            value={energyInfo.fiber}
+            value={currentValues.fiber}
             onChange={(e) => onChange({ fiber: Number(e.target.value) })}
           />
         </div>
