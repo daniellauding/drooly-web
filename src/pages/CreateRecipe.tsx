@@ -207,9 +207,7 @@ export default function CreateRecipe() {
         <RecipeHeader
           isEditing={isEditing}
           recipe={recipe}
-          onRecipeChange={handleRecipeChange}
-          isStepBased={isStepBased}
-          onStepBasedChange={setIsStepBased}
+          onSaveAsDraft={handleSaveAsDraft}
         />
 
         <RecipeCreationOptions 
@@ -226,6 +224,7 @@ export default function CreateRecipe() {
           onOpenSectionsChange={setOpenSections}
           onRecipeChange={handleRecipeChange}
           onAddStep={handleAddStep}
+          onStepBasedChange={setIsStepBased}
         />
 
         <div className="flex justify-end gap-4">
