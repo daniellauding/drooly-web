@@ -55,12 +55,16 @@ export function ImageCropDialog({
 
   const handleComplete = () => {
     if (imageRef && crop.width && crop.height) {
-      const croppedImageUrl = getCroppedImg(
-        imageRef,
-        crop as PixelCrop
-      );
-      onCropComplete(croppedImageUrl);
-      onOpenChange(false);
+      try {
+        const croppedImageUrl = getCroppedImg(
+          imageRef,
+          crop as PixelCrop
+        );
+        onCropComplete(croppedImageUrl);
+        onOpenChange(false);
+      } catch (error) {
+        console.error('Error cropping image:', error);
+      }
     }
   };
 
@@ -91,6 +95,7 @@ export function ImageCropDialog({
               src={imageUrl}
               alt="Crop preview"
               className="max-h-[60vh] mx-auto"
+              crossOrigin="anonymous"
             />
           </ReactCrop>
           <div className="flex justify-end gap-2">
