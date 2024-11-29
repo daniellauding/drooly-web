@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -27,12 +27,18 @@ export function ImageCropDialog({
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState<Crop>(initialCrop);
   const [imageRef, setImageRef] = useState<HTMLImageElement | null>(null);
+  const firstUploadCropRef = useRef<Crop>(initialCrop);
 
-  // Reset crop when dialog opens with new image
+  // Reset crop and store first upload crop when dialog opens with new image
   useEffect(() => {
     if (open) {
-      console.log("Resetting crop to initial state");
-      setCrop(initialCrop);
+      console.log("Dialog opened with image:", imageUrl);
+      // Only update firstUploadCrop if it's a new image upload
+      if (!imageUrl.includes('blob:') || !firstUploadCropRef.current) {
+        console.log("Setting first upload crop reference");
+        firstUploadCropRef.current = initialCrop;
+      }
+      setCrop(firstUploadCropRef.current);
     }
   }, [open, imageUrl]);
 
@@ -79,8 +85,8 @@ export function ImageCropDialog({
   };
 
   const handleReset = () => {
-    console.log("Manually resetting crop to initial state");
-    setCrop(initialCrop);
+    console.log("Resetting crop to first upload state:", firstUploadCropRef.current);
+    setCrop(firstUploadCropRef.current);
   };
 
   return (
