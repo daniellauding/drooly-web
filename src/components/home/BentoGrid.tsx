@@ -6,6 +6,7 @@ import { Clock, ChefHat, Heart, Bookmark, Trophy, Search, Plus, Utensils, Apple 
 import { useAuth } from "@/contexts/AuthContext";
 import { BentoGridItem } from "./BentoGridItem";
 import { BentoInteractiveCard } from "./BentoInteractiveCard";
+import { useState } from "react"; // Add missing import
 
 interface BentoGridProps {
   recipes: Recipe[];
@@ -116,3 +117,4 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     </div>
   );
 }
+

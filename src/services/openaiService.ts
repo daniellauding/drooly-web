@@ -61,6 +61,88 @@ SERVINGS_UNIT: (unit only, e.g. servings, pieces)
 
 TOTAL_TIME: (total preparation and cooking time)`;
 
+export async function generateRecipesByIngredients(ingredients: string[]): Promise<Recipe[]> {
+  if (!OPENAI_API_KEY) {
+    throw new Error("OpenAI API key not configured");
+  }
+
+  console.log("Generating recipes for ingredients:", ingredients);
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Generate recipes using these ingredients: ${ingredients.join(", ")}`
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const aiResponse = data.choices[0]?.message?.content;
+    console.log("Raw OpenAI response:", aiResponse);
+
+    // Split the response into individual recipes
+    const recipeBlocks = aiResponse.split(/TITLE:/).slice(1);
+    
+    return recipeBlocks.map(block => {
+      const sections = {
+        title: block.match(/^([^\n]+)/)?.[1]?.trim(),
+        description: block.match(/DESCRIPTION:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim(),
+        ingredients: parseIngredients(block.match(/INGREDIENTS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim() || ""),
+        steps: parseSteps(block.match(/STEPS:\s*([\s\S]*?)(?=\n[A-Z]+:|\n\n|$)/)?.[1]?.trim() || ""),
+        difficulty: block.match(/DIFFICULTY:\s*([^\n]+)/)?.[1]?.trim()?.toLowerCase(),
+        cuisine: block.match(/CUISINE:\s*([^\n]+)/)?.[1]?.trim(),
+        totalTime: block.match(/TOTAL_TIME:\s*([^\n]+)/)?.[1]?.trim(),
+      };
+
+      return {
+        id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        title: sections.title || "Untitled Recipe",
+        description: sections.description || "",
+        ingredients: sections.ingredients || [],
+        steps: sections.steps || [],
+        instructions: [], // Add missing required field
+        difficulty: sections.difficulty || "medium",
+        cuisine: sections.cuisine || "International",
+        totalTime: sections.totalTime || "30 minutes",
+        images: [],
+        featuredImageIndex: 0,
+        status: 'generated' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        cookingMethods: [], // Add missing required field
+        dishTypes: [], // Add missing required field
+        servings: { amount: 4, unit: 'servings' }, // Add missing required field
+        tags: [], // Add missing required field
+        categories: [], // Add missing required field
+        equipment: [], // Add missing required field
+        worksWith: [], // Add missing required field
+        serveWith: [], // Add missing required field
+        stats: { views: 0, likes: [], saves: [], comments: 0 } // Add missing required field
+      } as Recipe;
+    });
+  } catch (error) {
+    console.error("Error generating recipes:", error);
+    throw error;
+  }
+}
+
 const mapToClosestMatch = (value: string, options: string[]): string => {
   if (!value) return options[0];
   
@@ -231,3 +313,4 @@ export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>) 
     throw error;
   }
 }
+
