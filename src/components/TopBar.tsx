@@ -6,6 +6,8 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AuthModal } from "./auth/AuthModal";
 import { MoodInput } from "./home/MoodInput";
+import { Home } from "lucide-react";
+import { Button } from "./ui/button";
 
 export function TopBar() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -37,8 +39,18 @@ export function TopBar() {
           
           <div className="hidden md:flex flex-1 items-center justify-end gap-4">
             {user && (
-              <div className="flex-1 max-w-3xl">
-                <MoodInput onFilterChange={handleMoodFilter} />
+              <div className="flex flex-1 max-w-3xl items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate('/')}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Home className="h-5 w-5" />
+                </Button>
+                <div className="flex-1">
+                  <MoodInput onFilterChange={handleMoodFilter} />
+                </div>
               </div>
             )}
             <DesktopNav 
