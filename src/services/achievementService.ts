@@ -1,6 +1,5 @@
 import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { useToast } from "@/hooks/use-toast";
 
 export interface Achievement {
   id: string;
@@ -20,6 +19,8 @@ export const achievements = {
     description: 'Create your first recipe',
     icon: '👨‍🍳',
     maxProgress: 1,
+    completed: false,
+    progress: 0
   },
   firstFollow: {
     id: 'firstFollow',
@@ -27,6 +28,8 @@ export const achievements = {
     description: 'Follow your first chef',
     icon: '🤝',
     maxProgress: 1,
+    completed: false,
+    progress: 0
   },
   firstLike: {
     id: 'firstLike',
@@ -34,6 +37,8 @@ export const achievements = {
     description: 'Like your first recipe',
     icon: '❤️',
     maxProgress: 1,
+    completed: false,
+    progress: 0
   },
   recipeStreak: {
     id: 'recipeStreak',
@@ -41,6 +46,8 @@ export const achievements = {
     description: 'Create 3 recipes',
     icon: '🔥',
     maxProgress: 3,
+    completed: false,
+    progress: 0
   }
 };
 

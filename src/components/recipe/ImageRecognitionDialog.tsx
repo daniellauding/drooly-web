@@ -58,7 +58,6 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
         variant: "destructive",
       });
       
-      // Remove the failed image
       setCapturedImages(prev => prev.filter(img => img !== imageUrl));
     } finally {
       setLoading(false);
@@ -202,11 +201,13 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
         </DialogContent>
       </Dialog>
 
-      <ImagePreviewDialog
-        open={!!previewImage}
-        onOpenChange={() => setPreviewImage(null)}
-        imageUrl={previewImage}
-      />
+      {previewImage && (
+        <ImagePreviewDialog
+          open={!!previewImage}
+          onOpenChange={() => setPreviewImage(null)}
+          imageUrl={previewImage}
+        />
+      )}
     </>
   );
 }
