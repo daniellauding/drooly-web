@@ -50,6 +50,15 @@ service cloud.firestore {
                    resource.data.createdBy == request.auth.uid;
     }
 
+    match /feedback/{feedbackId} {
+      // Allow creating feedback if authenticated
+      allow create: if request.auth != null;
+      
+      // Allow reading feedback if superadmin
+      allow read: if request.auth != null &&
+                 get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+    }
+
     match /mail/{mailId} {
       // Allow creating mail documents if authenticated
       allow create: if request.auth != null;

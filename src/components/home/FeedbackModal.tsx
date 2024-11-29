@@ -41,28 +41,23 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     setSending(true);
 
     try {
-      const feedbackCollection = collection(db, "feedback");
-      await addDoc(feedbackCollection, {
+      console.log("Submitting feedback...");
+      
+      const feedbackData = {
         email,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
         message,
         createdAt: new Date().toISOString(),
-        userId: user?.uid || null
-      });
-
-      // Send email notification through a separate collection
-      const mailCollection = collection(db, "mail");
-      await addDoc(mailCollection, {
-        to: ["daniel@lauding.se"],
-        template: {
-          name: "feedback",
-          data: {
-            email,
-            subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
-            message
-          }
-        }
-      });
+        userId: user?.uid || null,
+        status: 'new'
+      };
+      
+      console.log("Feedback data:", feedbackData);
+      
+      const feedbackCollection = collection(db, "feedback");
+      const feedbackRef = await addDoc(feedbackCollection, feedbackData);
+      
+      console.log("Feedback saved with ID:", feedbackRef.id);
 
       toast({
         title: "Feedback sent",
