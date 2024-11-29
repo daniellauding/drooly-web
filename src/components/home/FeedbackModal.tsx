@@ -30,7 +30,6 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
 
-  // Update email when user changes
   useEffect(() => {
     if (user?.email) {
       setEmail(user.email);
@@ -42,18 +41,27 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     setSending(true);
 
     try {
+      const feedbackCollection = collection(db, "feedback");
+      await addDoc(feedbackCollection, {
+        email,
+        subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
+        message,
+        createdAt: new Date().toISOString(),
+        userId: user?.uid || null
+      });
+
+      // Send email notification through a separate collection
       const mailCollection = collection(db, "mail");
       await addDoc(mailCollection, {
-        to: "daniel@lauding.se",
-        message: {
-          subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
-          html: `
-            <p><strong>From:</strong> ${email}</p>
-            <p><strong>Subject:</strong> ${SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject}</p>
-            <p><strong>Message:</strong></p>
-            <p>${message}</p>
-          `,
-        },
+        to: ["daniel@lauding.se"],
+        template: {
+          name: "feedback",
+          data: {
+            email,
+            subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
+            message
+          }
+        }
       });
 
       toast({
