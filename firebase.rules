@@ -57,6 +57,14 @@ service cloud.firestore {
       // Allow reading feedback if superadmin
       allow read: if request.auth != null &&
                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin';
+                 
+      // Validate feedback document structure
+      allow create: if request.auth != null &&
+                   request.resource.data.keys().hasAll(['email', 'subject', 'message', 'createdAt', 'userId', 'status']) &&
+                   request.resource.data.email is string &&
+                   request.resource.data.subject is string &&
+                   request.resource.data.message is string &&
+                   request.resource.data.status == 'new';
     }
 
     match /mail/{mailId} {
