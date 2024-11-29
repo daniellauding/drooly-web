@@ -4,30 +4,44 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { saveRecipe } from "@/services/recipeOperations";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { RefreshCw, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 interface GeneratedRecipesProps {
   recipes: Recipe[];
   onClose: () => void;
+  onRegenerate?: () => void;
 }
 
-export function GeneratedRecipes({ recipes, onClose }: GeneratedRecipesProps) {
+export function GeneratedRecipes({ recipes, onClose, onRegenerate }: GeneratedRecipesProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSaveRecipe = async (recipe: Recipe) => {
     if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please login to save recipes",
-        variant: "destructive"
-      });
+      setShowAuthModal(true);
       return;
     }
 
     try {
-      await saveRecipe(recipe, user.uid, user.displayName || "Anonymous Chef", false);
+      setIsSaving(true);
+      // Ensure ingredients are properly mapped
+      const mappedRecipe = {
+        ...recipe,
+        ingredients: recipe.ingredients.map(ing => ({
+          name: typeof ing === 'string' ? ing : ing.name,
+          amount: typeof ing === 'string' ? '' : ing.amount,
+          unit: typeof ing === 'string' ? '' : ing.unit,
+        }))
+      };
+
+      await saveRecipe(mappedRecipe, user.uid, user.displayName || "Anonymous Chef", false);
       toast({
         title: "Recipe Saved",
         description: "The recipe has been added to your collection"
@@ -40,24 +54,51 @@ export function GeneratedRecipes({ recipes, onClose }: GeneratedRecipesProps) {
         description: "Failed to save recipe. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleCreateOwn = (recipe: Recipe) => {
     if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please login to create recipes",
-        variant: "destructive"
-      });
+      setShowAuthModal(true);
       return;
     }
-
     navigate('/create-recipe', { state: { recipe } });
+  };
+
+  const handleRegenerate = async () => {
+    if (onRegenerate) {
+      setIsRegenerating(true);
+      try {
+        await onRegenerate();
+      } finally {
+        setIsRegenerating(false);
+      }
+    }
   };
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Generated Recipes</h2>
+        {onRegenerate && (
+          <Button
+            variant="outline"
+            onClick={handleRegenerate}
+            disabled={isRegenerating}
+            className="gap-2"
+          >
+            {isRegenerating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Generate New Recipes
+          </Button>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {recipes.map((recipe) => (
           <div key={recipe.id} className="space-y-4">
@@ -76,8 +117,16 @@ export function GeneratedRecipes({ recipes, onClose }: GeneratedRecipesProps) {
                 variant="outline" 
                 className="flex-1"
                 onClick={() => handleSaveRecipe(recipe)}
+                disabled={isSaving}
               >
-                Save Recipe
+                {isSaving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Recipe"
+                )}
               </Button>
               <Button 
                 variant="default"
@@ -90,6 +139,12 @@ export function GeneratedRecipes({ recipes, onClose }: GeneratedRecipesProps) {
           </div>
         ))}
       </div>
+
+      <AuthModal 
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="login"
+      />
     </div>
   );
 }

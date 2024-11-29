@@ -52,8 +52,8 @@ export function IngredientSearchModal({
       onRecipesGenerated(selectedIngredients);
       
       toast({
-        title: "Recipes generated!",
-        description: `Finding recipes using your ingredients`,
+        title: "Finding recipes...",
+        description: `Searching for recipes using your ingredients`,
       });
     } catch (error) {
       console.error("Error generating recipes:", error);
@@ -67,10 +67,6 @@ export function IngredientSearchModal({
     }
   };
 
-  const handleRegenerate = async () => {
-    await handleGenerateRecipes();
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -78,45 +74,43 @@ export function IngredientSearchModal({
           <DialogTitle>What's in your kitchen?</DialogTitle>
         </DialogHeader>
 
-        {!generatedRecipes.length ? (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Selected Ingredients:</h3>
-              <div className="flex flex-wrap gap-2">
-                {selectedIngredients.map(ingredient => (
-                  <Button
-                    key={ingredient}
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleRemoveIngredient(ingredient)}
-                  >
-                    {ingredient} ×
-                  </Button>
-                ))}
-              </div>
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Selected Ingredients:</h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedIngredients.map(ingredient => (
+                <Button
+                  key={ingredient}
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleRemoveIngredient(ingredient)}
+                >
+                  {ingredient} ×
+                </Button>
+              ))}
             </div>
-
-            <IngredientSuggestions
-              onSelect={handleIngredientSelect}
-              onClose={() => {}}
-            />
-
-            <Button 
-              onClick={handleGenerateRecipes} 
-              className="w-full"
-              disabled={isGenerating}
-            >
-              {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isGenerating ? "Finding Recipes..." : "Find Recipes"}
-            </Button>
           </div>
-        ) : (
-          <AIRecipeSwiper 
-            recipes={generatedRecipes}
-            onRegenerate={handleRegenerate}
-            onClose={() => onOpenChange(false)}
+
+          <IngredientSuggestions
+            onSelect={handleIngredientSelect}
+            onClose={() => {}}
           />
-        )}
+
+          <Button 
+            onClick={handleGenerateRecipes} 
+            className="w-full"
+            disabled={isGenerating}
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Finding Recipes...
+              </>
+            ) : (
+              "Find Recipes"
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
