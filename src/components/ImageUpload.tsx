@@ -12,10 +12,9 @@ interface ImageUploadProps {
   images: string[];
   featuredImageIndex: number;
   onChange: (images: string[], featuredIndex: number) => void;
-  onImageClick?: (imageUrl: string) => void;
 }
 
-export function ImageUpload({ images, featuredImageIndex, onChange, onImageClick }: ImageUploadProps) {
+export function ImageUpload({ images, featuredImageIndex, onChange }: ImageUploadProps) {
   const [showUnsplashDialog, setShowUnsplashDialog] = useState(false);
   const [cropImage, setCropImage] = useState<string | null>(null);
   const { toast } = useToast();
@@ -62,6 +61,7 @@ export function ImageUpload({ images, featuredImageIndex, onChange, onImageClick
   };
 
   const handleCropComplete = (croppedImageUrl: string) => {
+    console.log("Crop completed, updating image");
     if (cropImage?.startsWith('blob:')) {
       // New image upload
       onChange([...images, croppedImageUrl], featuredImageIndex);
@@ -84,12 +84,8 @@ export function ImageUpload({ images, featuredImageIndex, onChange, onImageClick
   };
 
   const handleImageClick = (imageUrl: string) => {
-    console.log("Opening crop dialog for existing image:", imageUrl);
-    if (onImageClick) {
-      onImageClick(imageUrl);
-    } else {
-      setCropImage(imageUrl);
-    }
+    console.log("Opening crop dialog for image:", imageUrl);
+    setCropImage(imageUrl);
   };
 
   return (
