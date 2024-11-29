@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
-import { Coffee, Cookie, UtensilsCrossed, Pizza, Beer, Sandwich, Soup, Home } from "lucide-react";
+import { Coffee, Cookie, UtensilsCrossed, Pizza, Beer, Sandwich, Soup } from "lucide-react";
 
 type Mood = {
   icon: React.ElementType;
@@ -46,7 +46,6 @@ export function MoodInput({ onFilterChange }: MoodInputProps) {
           variant="outline"
           className="w-full flex items-center gap-2 h-12 justify-start px-4 text-muted-foreground hover:text-foreground"
         >
-          <Home className="h-5 w-5 text-muted-foreground" />
           <img 
             src={user.photoURL || "/placeholder.svg"} 
             alt="Profile" 
