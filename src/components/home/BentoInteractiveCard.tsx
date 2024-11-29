@@ -5,7 +5,9 @@ import { useState } from "react";
 import { IngredientSearchModal } from "../ingredients/IngredientSearchModal";
 import { Recipe } from "@/types/recipe";
 import { useToast } from "@/components/ui/use-toast";
-import { generateRecipesByIngredients } from "@/services/recipe/ingredientBasedGenerator";
+import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { GeneratedRecipes } from "../recipe/GeneratedRecipes";
 
 interface BentoInteractiveCardProps {
   item: {
@@ -21,7 +23,9 @@ interface BentoInteractiveCardProps {
 
 export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveCardProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isResultsOpen, setIsResultsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   const { toast } = useToast();
 
   const handleClick = () => {
@@ -45,7 +49,7 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
     setIsLoading(true);
     try {
       console.log("Generating recipes for ingredients:", ingredients);
-      const recipes = await generateRecipesByIngredients(ingredients);
+      const recipes = await generateDetailedRecipes(ingredients);
       console.log("Generated recipes:", recipes);
       
       if (recipes.length === 0) {
@@ -57,16 +61,18 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
         return;
       }
 
+      setGeneratedRecipes(recipes);
       if (onRecipesFound) {
         onRecipesFound(recipes);
       }
+      
+      setIsSearchOpen(false);
+      setIsResultsOpen(true);
       
       toast({
         title: "Recipes found!",
         description: `Found ${recipes.length} recipes using your ingredients`,
       });
-      
-      setIsSearchOpen(false);
     } catch (error) {
       console.error("Error generating recipes:", error);
       toast({
@@ -77,6 +83,11 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCloseResults = () => {
+    setIsResultsOpen(false);
+    setGeneratedRecipes([]);
   };
 
   return (
@@ -111,6 +122,15 @@ export function BentoInteractiveCard({ item, onRecipesFound }: BentoInteractiveC
         onRecipesGenerated={handleRecipesGenerated}
         isLoading={isLoading}
       />
+
+      <Dialog open={isResultsOpen} onOpenChange={setIsResultsOpen}>
+        <DialogContent className="max-w-7xl">
+          <GeneratedRecipes 
+            recipes={generatedRecipes} 
+            onClose={handleCloseResults}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
