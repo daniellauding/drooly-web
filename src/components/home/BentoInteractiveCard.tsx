@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
 import { Button } from "@/components/ui/button";
 import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
+import { CuisineMapDialog } from "./CuisineMapDialog";
 
 interface InteractiveCardProps {
   title: string;
@@ -27,6 +28,7 @@ export function BentoInteractiveCard({
   onRecipesFound: (recipes: Recipe[]) => void;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
   const Icon = item.icon;
@@ -69,6 +71,8 @@ export function BentoInteractiveCard({
   const handleCardClick = () => {
     if (item.title === "What's in your kitchen?") {
       setIsModalOpen(true);
+    } else if (item.title === "Explore Cuisines") {
+      setIsMapOpen(true);
     } else {
       item.action();
     }
@@ -99,6 +103,12 @@ export function BentoInteractiveCard({
         onOpenChange={setIsModalOpen}
         onRecipesGenerated={handleGenerateRecipes}
         isLoading={isGenerating}
+      />
+
+      <CuisineMapDialog
+        open={isMapOpen}
+        onOpenChange={setIsMapOpen}
+        recipes={[]} // Pass the recipes from your context/state here
       />
     </>
   );

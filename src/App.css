@@ -40,3 +40,17 @@
 .read-the-docs {
   color: #888;
 }
+
+.cuisine-marker {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.cuisine-marker:hover {
+  transform: scale(1.1);
+}
+
+.mapboxgl-popup-content {
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
