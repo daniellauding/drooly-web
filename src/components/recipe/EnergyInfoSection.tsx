@@ -33,146 +33,52 @@ const defaultEnergyInfo: EnergyInfo = {
 };
 
 export function EnergyInfoSection({ energyInfo = {}, onChange }: EnergyInfoProps) {
+  // Merge default values with provided energyInfo
   const currentValues = { ...defaultEnergyInfo, ...energyInfo };
+
+  const handleChange = (field: keyof EnergyInfo) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange({ [field]: Number(e.target.value) });
+  };
+
+  const renderField = (field: keyof EnergyInfo, label: string, tooltip: string) => (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <Label htmlFor={field}>{label}</Label>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <Info className="h-4 w-4 text-gray-500" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      <Input
+        id={field}
+        type="number"
+        value={currentValues[field]}
+        onChange={handleChange(field)}
+      />
+    </div>
+  );
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="calories">Calories</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Energy content in kilocalories (kcal)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            id="calories"
-            type="number"
-            value={currentValues.calories}
-            onChange={(e) => onChange({ calories: Number(e.target.value) })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="kilojoules">Kilojoules</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Energy content in kilojoules (kJ)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            id="kilojoules"
-            type="number"
-            value={currentValues.kilojoules}
-            onChange={(e) => onChange({ kilojoules: Number(e.target.value) })}
-          />
-        </div>
+        {renderField("calories", "Calories", "Energy content in kilocalories (kcal)")}
+        {renderField("kilojoules", "Kilojoules", "Energy content in kilojoules (kJ)")}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="protein">Protein (g)</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>4 kcal per gram of protein</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            id="protein"
-            type="number"
-            value={currentValues.protein}
-            onChange={(e) => onChange({ protein: Number(e.target.value) })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="carbohydrates">Carbohydrates (g)</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>4 kcal per gram of carbohydrates</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            id="carbohydrates"
-            type="number"
-            value={currentValues.carbohydrates}
-            onChange={(e) => onChange({ carbohydrates: Number(e.target.value) })}
-          />
-        </div>
+        {renderField("protein", "Protein (g)", "4 kcal per gram of protein")}
+        {renderField("carbohydrates", "Carbohydrates (g)", "4 kcal per gram of carbohydrates")}
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="fat">Fat (g)</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>9 kcal per gram of fat</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            id="fat"
-            type="number"
-            value={currentValues.fat}
-            onChange={(e) => onChange({ fat: Number(e.target.value) })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="fiber">Fiber (g)</Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="h-4 w-4 text-gray-500" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>2 kcal per gram of fiber</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            id="fiber"
-            type="number"
-            value={currentValues.fiber}
-            onChange={(e) => onChange({ fiber: Number(e.target.value) })}
-          />
-        </div>
+        {renderField("fat", "Fat (g)", "9 kcal per gram of fat")}
+        {renderField("fiber", "Fiber (g)", "2 kcal per gram of fiber")}
       </div>
     </div>
   );
