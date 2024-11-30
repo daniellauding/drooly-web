@@ -16,6 +16,7 @@ import Register from "./pages/Register";
 import Backoffice from "./pages/Backoffice";
 import PlanTogether from "./pages/PlanTogether";
 import About from "./pages/About";
+import Events from "./pages/Events";
 import "./i18n/config";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ function App() {
             <Route path="/register" element={<Navigate to="/signup" replace />} />
             <Route path="/backoffice" element={<Backoffice />} />
             <Route path="/plan" element={<PlanTogether />} />
+            <Route path="/events" element={<Events />} />
             <Route path="/about" element={<About />} />
           </Routes>
           <MobileNav />
