@@ -274,15 +274,6 @@ export default function CreateRecipe() {
           onRecipeSelect={setActiveRecipeIndex}
         />
 
-        <div className="flex items-center gap-4 mb-4">
-          <Switch
-            checked={isStepBased}
-            onCheckedChange={setIsStepBased}
-            id="step-based"
-          />
-          <Label htmlFor="step-based">Step-based Recipe</Label>
-        </div>
-
         <RecipeCreationOptions 
           onRecipeImported={handleRecipeScanned}
           onStepBasedChange={setIsStepBased}
@@ -296,6 +287,7 @@ export default function CreateRecipe() {
           onOpenSectionsChange={setOpenSections}
           onRecipeChange={handleRecipeChange}
           onAddStep={handleAddStep}
+          onStepBasedChange={setIsStepBased}
         />
 
         <div className="flex justify-end gap-4">

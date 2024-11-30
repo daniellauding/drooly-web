@@ -34,7 +34,13 @@ export function RecipeAccordions({
 }: RecipeAccordionsProps) {
   return (
     <div className="space-y-4">
-      {recipe.images.length > 0 && (
+      {recipe.images.length === 1 ? (
+        <img
+          src={recipe.images[0]}
+          alt="Recipe"
+          className="w-full h-64 object-cover rounded-lg mb-4"
+        />
+      ) : recipe.images.length > 1 ? (
         <Tabs defaultValue="0">
           <TabsList className="w-full">
             {recipe.images.map((_, index) => (
@@ -53,7 +59,7 @@ export function RecipeAccordions({
             </TabsContent>
           ))}
         </Tabs>
-      )}
+      ) : null}
 
       <Accordion
         type="multiple"
