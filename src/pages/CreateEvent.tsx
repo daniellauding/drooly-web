@@ -13,6 +13,7 @@ import { EventGuest } from "@/types/event";
 import { createEvent } from "@/services/eventService";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CreateEvent() {
   const [title, setTitle] = useState("");
@@ -38,6 +39,15 @@ export default function CreateEvent() {
       toast({
         title: "Error",
         description: "You must be logged in to create an event",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!user.emailVerified) {
+      toast({
+        title: "Email verification required",
+        description: "Please verify your email before creating events. Check your inbox for a verification link.",
         variant: "destructive"
       });
       return;
@@ -70,11 +80,11 @@ export default function CreateEvent() {
       });
       
       navigate("/events");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating event:", error);
       toast({
         title: "Error",
-        description: "Failed to create event. Please try again.",
+        description: error.message || "Failed to create event. Please try again.",
         variant: "destructive"
       });
     }
@@ -86,6 +96,14 @@ export default function CreateEvent() {
       <main className="container max-w-3xl mx-auto px-4 py-6">
         <div className="space-y-6">
           <h1 className="text-2xl font-semibold">Create New Event</h1>
+
+          {user && !user.emailVerified && (
+            <Alert variant="destructive">
+              <AlertDescription>
+                Please verify your email before creating events. Check your inbox for a verification link.
+              </AlertDescription>
+            </Alert>
+          )}
           
           <form onSubmit={handleCreateEvent} className="space-y-6">
             <Card className="p-6">

@@ -1,9 +1,20 @@
 import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { Event } from '@/types/event';
 
 export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) => {
   console.log('Creating new event:', eventData);
+  
+  // Check if user is logged in
+  if (!auth.currentUser) {
+    throw new Error('You must be logged in to create an event');
+  }
+
+  // Check if email is verified
+  if (!auth.currentUser.emailVerified) {
+    throw new Error('Please verify your email before creating events. Check your inbox for a verification link.');
+  }
+
   try {
     const eventsRef = collection(db, 'events');
     const newEvent = {
@@ -20,7 +31,7 @@ export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'u
     return docRef.id;
   } catch (error) {
     console.error('Error creating event:', error);
-    throw new Error('Failed to create event. Please ensure you are logged in and verified.');
+    throw new Error('Failed to create event. Please try again later.');
   }
 };
 
