@@ -1,40 +1,27 @@
 import { TopBar } from "@/components/TopBar";
-import { useState } from "react";
-import { GuestList } from "@/components/event/GuestList";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
-import { CalendarDays, Clock, MapPin, Lock } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventGuest } from "@/types/event";
 import { createEvent } from "@/services/eventService";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EventVerificationAlert } from "@/components/event/EventVerificationAlert";
+import { EventForm } from "@/components/event/EventForm";
 
 export default function CreateEvent() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [location, setLocation] = useState("");
-  const [guests, setGuests] = useState<EventGuest[]>([]);
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [password, setPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user, sendVerificationEmail } = useAuth();
+  const { user } = useAuth();
 
-  const handleAddGuest = (guest: EventGuest) => {
-    setGuests([...guests, guest]);
-  };
-
-  const handleCreateEvent = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleCreateEvent = async (formData: {
+    title: string;
+    description: string;
+    date: string;
+    time: string;
+    location: string;
+    guests: EventGuest[];
+    isPrivate: boolean;
+    password?: string;
+  }) => {
     if (!user) {
       toast({
         title: "Error",
@@ -46,21 +33,21 @@ export default function CreateEvent() {
 
     try {
       const eventData = {
-        title,
-        description,
-        date,
-        time,
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        time: formData.time,
         location: {
-          name: location,
+          name: formData.location,
           address: ""
         },
-        guests,
+        guests: formData.guests,
         dishes: [],
         createdBy: user.uid,
         createdAt: new Date(),
         updatedAt: new Date(),
-        isPrivate,
-        ...(isPrivate && password ? { password } : {})
+        isPrivate: formData.isPrivate,
+        ...(formData.isPrivate && formData.password ? { password: formData.password } : {})
       };
 
       await createEvent(eventData);
@@ -73,40 +60,11 @@ export default function CreateEvent() {
       navigate("/events");
     } catch (error: any) {
       console.error("Error creating event:", error);
-      if (error.message.includes("verify")) {
-        toast({
-          title: "Email verification required",
-          description: "Please verify your email before creating events.",
-          action: (
-            <Button 
-              variant="outline" 
-              onClick={async () => {
-                try {
-                  await sendVerificationEmail();
-                  toast({
-                    title: "Verification email sent",
-                    description: "Please check your inbox for the verification link."
-                  });
-                } catch (error) {
-                  toast({
-                    title: "Error",
-                    description: "Failed to send verification email. Please try again.",
-                    variant: "destructive"
-                  });
-                }
-              }}
-            >
-              Resend verification email
-            </Button>
-          )
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: error.message || "Failed to create event. Please try again.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create event. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -116,134 +74,11 @@ export default function CreateEvent() {
       <main className="container max-w-3xl mx-auto px-4 py-6">
         <div className="space-y-6">
           <h1 className="text-2xl font-semibold">Create New Event</h1>
-
-          {user && !user.emailVerified && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                Please verify your email before creating events. Check your inbox for a verification link.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <form onSubmit={handleCreateEvent} className="space-y-6">
-            <Card className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="title" className="block text-sm font-medium mb-1">
-                    Event Title
-                  </label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter event title"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium mb-1">
-                    Description
-                  </label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What's the occasion?"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="date" className="block text-sm font-medium mb-1">
-                      <CalendarDays className="w-4 h-4 inline-block mr-1" />
-                      Date
-                    </label>
-                    <Input
-                      id="date"
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="time" className="block text-sm font-medium mb-1">
-                      <Clock className="w-4 h-4 inline-block mr-1" />
-                      Time
-                    </label>
-                    <Input
-                      id="time"
-                      type="time"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label htmlFor="location" className="block text-sm font-medium mb-1">
-                    <MapPin className="w-4 h-4 inline-block mr-1" />
-                    Location
-                  </label>
-                  <Input
-                    id="location"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="Where is it happening?"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Private Event</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Only invited guests can see this event
-                      </p>
-                    </div>
-                    <Switch
-                      checked={isPrivate}
-                      onCheckedChange={setIsPrivate}
-                    />
-                  </div>
-
-                  {isPrivate && (
-                    <div>
-                      <label htmlFor="password" className="block text-sm font-medium mb-1">
-                        <Lock className="w-4 h-4 inline-block mr-1" />
-                        Event Password
-                      </label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Optional: Set a password for uninvited guests"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-
-            <GuestList guests={guests} onAddGuest={handleAddGuest} />
-
-            <div className="flex gap-4">
-              <Button type="submit" className="bg-primary">Create Event</Button>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => navigate("/events")}
-              >
-                Cancel
-              </Button>
-            </div>
-          </form>
+          <EventVerificationAlert />
+          <EventForm 
+            onSubmit={handleCreateEvent}
+            onCancel={() => navigate("/events")}
+          />
         </div>
       </main>
     </div>
