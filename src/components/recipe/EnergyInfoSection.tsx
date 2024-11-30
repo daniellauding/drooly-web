@@ -37,7 +37,8 @@ export function EnergyInfoSection({ energyInfo = {}, onChange }: EnergyInfoProps
   const currentValues = { ...defaultEnergyInfo, ...energyInfo };
 
   const handleChange = (field: keyof EnergyInfo) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange({ [field]: Number(e.target.value) });
+    const value = e.target.value === '' ? 0 : Number(e.target.value);
+    onChange({ [field]: value });
   };
 
   const renderField = (field: keyof EnergyInfo, label: string, tooltip: string) => (
@@ -60,6 +61,8 @@ export function EnergyInfoSection({ energyInfo = {}, onChange }: EnergyInfoProps
         type="number"
         value={currentValues[field]}
         onChange={handleChange(field)}
+        min="0"
+        step="0.1"
       />
     </div>
   );
