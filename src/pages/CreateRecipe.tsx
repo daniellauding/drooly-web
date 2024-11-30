@@ -256,21 +256,6 @@ export default function CreateRecipe() {
     });
   };
 
-  const handleRecipeTabChange = (index: number) => {
-    console.log("Switching to recipe:", index);
-    setActiveRecipeIndex(index);
-    const selectedRecipe = scannedRecipes[index];
-    setRecipe(prev => ({
-      ...prev,
-      ...selectedRecipe,
-      title: selectedRecipe.title || prev.title,
-      description: selectedRecipe.description || prev.description,
-      ingredients: selectedRecipe.ingredients || prev.ingredients,
-      instructions: selectedRecipe.instructions || prev.instructions,
-      steps: selectedRecipe.steps || prev.steps,
-    }));
-  };
-
   return (
     <div className="min-h-screen pb-20">
       <BetaStrip />
@@ -280,7 +265,7 @@ export default function CreateRecipe() {
           <RecipeHeaderSection isEditing={isEditing} />
           <Button
             onClick={() => setShowImageRecognition(true)}
-            className="flex items-center gap-2"
+            className="hidden"
           >
             <Camera className="w-4 h-4" />
             Take Photo & Scan
@@ -290,7 +275,7 @@ export default function CreateRecipe() {
         <ScannedRecipesNav
           scannedRecipes={scannedRecipes}
           activeRecipeIndex={activeRecipeIndex}
-          onRecipeSelect={handleRecipeTabChange}
+          onRecipeSelect={setActiveRecipeIndex}
         />
 
         <RecipeCreationOptions 
@@ -313,12 +298,6 @@ export default function CreateRecipe() {
             {isEditing ? "Update Recipe" : "Publish Recipe"}
           </Button>
         </div>
-
-        <ImageRecognitionDialog
-          open={showImageRecognition}
-          onOpenChange={setShowImageRecognition}
-          onRecipeScanned={handleRecipeScanned}
-        />
 
         <DeleteConfirmationDialog
           open={showExitPrompt}

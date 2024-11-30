@@ -39,6 +39,10 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
+              <Camera className="mr-2 h-4 w-4" />
+              Take Photo & Scan
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowUrlDialog(true)}>
               <Globe className="mr-2 h-4 w-4" />
               Web Scrape URL
@@ -46,10 +50,6 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
             <DropdownMenuItem onClick={() => setShowTrelloDialog(true)}>
               <Trello className="mr-2 h-4 w-4" />
               Import from Trello
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
-              <Camera className="mr-2 h-4 w-4" />
-              Recipe from Photo
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowClipboardDialog(true)}>
               <Clipboard className="mr-2 h-4 w-4" />
