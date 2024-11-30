@@ -1,6 +1,28 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /events/{eventId} {
+      // Allow reading if user is authenticated and is either:
+      // 1. The creator
+      // 2. An invited guest
+      // 3. The event is not private
+      allow read: if request.auth != null && 
+                 (resource.data.createdBy == request.auth.uid ||
+                  resource.data.guests[request.auth.uid] != null ||
+                  !resource.data.isPrivate);
+      
+      // Allow creating if user is authenticated
+      allow create: if request.auth != null;
+      
+      // Allow updating if user is authenticated and is the creator
+      allow update: if request.auth != null && 
+                   resource.data.createdBy == request.auth.uid;
+      
+      // Allow deleting if user is authenticated and is the creator
+      allow delete: if request.auth != null && 
+                   resource.data.createdBy == request.auth.uid;
+    }
+
     match /recipes/{recipeId} {
       // Allow reading public recipes or private recipes if user is owner
       allow read: if (resource.data.status == 'published' && 
@@ -77,6 +99,30 @@ service cloud.firestore {
                    resource.data.to == request.auth.token.email ||
                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin'
                  );
+    }
+
+    match /users/{userId}/achievements/{achievementId} {
+      allow read: if request.auth != null && 
+                 (request.auth.uid == userId || 
+                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
+                  
+      allow write: if request.auth != null && 
+                  (request.auth.uid == userId ||
+                   get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin');
+    }
+
+    match /eventInvites/{inviteId} {
+      // Allow reading invites if authenticated
+      allow read: if request.auth != null;
+      
+      // Allow creating invites if authenticated and verified
+      allow create: if request.auth != null && 
+                   (request.auth.token.email_verified == true || 
+                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.manuallyVerified == true);
+      
+      // Allow updating own invites
+      allow update: if request.auth != null && 
+                   resource.data.email == request.auth.token.email;
     }
   }
 }

@@ -1,12 +1,14 @@
+import { useEffect, useState } from "react";
 import { Recipe } from "@/services/recipeService";
-import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Clock, ChefHat, Heart, Bookmark, Trophy, Search, Plus, Utensils, Apple } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import { BentoGridItem } from "./BentoGridItem";
 import { BentoInteractiveCard } from "./BentoInteractiveCard";
-import { useState } from "react";
+import { SeasonalRecipes } from "./SeasonalRecipes";
+import { FlavorQuiz } from "./FlavorQuiz";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
 
 interface BentoGridProps {
   recipes: Recipe[];
@@ -14,12 +16,12 @@ interface BentoGridProps {
 }
 
 export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
+  const PREVIEW_COUNT = 8;
+  const navigate = useNavigate();
   
   console.log('BentoGrid received recipes count:', recipes.length);
-  console.log('Raw recipes data:', recipes);
 
   const handleRecipesFound = (newRecipes: Recipe[]) => {
     console.log("Received AI generated recipes:", newRecipes);
@@ -30,7 +32,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     {
       title: "What's in your kitchen?",
       description: "Find recipes using ingredients you have",
-      icon: Apple,
+      icon: Plus,
       action: () => {},
       color: "bg-orange-50 hover:bg-orange-100",
       textColor: "text-orange-700"
@@ -38,7 +40,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     {
       title: "Explore Cuisines",
       description: "Discover recipes from around the world",
-      icon: Utensils,
+      icon: Plus,
       action: () => navigate('/create-recipe?mode=cuisine'),
       color: "bg-blue-50 hover:bg-blue-100",
       textColor: "text-blue-700"
@@ -46,7 +48,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     {
       title: "Quick Search",
       description: "Find exactly what you're looking for",
-      icon: Search,
+      icon: Plus,
       action: () => navigate('/create-recipe?mode=search'),
       color: "bg-purple-50 hover:bg-purple-100",
       textColor: "text-purple-700"
@@ -57,9 +59,12 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     const items = [];
     let interactiveIndex = 0;
 
-    // Add all recipes first
+    // Add seasonal recipes and quiz at the beginning
+    items.push({ isSpecial: true, type: 'seasonal' });
+    items.push({ isSpecial: true, type: 'quiz' });
+
+    // Add all recipes
     items.push(...recipes, ...generatedRecipes);
-    console.log('Initial items array length:', items.length);
     
     // Add interactive cards every 6 recipes
     for (let i = 0; i < items.length; i += 6) {
@@ -85,35 +90,63 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       });
     }
 
-    console.log('Final items array length (with interactive cards):', items.length);
     return items;
   };
 
   const gridItems = getGridItems();
+  const shouldShowOverlay = !user && gridItems.length > PREVIEW_COUNT;
+  const displayItems = user ? gridItems : gridItems.slice(0, PREVIEW_COUNT);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-      {gridItems.map((item, index) => {
-        if ('isInteractive' in item) {
+    <div className="relative">
+      <div className={cn(
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6",
+        shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
+      )}>
+        {displayItems.map((item, index) => {
+          if (item.isSpecial) {
+            if (item.type === 'seasonal') {
+              return <SeasonalRecipes key="seasonal" recipes={recipes} />;
+            }
+            if (item.type === 'quiz') {
+              return <FlavorQuiz key="quiz" />;
+            }
+          }
+
+          if ('isInteractive' in item) {
+            return (
+              <BentoInteractiveCard
+                key={`interactive-${index}`}
+                item={item}
+                onRecipesFound={handleRecipesFound}
+              />
+            );
+          }
+
+          const recipe = item as Recipe;
           return (
-            <BentoInteractiveCard
-              key={`interactive-${index}`}
-              item={item}
-              onRecipesFound={handleRecipesFound}
+            <BentoGridItem
+              key={recipe.id}
+              recipe={recipe}
+              index={index}
+              onRecipeClick={() => navigate(`/recipe/${recipe.id}`)}
             />
           );
-        }
+        })}
+      </div>
 
-        const recipe = item as Recipe;
-        return (
-          <BentoGridItem
-            key={recipe.id}
-            recipe={recipe}
-            index={index}
-            onRecipeClick={() => navigate(`/recipe/${recipe.id}`)}
-          />
-        );
-      })}
+      {shouldShowOverlay && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 backdrop-blur-[2px] z-10">
+          <h2 className="text-3xl font-bold mb-4 text-gray-800">Wanna see more?</h2>
+          <Button 
+            size="lg"
+            onClick={onAuthModalOpen}
+            className="bg-primary hover:bg-primary/90 text-white px-8"
+          >
+            Login or create account
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

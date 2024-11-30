@@ -1,69 +1,124 @@
 import { Recipe } from "@/types/recipe";
+import { generateRecipeSuggestions } from "@/services/openaiService";
 
-export const analyzeRecipeText = (text: string): Partial<Recipe> => {
-  console.log("Analyzing text:", text);
-  
-  const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
-  
-  // Find title (usually first line)
-  const title = lines[0];
-  
-  // Find description (usually second paragraph or after title)
-  const description = lines[1] || "";
-  
-  // Extract ingredients (lines with numbers or measurements)
-  const ingredientLines = lines.filter(line => {
-    const hasNumbers = /\d/.test(line);
-    const hasMeasurements = /\b(msk|tsk|ml|g|kg|st|burk|dl)\b/i.test(line);
-    return (hasNumbers || hasMeasurements) && !line.toLowerCase().includes('steg');
-  });
+const COMMON_RECIPE_WORDS = [
+  "recipe", "ingredients", "instructions", "method", "preparation",
+  "cook", "bake", "mix", "stir", "add", "combine", "heat", "serve",
+  "minutes", "hour", "temperature", "degrees", "cup", "tablespoon",
+  "teaspoon", "gram", "pound", "ounce", "ml", "liter"
+];
 
-  // Convert ingredient lines to structured format
-  const ingredients = ingredientLines.map(line => {
-    const amount = line.match(/\d+(\.\d+)?/)?.[0] || "1";
-    const unit = line.match(/\b(msk|tsk|ml|g|kg|st|burk|dl)\b/i)?.[0] || "st";
-    const name = line
-      .replace(/^\d+(\.\d+)?/, '')
-      .replace(/\b(msk|tsk|ml|g|kg|st|burk|dl)\b/i, '')
-      .trim();
+const isLikelyRecipeText = (text: string): boolean => {
+  const normalizedText = text.toLowerCase();
+  const recipeWordCount = COMMON_RECIPE_WORDS.filter(word => 
+    normalizedText.includes(word)
+  ).length;
+  
+  return recipeWordCount >= 3 && text.length > 50;
+};
 
-    return {
-      name,
-      amount,
-      unit: unit.toLowerCase(),
-      group: "Main Ingredients"
-    };
-  });
+const cleanOCRText = (text: string): string => {
+  return text
+    .replace(/[^\w\s,.()/-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
 
-  // Extract steps (longer lines with instructions)
-  const stepLines = lines.filter(line => 
-    (line.length > 30 || line.toLowerCase().includes('steg')) &&
-    !ingredientLines.includes(line)
+const extractIngredients = (lines: string[]): { name: string; amount: string; unit: string; group: string; }[] => {
+  return lines
+    .filter(line => {
+      const hasNumbers = /\d/.test(line);
+      const hasMeasurements = /\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i.test(line);
+      const hasIngredientWords = /\b(salt|pepper|sugar|flour|oil|water|butter|milk|egg|onion|garlic)\b/i.test(line);
+      return (hasNumbers && (hasMeasurements || hasIngredientWords)) || (hasMeasurements && hasIngredientWords);
+    })
+    .map(line => {
+      const amount = line.match(/\d+(\.\d+)?/)?.[0] || "1";
+      const unit = line.match(/\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i)?.[0] || "piece";
+      const name = line
+        .replace(/\d+(\.\d+)?/, '')
+        .replace(/\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i, '')
+        .trim();
+
+      return {
+        name: name || "Unknown ingredient",
+        amount,
+        unit,
+        group: "Main Ingredients"
+      };
+    });
+};
+
+const extractInstructions = (lines: string[]): { title: string; instructions: string; duration: string; media: string[]; ingredients: any[]; }[] => {
+  const instructionLines = lines.filter(line => 
+    line.length > 30 && 
+    !line.trim().match(/^\d/) &&
+    !/^\d+(\.\d+)?\s*(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i.test(line)
   );
 
-  const steps = stepLines.map((instruction, index) => ({
+  return instructionLines.map((instruction, index) => ({
     title: `Step ${index + 1}`,
     instructions: instruction.trim(),
     duration: "",
     media: [],
     ingredients: []
   }));
+};
 
-  // Try to extract servings from description or ingredients
-  const servingsMatch = text.match(/(\d+)\s*(?:personer|portioner|servings)/i);
-  const servings = {
-    amount: servingsMatch ? parseInt(servingsMatch[1]) : 4,
-    unit: "serving"
-  };
+export const analyzeRecipeText = async (text: string): Promise<Partial<Recipe>> => {
+  console.log("Analyzing OCR text:", text);
+  
+  const cleanedText = cleanOCRText(text);
+  console.log("Cleaned OCR text:", cleanedText);
+
+  if (!isLikelyRecipeText(cleanedText)) {
+    console.log("OCR text appears garbled or unclear, requesting AI assistance");
+    try {
+      const suggestions = await generateRecipeSuggestions({
+        title: "Recipe from Photo",
+        description: "Please analyze this image and suggest a recipe that might match what's shown: " + cleanedText
+      });
+      return suggestions;
+    } catch (error) {
+      console.error("Error getting AI suggestions:", error);
+      throw new Error("Could not generate recipe suggestions. Please try taking another photo with better lighting and focus.");
+    }
+  }
+
+  const lines = cleanedText.split('\n').filter(line => line.trim());
+  const titleLine = lines.find(line => 
+    line.toLowerCase().includes('recipe') || 
+    (line.length > 3 && line.length < 50)
+  ) || "Recipe from Photo";
+
+  const ingredients = extractIngredients(lines);
+  const steps = extractInstructions(lines);
+
+  if (ingredients.length === 0 || steps.length === 0) {
+    try {
+      console.log("Not enough recipe information extracted, getting AI suggestions");
+      const suggestions = await generateRecipeSuggestions({
+        title: titleLine,
+        description: cleanedText
+      });
+      return suggestions;
+    } catch (error) {
+      console.error("Error getting AI suggestions:", error);
+      throw new Error("Could not generate recipe suggestions. Please try taking another photo with better lighting and focus.");
+    }
+  }
 
   return {
-    title,
-    description,
+    title: titleLine,
+    description: lines[1]?.trim() || "A delicious recipe",
     ingredients,
     steps,
-    servings,
+    servings: {
+      amount: 4,
+      unit: "serving"
+    },
     difficulty: "Medium",
-    cuisine: text.toLowerCase().includes('thai') ? 'Thai' : 'International',
+    cuisine: "International",
     totalTime: "",
     images: [],
     featuredImageIndex: 0,
@@ -71,6 +126,8 @@ export const analyzeRecipeText = (text: string): Partial<Recipe> => {
     dishTypes: [],
     equipment: [],
     categories: [],
-    tags: []
+    tags: [],
+    estimatedCost: "",
+    season: "Year Round"
   };
 };

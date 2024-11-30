@@ -1,49 +1,36 @@
 import { useState } from "react";
 import { Recipe } from "@/types/recipe";
 import { motion, AnimatePresence } from "framer-motion";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, X } from "lucide-react";
+import { Heart, X, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 interface RecipeCardStackProps {
   recipes: Recipe[];
-  onEmpty: () => void;
+  onRegenerate: () => Promise<void>;
+  onSave: (recipe: Recipe) => void;
+  onDismiss: (recipe: Recipe) => void;
 }
 
-export function RecipeCardStack({ recipes, onEmpty }: RecipeCardStackProps) {
+export function RecipeCardStack({ recipes, onRegenerate, onSave, onDismiss }: RecipeCardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState<'left' | 'right' | null>(null);
-  const { user } = useAuth();
   const { toast } = useToast();
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   const currentRecipe = recipes[currentIndex];
 
   const handleSwipe = async (isLike: boolean) => {
-    if (isLike && user) {
-      try {
-        const recipeRef = doc(db, "recipes", currentRecipe.id);
-        await updateDoc(recipeRef, {
-          "stats.likes": arrayUnion(user.uid)
-        });
-        
-        toast({
-          title: "Recipe liked",
-          description: "Added to your liked recipes"
-        });
-      } catch (error) {
-        console.error("Error updating like:", error);
-        toast({
-          title: "Error",
-          description: "Failed to save the recipe",
-          variant: "destructive"
-        });
-      }
-    }
-
+    if (!currentRecipe) return;
+    
     setDirection(isLike ? 'right' : 'left');
+    
+    if (isLike) {
+      onSave(currentRecipe);
+    } else {
+      onDismiss(currentRecipe);
+    }
     
     setTimeout(() => {
       setDirection(null);
@@ -52,14 +39,37 @@ export function RecipeCardStack({ recipes, onEmpty }: RecipeCardStackProps) {
           title: "No more recipes",
           description: "Generate more recipes or close to finish",
         });
-        onEmpty();
       } else {
         setCurrentIndex(prev => prev + 1);
       }
     }, 200);
   };
 
-  if (!currentRecipe) return null;
+  const handleRegenerate = async () => {
+    setIsRegenerating(true);
+    try {
+      await onRegenerate();
+      setCurrentIndex(0);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  if (!currentRecipe) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8">
+        <p className="text-center text-muted-foreground">No more recipes to show</p>
+        <Button 
+          onClick={handleRegenerate}
+          disabled={isRegenerating}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+          Generate More Recipes
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-[400px] w-full">
@@ -75,7 +85,7 @@ export function RecipeCardStack({ recipes, onEmpty }: RecipeCardStackProps) {
           }}
           transition={{ duration: 0.2 }}
         >
-          <div className="relative h-full w-full rounded-xl overflow-hidden shadow-lg">
+          <Card className="relative h-full w-full overflow-hidden">
             <img
               src={currentRecipe.images?.[0] || '/placeholder.svg'}
               alt={currentRecipe.title}
@@ -91,7 +101,7 @@ export function RecipeCardStack({ recipes, onEmpty }: RecipeCardStackProps) {
                 <p className="text-sm opacity-80">{currentRecipe.difficulty}</p>
               </div>
             </div>
-          </div>
+          </Card>
         </motion.div>
       </AnimatePresence>
 
