@@ -15,6 +15,7 @@ interface RecipeStepsProps {
 
 export function RecipeSteps({ steps, onChange, onAddStep }: RecipeStepsProps) {
   const [openSteps, setOpenSteps] = useState<number[]>([0]); // First step open by default
+  const [isStepsOpen, setIsStepsOpen] = useState(true);
 
   const toggleStep = (index: number) => {
     setOpenSteps(prev => 
@@ -25,7 +26,13 @@ export function RecipeSteps({ steps, onChange, onAddStep }: RecipeStepsProps) {
   };
 
   return (
-    <Accordion type="multiple" value={["recipe-steps"]} className="space-y-4">
+    <Accordion 
+      type="single" 
+      collapsible
+      value={isStepsOpen ? "recipe-steps" : ""}
+      onValueChange={(value) => setIsStepsOpen(value === "recipe-steps")}
+      className="space-y-4"
+    >
       <AccordionItem value="recipe-steps" className="border rounded-lg">
         <AccordionTrigger className="px-4">
           <div className="flex items-center gap-2">
