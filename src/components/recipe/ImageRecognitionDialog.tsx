@@ -19,6 +19,7 @@ export function ImageRecognitionDialog({
   onRecipeScanned 
 }: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -32,7 +33,7 @@ export function ImageRecognitionDialog({
       console.log("Tesseract worker created successfully");
       
       const { data: { text } } = await worker.recognize(file);
-      console.log("Recognized text:", text); // Log complete recognized text
+      console.log("Recognized text:", text);
       
       await worker.terminate();
 
@@ -53,17 +54,31 @@ export function ImageRecognitionDialog({
   const handleImageCapture = async (files: FileList) => {
     setLoading(true);
     const recipes: Partial<Recipe>[] = [];
+    const newProcessedFiles = new Set(processedFiles);
 
     try {
       for (let i = 0; i < files.length; i++) {
-        const processedRecipe = await processImage(files[i]);
-        recipes.push(processedRecipe);
+        const file = files[i];
+        const fileId = `${file.name}-${file.size}-${file.lastModified}`;
+        
+        // Skip if this file has already been processed
+        if (newProcessedFiles.has(fileId)) {
+          console.log("Skipping duplicate file:", file.name);
+          continue;
+        }
+
+        const processedRecipe = await processImage(file);
+        if (processedRecipe) {
+          recipes.push(processedRecipe);
+          newProcessedFiles.add(fileId);
+        }
       }
 
       if (recipes.length === 0) {
         throw new Error("No recipes could be extracted from the images");
       }
 
+      setProcessedFiles(newProcessedFiles);
       onRecipeScanned(recipes);
       onOpenChange(false);
       
