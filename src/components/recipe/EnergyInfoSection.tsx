@@ -19,7 +19,7 @@ interface EnergyInfo {
 }
 
 interface EnergyInfoProps {
-  energyInfo?: Partial<EnergyInfo>;
+  energyInfo: Partial<EnergyInfo>;
   onChange: (updates: Partial<EnergyInfo>) => void;
 }
 
@@ -32,7 +32,7 @@ const defaultEnergyInfo: EnergyInfo = {
   fiber: 0,
 };
 
-export function EnergyInfoSection({ energyInfo = {}, onChange }: EnergyInfoProps) {
+export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
   const currentValues = { ...defaultEnergyInfo, ...energyInfo };
 
   return (
