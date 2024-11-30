@@ -16,9 +16,10 @@ import { Recipe } from "@/types/recipe";
 
 interface RecipeCreationOptionsProps {
   onRecipeImported: (recipes: Partial<Recipe>[]) => void;
+  onStepBasedChange: (enabled: boolean) => void;
 }
 
-export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOptionsProps) {
+export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: RecipeCreationOptionsProps) {
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [showImageRecognitionDialog, setShowImageRecognitionDialog] = useState(false);
   const [showTrelloDialog, setShowTrelloDialog] = useState(false);
@@ -27,6 +28,7 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
 
   const handleSingleRecipeImport = (recipe: Partial<Recipe>) => {
     onRecipeImported([recipe]);
+    onStepBasedChange(true);
   };
 
   return (
@@ -42,6 +44,10 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
             <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
               <Camera className="mr-2 h-4 w-4" />
               Take Photo & Scan
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
+              <Camera className="mr-2 h-4 w-4" />
+              Recipe from Photo
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowUrlDialog(true)}>
               <Globe className="mr-2 h-4 w-4" />
@@ -76,7 +82,7 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
       <ImageRecognitionDialog
         open={showImageRecognitionDialog}
         onOpenChange={setShowImageRecognitionDialog}
-        onRecipeScanned={onRecipeImported}
+        onRecipeScanned={handleSingleRecipeImport}
       />
 
       <TrelloImportDialog

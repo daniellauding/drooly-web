@@ -19,6 +19,8 @@ import { BetaStrip } from "@/components/home/BetaStrip";
 import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
 import { updateAchievementProgress, achievements } from "@/services/achievementService";
 import { AchievementToast } from "@/components/achievements/AchievementToast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -242,6 +244,7 @@ export default function CreateRecipe() {
         instructions: firstRecipe.instructions || prev.instructions,
         steps: firstRecipe.steps || prev.steps,
       }));
+      setIsStepBased(true);
       
       // Open relevant sections when data is available
       const sectionsToOpen = ["basic-info"];
@@ -251,7 +254,7 @@ export default function CreateRecipe() {
     }
     setShowImageRecognition(false);
     toast({
-      title: `${recipes.length} recipe${recipes.length > 1 ? 's' : ''} created from photos`,
+      title: `Recipe created from photo`,
       description: "You can now edit and customize the recipe details."
     });
   };
@@ -263,13 +266,6 @@ export default function CreateRecipe() {
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
         <div className="flex items-center justify-between">
           <RecipeHeaderSection isEditing={isEditing} />
-          <Button
-            onClick={() => setShowImageRecognition(true)}
-            className="hidden"
-          >
-            <Camera className="w-4 h-4" />
-            Take Photo & Scan
-          </Button>
         </div>
 
         <ScannedRecipesNav
@@ -278,8 +274,18 @@ export default function CreateRecipe() {
           onRecipeSelect={setActiveRecipeIndex}
         />
 
+        <div className="flex items-center gap-4 mb-4">
+          <Switch
+            checked={isStepBased}
+            onCheckedChange={setIsStepBased}
+            id="step-based"
+          />
+          <Label htmlFor="step-based">Step-based Recipe</Label>
+        </div>
+
         <RecipeCreationOptions 
           onRecipeImported={handleRecipeScanned}
+          onStepBasedChange={setIsStepBased}
         />
 
         <RecipeAccordions
@@ -290,7 +296,6 @@ export default function CreateRecipe() {
           onOpenSectionsChange={setOpenSections}
           onRecipeChange={handleRecipeChange}
           onAddStep={handleAddStep}
-          onStepBasedChange={setIsStepBased}
         />
 
         <div className="flex justify-end gap-4">
