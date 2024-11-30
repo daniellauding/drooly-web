@@ -25,21 +25,23 @@ export function RecipeSteps({ steps, onChange, onAddStep }: RecipeStepsProps) {
   };
 
   return (
-    <Accordion type="single" collapsible className="w-full">
-      <AccordionItem value="recipe-steps">
-        <AccordionTrigger className="text-lg font-semibold">
-          Recipe Steps
+    <Accordion type="multiple" value={["recipe-steps"]} className="space-y-4">
+      <AccordionItem value="recipe-steps" className="border rounded-lg">
+        <AccordionTrigger className="px-4">
+          <div className="flex items-center gap-2">
+            <span>Recipe Steps</span>
+          </div>
         </AccordionTrigger>
-        <AccordionContent>
+        <AccordionContent className="px-4 pb-4">
           <div className="space-y-4">
             {steps.map((step, index) => (
               <Collapsible 
                 key={index} 
                 open={openSteps.includes(index)}
                 onOpenChange={() => toggleStep(index)}
-                className="border rounded-lg p-2"
+                className="border rounded-lg"
               >
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-2">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-4">
                   <span className="font-medium">
                     Step {index + 1}: {step.title || 'Untitled Step'}
                   </span>
@@ -49,7 +51,7 @@ export function RecipeSteps({ steps, onChange, onAddStep }: RecipeStepsProps) {
                     <ChevronDown className="h-4 w-4" />
                   )}
                 </CollapsibleTrigger>
-                <CollapsibleContent className="p-2">
+                <CollapsibleContent className="p-4">
                   <RecipeStepInput
                     step={step}
                     onChange={(updatedStep) => {
