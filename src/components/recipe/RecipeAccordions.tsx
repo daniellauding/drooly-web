@@ -28,6 +28,9 @@ export function RecipeAccordions({
   onAddStep,
   onStepBasedChange
 }: RecipeAccordionsProps) {
+  const hasValidSteps = recipe.steps && recipe.steps.length > 0 && 
+    recipe.steps.some(step => step.title || step.instructions);
+
   return (
     <div className="space-y-4">
       {recipe.images.length > 0 && (
@@ -81,9 +84,10 @@ export function RecipeAccordions({
       <StepBasedToggle
         isStepBased={isStepBased}
         onStepBasedChange={onStepBasedChange}
+        hasSteps={hasValidSteps}
       />
 
-      {isStepBased && (
+      {isStepBased && hasValidSteps && (
         <RecipeSteps
           steps={recipe.steps || []}
           onChange={(steps) => onRecipeChange({ steps })}

@@ -4,9 +4,12 @@ import { Label } from "@/components/ui/label";
 interface StepBasedToggleProps {
   isStepBased: boolean;
   onStepBasedChange: (enabled: boolean) => void;
+  hasSteps?: boolean;
 }
 
-export function StepBasedToggle({ isStepBased, onStepBasedChange }: StepBasedToggleProps) {
+export function StepBasedToggle({ isStepBased, onStepBasedChange, hasSteps }: StepBasedToggleProps) {
+  if (!hasSteps) return null;
+
   return (
     <div className="flex items-center gap-2 py-4">
       <Switch

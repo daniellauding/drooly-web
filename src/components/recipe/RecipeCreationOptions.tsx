@@ -27,13 +27,31 @@ export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: R
   const [showClipboardDialog, setShowClipboardDialog] = useState(false);
 
   const handleSingleRecipeImport = (recipe: Partial<Recipe>) => {
+    console.log("Handling single recipe import:", recipe);
+    // Only enable step-based mode if steps are present and non-empty
+    const hasValidSteps = recipe.steps && recipe.steps.length > 0 && 
+      recipe.steps.some(step => step.title || step.instructions);
+    
+    if (hasValidSteps) {
+      console.log("Valid steps found, enabling step-based mode");
+      onStepBasedChange(true);
+    }
     onRecipeImported([recipe]);
-    onStepBasedChange(true);
   };
 
   const handleMultipleRecipesImport = (recipes: Partial<Recipe>[]) => {
+    console.log("Handling multiple recipes import:", recipes.length);
+    if (recipes.length > 0) {
+      const firstRecipe = recipes[0];
+      const hasValidSteps = firstRecipe.steps && firstRecipe.steps.length > 0 && 
+        firstRecipe.steps.some(step => step.title || step.instructions);
+      
+      if (hasValidSteps) {
+        console.log("Valid steps found in first recipe, enabling step-based mode");
+        onStepBasedChange(true);
+      }
+    }
     onRecipeImported(recipes);
-    onStepBasedChange(true);
   };
 
   return (
