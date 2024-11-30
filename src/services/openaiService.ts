@@ -1,24 +1,21 @@
 import { Recipe } from "@/types/recipe";
 import { createApi } from 'unsplash-js';
 import { parseIngredients } from './recipe/ingredientParser';
-import { parseSteps, mapIngredientsToSteps } from './recipe/stepParser';
-import { CUISINES, RECIPE_CATEGORIES, SEASONS, COST_CATEGORIES } from "@/types/recipe";
+import { parseSteps } from './recipe/stepParser';
 import { Timestamp } from 'firebase/firestore';
 
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-const UNSPLASH_API_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+// Get API keys from environment variables
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.VITE_OPENAI_KEY;
+const UNSPLASH_API_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || import.meta.env.VITE_UNSPLASH_KEY;
 
-if (!OPENAI_API_KEY) {
-  console.error("OpenAI API key not found. Please add VITE_OPENAI_API_KEY to your .env file");
-}
+// Log environment status without exposing keys
+console.log("OpenAI API key status:", OPENAI_API_KEY ? "configured" : "missing");
+console.log("Unsplash API key status:", UNSPLASH_API_KEY ? "configured" : "missing");
 
-if (!UNSPLASH_API_KEY) {
-  console.error("Unsplash API key not found. Please add VITE_UNSPLASH_ACCESS_KEY to your .env file");
-}
-
-const unsplash = createApi({
-  accessKey: UNSPLASH_API_KEY || ''
-});
+// Create Unsplash API instance if key is available
+const unsplash = UNSPLASH_API_KEY ? createApi({
+  accessKey: UNSPLASH_API_KEY
+}) : null;
 
 const SYSTEM_PROMPT = `You are a professional chef and culinary AI assistant. When analyzing recipes, provide detailed suggestions in this EXACT format:
 
@@ -64,7 +61,7 @@ TOTAL_TIME: (total preparation and cooking time)`;
 
 export async function generateRecipesByIngredients(ingredients: string[]): Promise<Recipe[]> {
   if (!OPENAI_API_KEY) {
-    throw new Error("OpenAI API key not configured");
+    throw new Error("OpenAI API key not configured. Please add VITE_OPENAI_API_KEY or VITE_OPENAI_KEY to your environment variables.");
   }
 
   console.log("Generating recipes for ingredients:", ingredients);
@@ -146,7 +143,7 @@ export async function generateRecipesByIngredients(ingredients: string[]): Promi
 
 export async function generateRecipeSuggestions(currentRecipe: Partial<Recipe>): Promise<Recipe> {
   if (!OPENAI_API_KEY) {
-    throw new Error("OpenAI API key not configured");
+    throw new Error("OpenAI API key not configured. Please add VITE_OPENAI_API_KEY or VITE_OPENAI_KEY to your environment variables.");
   }
 
   console.log("Generating suggestions for recipe:", currentRecipe.title);
