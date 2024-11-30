@@ -12,13 +12,12 @@ import { ImagePreviewDialog } from "./ImagePreviewDialog";
 interface ImageRecognitionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRecipeScanned: (recipe: Partial<Recipe>) => void;
+  onRecipeScanned: (recipe: Partial<Recipe>, rawText: string) => void;
 }
 
 export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
   const [capturedImages, setCapturedImages] = useState<string[]>([]);
-  const [extractedData, setExtractedData] = useState<any>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -35,13 +34,15 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
       console.log("Recognized text:", text);
 
       const analyzed = analyzeRecipeText(text);
-      setExtractedData(analyzed);
+      
+      // Pass both the analyzed recipe and raw text to parent
+      onRecipeScanned(analyzed, text);
       
       await worker.terminate();
       
       toast({
         title: "Text extracted from image",
-        description: "Please review the extracted information below.",
+        description: "Recipe details have been extracted successfully.",
       });
     } catch (error) {
       console.error("Error scanning recipe:", error);
@@ -64,17 +65,6 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
 
   const removeImage = (index: number) => {
     setCapturedImages(prev => prev.filter((_, i) => i !== index));
-    if (capturedImages.length === 1) {
-      setExtractedData(null);
-    }
-  };
-
-  const handleConfirm = () => {
-    if (!extractedData) return;
-    onRecipeScanned(extractedData);
-    onOpenChange(false);
-    setCapturedImages([]);
-    setExtractedData(null);
   };
 
   return (
@@ -89,7 +79,7 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
           </DialogHeader>
 
           <div className="space-y-6">
-            {!extractedData && (
+            {!loading && (
               <div className="grid grid-cols-2 gap-4">
                 <Button
                   onClick={() => cameraInputRef.current?.click()}
@@ -106,6 +96,13 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
                   <Upload className="h-8 w-8" />
                   Upload Image
                 </Button>
+              </div>
+            )}
+
+            {loading && (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                <p className="text-sm text-muted-foreground">Processing image...</p>
               </div>
             )}
 
@@ -129,43 +126,6 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
                     </Button>
                   </div>
                 ))}
-              </div>
-            )}
-
-            {extractedData && (
-              <div className="space-y-4">
-                <h3 className="font-medium">Extracted Recipe Information</h3>
-                <ScrollArea className="h-[300px] rounded-md border p-4">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Title</h4>
-                      <p>{extractedData.title || "No title detected"}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium mb-2">Ingredients</h4>
-                      <ul className="list-disc pl-5">
-                        {extractedData.ingredients?.map((ing: any, i: number) => (
-                          <li key={i}>{ing.name} - {ing.amount} {ing.unit}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-medium mb-2">Instructions</h4>
-                      {extractedData.steps?.map((step: any, i: number) => (
-                        <p key={i} className="mb-2">{step.instructions}</p>
-                      ))}
-                    </div>
-                  </div>
-                </ScrollArea>
-
-                <div className="flex justify-end gap-4">
-                  <Button variant="outline" onClick={() => setExtractedData(null)}>
-                    Try Again
-                  </Button>
-                  <Button onClick={handleConfirm}>
-                    Use This Recipe
-                  </Button>
-                </div>
               </div>
             )}
           </div>

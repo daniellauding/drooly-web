@@ -193,6 +193,20 @@ export default function CreateRecipe() {
     }));
   };
 
+  const handleRecipeImport = (importedRecipe: Partial<Recipe>, rawText?: string) => {
+    console.log("Imported recipe:", importedRecipe);
+    if (rawText) {
+      console.log("Raw recognized text:", rawText);
+    }
+    
+    // Enable step-based recipe if steps are present
+    if (importedRecipe.steps && importedRecipe.steps.length > 0) {
+      setIsStepBased(true);
+    }
+    
+    handleRecipeChange(importedRecipe);
+  };
+
   const handleAISuggestions = (suggestions: Partial<Recipe>) => {
     console.log("Applying AI suggestions to recipe:", suggestions);
     setRecipe(prev => ({
@@ -213,9 +227,7 @@ export default function CreateRecipe() {
         />
 
         <RecipeCreationOptions 
-          onRecipeImported={(importedRecipe) => {
-            handleRecipeChange(importedRecipe);
-          }} 
+          onRecipeImported={handleRecipeImport}
         />
 
         <RecipeAccordions
