@@ -16,6 +16,15 @@ interface RecipeDetailsProps {
 }
 
 export function RecipeDetails({ recipe, onChange }: RecipeDetailsProps) {
+  const defaultEnergyInfo = {
+    calories: 0,
+    kilojoules: 0,
+    protein: 0,
+    carbohydrates: 0,
+    fat: 0,
+    fiber: 0
+  };
+
   return (
     <div className="space-y-6">
       <BasicInfoSection recipe={recipe} onChange={onChange} />
@@ -107,7 +116,7 @@ export function RecipeDetails({ recipe, onChange }: RecipeDetailsProps) {
       />
 
       <EnergyInfoSection
-        energyInfo={recipe.energyInfo}
+        energyInfo={{ ...defaultEnergyInfo, ...recipe.energyInfo }}
         onChange={(energyInfo) => onChange({ energyInfo })}
       />
     </div>
