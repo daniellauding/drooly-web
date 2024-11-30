@@ -26,7 +26,7 @@ export default function CreateEvent() {
   const [password, setPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, sendVerificationEmail } = useAuth();
 
   const handleAddGuest = (guest: EventGuest) => {
     setGuests([...guests, guest]);
@@ -39,15 +39,6 @@ export default function CreateEvent() {
       toast({
         title: "Error",
         description: "You must be logged in to create an event",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!user.emailVerified) {
-      toast({
-        title: "Email verification required",
-        description: "Please verify your email before creating events. Check your inbox for a verification link.",
         variant: "destructive"
       });
       return;
@@ -82,11 +73,40 @@ export default function CreateEvent() {
       navigate("/events");
     } catch (error: any) {
       console.error("Error creating event:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create event. Please try again.",
-        variant: "destructive"
-      });
+      if (error.message.includes("verify")) {
+        toast({
+          title: "Email verification required",
+          description: "Please verify your email before creating events.",
+          action: (
+            <Button 
+              variant="outline" 
+              onClick={async () => {
+                try {
+                  await sendVerificationEmail();
+                  toast({
+                    title: "Verification email sent",
+                    description: "Please check your inbox for the verification link."
+                  });
+                } catch (error) {
+                  toast({
+                    title: "Error",
+                    description: "Failed to send verification email. Please try again.",
+                    variant: "destructive"
+                  });
+                }
+              }}
+            >
+              Resend verification email
+            </Button>
+          )
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: error.message || "Failed to create event. Please try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
