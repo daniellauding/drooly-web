@@ -107,7 +107,7 @@ export function RecipeDetails({ recipe, onChange }: RecipeDetailsProps) {
       />
 
       <EnergyInfoSection
-        energyInfo={recipe.energyInfo || {}}
+        energyInfo={recipe.energyInfo}
         onChange={(energyInfo) => onChange({ energyInfo })}
       />
     </div>
