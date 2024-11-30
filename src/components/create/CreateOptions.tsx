@@ -18,7 +18,7 @@ export const createOptions = [
     title: "Plan Together",
     description: "Create meal plans and organize food events with loved ones.",
     icon: Users,
-    path: "/create-event"
+    path: "/plan"
   },
   {
     title: "Share Stories",

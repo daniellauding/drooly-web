@@ -13,7 +13,7 @@ import { EventGuest } from "@/types/event";
 import { createEvent } from "@/services/eventService";
 import EventPage from "@/components/event/EventPage";
 
-export default function CreateEvent() {
+export default function PlanTogether() {
   const [isCreating, setIsCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -65,6 +65,7 @@ export default function CreateEvent() {
         description: "Event created successfully!"
       });
       
+      setIsCreating(false);
       navigate("/events");
     } catch (error) {
       console.error("Error creating event:", error);
@@ -81,7 +82,7 @@ export default function CreateEvent() {
       <div className="min-h-screen bg-background">
         <TopBar />
         <main className="container max-w-6xl mx-auto px-4 py-6">
-          <EventPage />
+          <EventPage onCreateNew={() => setIsCreating(true)} />
         </main>
       </div>
     );

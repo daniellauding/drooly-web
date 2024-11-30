@@ -14,9 +14,10 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Backoffice from "./pages/Backoffice";
+import PlanTogether from "./pages/PlanTogether";
 import About from "./pages/About";
 import Events from "./pages/Events";
-import CreateEvent from "./pages/CreateEvent";
+import "./i18n/config";
 
 const queryClient = new QueryClient();
 
@@ -38,8 +39,8 @@ function App() {
             <Route path="/signup" element={<Register />} />
             <Route path="/register" element={<Navigate to="/signup" replace />} />
             <Route path="/backoffice" element={<Backoffice />} />
+            <Route path="/plan" element={<PlanTogether />} />
             <Route path="/events" element={<Events />} />
-            <Route path="/create-event" element={<CreateEvent />} />
             <Route path="/about" element={<About />} />
           </Routes>
           <MobileNav />
