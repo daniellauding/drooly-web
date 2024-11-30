@@ -63,6 +63,7 @@ export interface Recipe {
   source?: string;
   sourceUrl?: string;
   privacy?: 'public' | 'private';
+  sourceFile?: string; // Added this property
   dietaryInfo?: {
     isVegetarian: boolean;
     isVegan: boolean;
