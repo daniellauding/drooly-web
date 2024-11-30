@@ -29,7 +29,8 @@ const extractIngredients = (lines: string[]): { name: string; amount: string; un
     .filter(line => {
       const hasNumbers = /\d/.test(line);
       const hasMeasurements = /\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i.test(line);
-      return hasNumbers || hasMeasurements;
+      const hasIngredientWords = /\b(salt|pepper|sugar|flour|oil|water|butter|milk|egg|onion|garlic)\b/i.test(line);
+      return (hasNumbers && (hasMeasurements || hasIngredientWords)) || (hasMeasurements && hasIngredientWords);
     })
     .map(line => {
       const amount = line.match(/\d+(\.\d+)?/)?.[0] || "1";
@@ -43,23 +44,24 @@ const extractIngredients = (lines: string[]): { name: string; amount: string; un
         name: name || "Unknown ingredient",
         amount,
         unit,
-        group: "main"
+        group: "Main Ingredients"
       };
     });
 };
 
-const extractInstructions = (lines: string[], ingredients: any[]): { title: string; instructions: string; duration: string; media: string[]; }[] => {
+const extractInstructions = (lines: string[]): { title: string; instructions: string; duration: string; media: string[]; ingredients: any[]; }[] => {
   const instructionLines = lines.filter(line => 
     line.length > 30 && 
     !line.trim().match(/^\d/) &&
-    !ingredients.some(ing => line.includes(ing.name))
+    !/^\d+(\.\d+)?\s*(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i.test(line)
   );
 
   return instructionLines.map((instruction, index) => ({
     title: `Step ${index + 1}`,
-    instructions: instruction.trim() || "Instructions not detected",
+    instructions: instruction.trim(),
     duration: "",
-    media: []
+    media: [],
+    ingredients: []
   }));
 };
 
@@ -90,7 +92,7 @@ export const analyzeRecipeText = async (text: string): Promise<Partial<Recipe>> 
   ) || "Recipe from Photo";
 
   const ingredients = extractIngredients(lines);
-  const steps = extractInstructions(lines, ingredients);
+  const steps = extractInstructions(lines);
 
   if (ingredients.length === 0 || steps.length === 0) {
     try {
@@ -102,6 +104,7 @@ export const analyzeRecipeText = async (text: string): Promise<Partial<Recipe>> 
       return suggestions;
     } catch (error) {
       console.error("Error getting AI suggestions:", error);
+      throw new Error("Could not generate recipe suggestions. Please try taking another photo with better lighting and focus.");
     }
   }
 
@@ -124,7 +127,7 @@ export const analyzeRecipeText = async (text: string): Promise<Partial<Recipe>> 
     equipment: [],
     categories: [],
     tags: [],
-    estimatedCost: "Under $5",
+    estimatedCost: "",
     season: "Year Round"
   };
 };

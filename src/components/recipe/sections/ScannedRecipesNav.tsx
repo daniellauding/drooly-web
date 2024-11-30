@@ -13,7 +13,7 @@ export function ScannedRecipesNav({
   activeRecipeIndex,
   onRecipeSelect
 }: ScannedRecipesNavProps) {
-  if (scannedRecipes.length === 0) return null;
+  if (scannedRecipes.length <= 1) return null;
 
   return (
     <div className="space-y-4">

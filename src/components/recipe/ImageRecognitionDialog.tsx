@@ -36,10 +36,21 @@ export function ImageRecognitionDialog({
 
       const analyzedRecipe = await analyzeRecipeText(text);
       console.log("Recipe analyzed:", analyzedRecipe);
-      return { ...analyzedRecipe, images: [imageUrl] };
+      
+      // Ensure we have the image in the recipe
+      const recipeWithImage = {
+        ...analyzedRecipe,
+        images: [imageUrl],
+        featuredImageIndex: 0
+      };
+
+      return recipeWithImage;
     } catch (error) {
       console.error("Error processing image:", error);
-      return { images: [imageUrl] };
+      return { 
+        images: [imageUrl],
+        featuredImageIndex: 0
+      };
     }
   };
 
@@ -55,6 +66,11 @@ export function ImageRecognitionDialog({
 
       onRecipeScanned(recipes);
       onOpenChange(false);
+      
+      toast({
+        title: "Recipe scanned successfully",
+        description: "The recipe details have been extracted. You can now edit and customize them."
+      });
     } catch (error) {
       console.error("Error processing images:", error);
       toast({
