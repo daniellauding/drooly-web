@@ -1,0 +1,19 @@
+{
+  "common": {
+    "settings": "Settings",
+    "language": "Language",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "languages": {
+    "en": "English",
+    "sv": "Swedish"
+  },
+  "recipe": {
+    "ingredients": "Ingredients",
+    "instructions": "Instructions",
+    "servings": "Servings",
+    "cookTime": "Cooking Time",
+    "difficulty": "Difficulty"
+  }
+}

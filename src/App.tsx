@@ -16,6 +16,7 @@ import Register from "./pages/Register";
 import Backoffice from "./pages/Backoffice";
 import PlanTogether from "./pages/PlanTogether";
 import About from "./pages/About";
+import "./i18n/config";
 
 const queryClient = new QueryClient();
 
