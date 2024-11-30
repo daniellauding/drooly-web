@@ -54,6 +54,7 @@ export default function PlanTogether() {
         guests,
         dishes: [],
         createdBy: user.uid,
+        isPrivate: false, // Added the missing isPrivate property
         createdAt: new Date(),
         updatedAt: new Date()
       };
