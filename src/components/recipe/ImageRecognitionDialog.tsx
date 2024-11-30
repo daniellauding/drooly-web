@@ -28,29 +28,25 @@ export function ImageRecognitionDialog({
     const imageUrl = URL.createObjectURL(file);
     
     try {
-      const worker = await createWorker('eng');
-      console.log("Worker created successfully");
+      const worker = await createWorker('eng+swe');
+      console.log("Tesseract worker created successfully");
+      
       const { data: { text } } = await worker.recognize(file);
-      console.log("Text recognized:", text.substring(0, 100) + "...");
+      console.log("Recognized text:", text); // Log complete recognized text
+      
       await worker.terminate();
 
       const analyzedRecipe = await analyzeRecipeText(text);
       console.log("Recipe analyzed:", analyzedRecipe);
       
-      // Ensure we have the image in the recipe
-      const recipeWithImage = {
+      return {
         ...analyzedRecipe,
         images: [imageUrl],
         featuredImageIndex: 0
       };
-
-      return recipeWithImage;
     } catch (error) {
       console.error("Error processing image:", error);
-      return { 
-        images: [imageUrl],
-        featuredImageIndex: 0
-      };
+      throw error;
     }
   };
 
@@ -64,18 +60,22 @@ export function ImageRecognitionDialog({
         recipes.push(processedRecipe);
       }
 
+      if (recipes.length === 0) {
+        throw new Error("No recipes could be extracted from the images");
+      }
+
       onRecipeScanned(recipes);
       onOpenChange(false);
       
       toast({
         title: "Recipe scanned successfully",
-        description: "The recipe details have been extracted. You can now edit and customize them."
+        description: `Found ${recipes.length} recipe${recipes.length > 1 ? 's' : ''} in your images`,
       });
     } catch (error) {
       console.error("Error processing images:", error);
       toast({
         title: "Error processing images",
-        description: "Failed to process one or more images. Please try again.",
+        description: "Failed to process one or more images. Please try again with clearer photos.",
         variant: "destructive",
       });
     } finally {
@@ -129,9 +129,7 @@ export function ImageRecognitionDialog({
           accept="image/*"
           multiple
           className="hidden"
-          onChange={(e) => {
-            if (e.target.files?.length) handleImageCapture(e.target.files);
-          }}
+          onChange={(e) => e.target.files && handleImageCapture(e.target.files)}
         />
         <input
           ref={cameraInputRef}
@@ -140,9 +138,7 @@ export function ImageRecognitionDialog({
           capture="environment"
           multiple
           className="hidden"
-          onChange={(e) => {
-            if (e.target.files?.length) handleImageCapture(e.target.files);
-          }}
+          onChange={(e) => e.target.files && handleImageCapture(e.target.files)}
         />
       </DialogContent>
     </Dialog>

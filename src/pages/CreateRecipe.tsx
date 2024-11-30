@@ -233,6 +233,7 @@ export default function CreateRecipe() {
   const handleRecipeScanned = async (recipes: Partial<Recipe>[]) => {
     console.log("Received scanned recipes:", recipes.length);
     setScannedRecipes(recipes);
+    
     if (recipes.length > 0) {
       const firstRecipe = recipes[0];
       setRecipe(prev => ({
@@ -244,7 +245,12 @@ export default function CreateRecipe() {
         instructions: firstRecipe.instructions || prev.instructions,
         steps: firstRecipe.steps || prev.steps,
       }));
-      setIsStepBased(true);
+      
+      // Only enable step-based mode if steps were detected
+      if (firstRecipe.steps && firstRecipe.steps.length > 0) {
+        setIsStepBased(true);
+        console.log("Enabling step-based mode due to detected steps:", firstRecipe.steps);
+      }
       
       // Open relevant sections when data is available
       const sectionsToOpen = ["basic-info"];
@@ -252,6 +258,7 @@ export default function CreateRecipe() {
       if (firstRecipe.steps?.length) sectionsToOpen.push("steps");
       setOpenSections(sectionsToOpen);
     }
+    
     setShowImageRecognition(false);
     toast({
       title: `Recipe created from photo`,
@@ -307,6 +314,12 @@ export default function CreateRecipe() {
           description="You have unsaved changes. Are you sure you want to leave? Your changes will be lost."
           confirmText="Leave"
           cancelText="Stay"
+        />
+
+        <ImageRecognitionDialog
+          open={showImageRecognition}
+          onOpenChange={setShowImageRecognition}
+          onRecipeScanned={handleRecipeScanned}
         />
       </main>
     </div>

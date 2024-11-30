@@ -1,133 +1,133 @@
 import { Recipe } from "@/types/recipe";
-import { generateRecipeSuggestions } from "@/services/openaiService";
+import { Timestamp } from "firebase/firestore";
 
-const COMMON_RECIPE_WORDS = [
-  "recipe", "ingredients", "instructions", "method", "preparation",
-  "cook", "bake", "mix", "stir", "add", "combine", "heat", "serve",
-  "minutes", "hour", "temperature", "degrees", "cup", "tablespoon",
-  "teaspoon", "gram", "pound", "ounce", "ml", "liter"
-];
-
-const isLikelyRecipeText = (text: string): boolean => {
-  const normalizedText = text.toLowerCase();
-  const recipeWordCount = COMMON_RECIPE_WORDS.filter(word => 
-    normalizedText.includes(word)
-  ).length;
-  
-  return recipeWordCount >= 3 && text.length > 50;
+const SWEDISH_UNITS = {
+  'msk': 'tablespoon',
+  'tsk': 'teaspoon',
+  'dl': 'deciliter',
+  'st': 'piece',
+  'krm': 'pinch',
+  'burk': 'can',
+  'port': 'serving',
+  'ml': 'ml',
+  'g': 'gram',
+  'kg': 'kilogram',
+  'l': 'liter'
 };
 
-const cleanOCRText = (text: string): string => {
+const cleanText = (text: string): string => {
   return text
-    .replace(/[^\w\s,.()/-]/g, '')
+    .replace(/[^\w\s,.()/-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 };
 
-const extractIngredients = (lines: string[]): { name: string; amount: string; unit: string; group: string; }[] => {
-  return lines
+const extractIngredients = (text: string): { name: string; amount: string; unit: string; group: string; }[] => {
+  console.log("Extracting ingredients from:", text);
+  
+  const lines = text.split('\n');
+  const ingredients = lines
     .filter(line => {
       const hasNumbers = /\d/.test(line);
-      const hasMeasurements = /\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i.test(line);
-      const hasIngredientWords = /\b(salt|pepper|sugar|flour|oil|water|butter|milk|egg|onion|garlic)\b/i.test(line);
-      return (hasNumbers && (hasMeasurements || hasIngredientWords)) || (hasMeasurements && hasIngredientWords);
+      const hasUnits = new RegExp(`\\b(${Object.keys(SWEDISH_UNITS).join('|')})\\b`, 'i').test(line);
+      return hasNumbers || hasUnits;
     })
     .map(line => {
-      const amount = line.match(/\d+(\.\d+)?/)?.[0] || "1";
-      const unit = line.match(/\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i)?.[0] || "piece";
-      const name = line
-        .replace(/\d+(\.\d+)?/, '')
-        .replace(/\b(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i, '')
-        .trim();
-
+      const match = line.match(/^(\d+(?:[,.]\d+)?)\s*([a-zA-Z]+)?\s*(.+)/);
+      
+      if (match) {
+        const [_, amount, unit, name] = match;
+        const normalizedUnit = SWEDISH_UNITS[unit?.toLowerCase() as keyof typeof SWEDISH_UNITS] || unit || 'piece';
+        
+        return {
+          name: name.trim(),
+          amount: amount,
+          unit: normalizedUnit,
+          group: "Main Ingredients"
+        };
+      }
+      
       return {
-        name: name || "Unknown ingredient",
-        amount,
-        unit,
+        name: line.trim(),
+        amount: "1",
+        unit: "piece",
         group: "Main Ingredients"
       };
     });
+
+  console.log("Extracted ingredients:", ingredients);
+  return ingredients;
 };
 
-const extractInstructions = (lines: string[]): { title: string; instructions: string; duration: string; media: string[]; ingredients: any[]; }[] => {
-  const instructionLines = lines.filter(line => 
-    line.length > 30 && 
-    !line.trim().match(/^\d/) &&
-    !/^\d+(\.\d+)?\s*(cup|tbsp|tsp|g|kg|ml|l|oz|pound|piece|slice)s?\b/i.test(line)
-  );
+const extractSteps = (text: string): { title: string; instructions: string; duration: string; media: string[]; }[] => {
+  console.log("Extracting steps from:", text);
+  
+  const instructionsSection = text.toLowerCase().indexOf('sa har gor du') !== -1 
+    ? text.slice(text.toLowerCase().indexOf('sa har gor du'))
+    : text;
 
-  return instructionLines.map((instruction, index) => ({
-    title: `Step ${index + 1}`,
-    instructions: instruction.trim(),
-    duration: "",
-    media: [],
-    ingredients: []
-  }));
+  const steps = instructionsSection
+    .split(/\d+\.|[\n.]+/)
+    .map(step => step.trim())
+    .filter(step => step.length > 10)
+    .map((step, index) => ({
+      title: `Step ${index + 1}`,
+      instructions: step,
+      duration: step.match(/(\d+)(?:\s*-\s*\d+)?\s*min/)?.[1] + ' min' || '',
+      media: []
+    }));
+
+  console.log("Extracted steps:", steps);
+  return steps;
 };
 
 export const analyzeRecipeText = async (text: string): Promise<Partial<Recipe>> => {
-  console.log("Analyzing OCR text:", text);
+  console.log("Analyzing recipe text:", text);
   
-  const cleanedText = cleanOCRText(text);
-  console.log("Cleaned OCR text:", cleanedText);
+  const cleanedText = cleanText(text);
+  const lines = cleanedText.split('\n').map(line => line.trim());
+  
+  // Extract title - usually the first non-empty line
+  const title = lines.find(line => line.length > 0) || "Untitled Recipe";
+  
+  // Extract servings
+  const servingsMatch = text.match(/(\d+)\s*personer/);
+  const servings = {
+    amount: parseInt(servingsMatch?.[1] || "4"),
+    unit: "servings"
+  };
 
-  if (!isLikelyRecipeText(cleanedText)) {
-    console.log("OCR text appears garbled or unclear, requesting AI assistance");
-    try {
-      const suggestions = await generateRecipeSuggestions({
-        title: "Recipe from Photo",
-        description: "Please analyze this image and suggest a recipe that might match what's shown: " + cleanedText
-      });
-      return suggestions;
-    } catch (error) {
-      console.error("Error getting AI suggestions:", error);
-      throw new Error("Could not generate recipe suggestions. Please try taking another photo with better lighting and focus.");
-    }
-  }
+  // Extract description - usually the text before ingredients
+  const description = lines.slice(1, 3).join(' ').trim();
 
-  const lines = cleanedText.split('\n').filter(line => line.trim());
-  const titleLine = lines.find(line => 
-    line.toLowerCase().includes('recipe') || 
-    (line.length > 3 && line.length < 50)
-  ) || "Recipe from Photo";
+  const ingredients = extractIngredients(text);
+  const steps = extractSteps(text);
 
-  const ingredients = extractIngredients(lines);
-  const steps = extractInstructions(lines);
-
-  if (ingredients.length === 0 || steps.length === 0) {
-    try {
-      console.log("Not enough recipe information extracted, getting AI suggestions");
-      const suggestions = await generateRecipeSuggestions({
-        title: titleLine,
-        description: cleanedText
-      });
-      return suggestions;
-    } catch (error) {
-      console.error("Error getting AI suggestions:", error);
-      throw new Error("Could not generate recipe suggestions. Please try taking another photo with better lighting and focus.");
-    }
-  }
-
-  return {
-    title: titleLine,
-    description: lines[1]?.trim() || "A delicious recipe",
+  const recipe: Partial<Recipe> = {
+    title,
+    description,
     ingredients,
     steps,
-    servings: {
-      amount: 4,
-      unit: "serving"
-    },
+    servings,
     difficulty: "Medium",
-    cuisine: "International",
-    totalTime: "",
+    cuisine: text.toLowerCase().includes('curry') ? 'Thai' : 'Swedish',
+    totalTime: steps.reduce((total, step) => {
+      const duration = parseInt(step.duration) || 0;
+      return total + duration;
+    }, 0) + ' minutes',
     images: [],
     featuredImageIndex: 0,
+    status: 'draft' as const,
+    privacy: 'public' as const,
+    createdAt: Timestamp.now(),
+    updatedAt: Timestamp.now(),
     cookingMethods: [],
     dishTypes: [],
     equipment: [],
     categories: [],
-    tags: [],
-    estimatedCost: "",
-    season: "Year Round"
+    tags: []
   };
+
+  console.log("Analyzed recipe:", recipe);
+  return recipe;
 };
