@@ -32,7 +32,7 @@ export default function Events() {
             <h1 className="text-2xl font-semibold">Events</h1>
           </div>
           <Button 
-            onClick={() => navigate('/plan')} 
+            onClick={() => navigate('/create-event')} 
             className="bg-primary hover:bg-primary/90"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -59,7 +59,7 @@ export default function Events() {
                 <p>No upcoming events</p>
                 <Button 
                   variant="outline" 
-                  onClick={() => navigate('/plan')}
+                  onClick={() => navigate('/create-event')}
                   className="mt-4"
                 >
                   Create your first event
