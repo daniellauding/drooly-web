@@ -5,16 +5,14 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Plus } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { GuestList } from "./GuestList";
 import { EventMenu } from "./EventMenu";
+import { EventDiscussion } from "./EventDiscussion";
+import { EventTimeline } from "./EventTimeline";
 import { createEvent } from "@/services/eventService";
 import { useToast } from "@/components/ui/use-toast";
-import { Event, EventGuest } from "@/types/event";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RecipeCard } from "../RecipeCard";
-import { useQuery } from "@tanstack/react-query";
-import { getRecipes } from "@/services/recipeService";
+import { Event } from "@/types/event";
 
 interface EventPageProps {
   id?: string;
@@ -32,15 +30,6 @@ export function EventPage({ id }: EventPageProps) {
   const [location, setLocation] = useState({
     name: "",
     address: ""
-  });
-  const [guests, setGuests] = useState<EventGuest[]>([]);
-  const [showRecipeDialog, setShowRecipeDialog] = useState(false);
-
-  // Fetch user's recipes
-  const { data: recipes } = useQuery({
-    queryKey: ['recipes', user?.uid],
-    queryFn: () => getRecipes({ creatorId: user?.uid }),
-    enabled: !!user
   });
 
   const handleSave = async () => {
@@ -61,7 +50,7 @@ export function EventPage({ id }: EventPageProps) {
         time,
         location,
         createdBy: user.uid,
-        guests,
+        guests: [],
         dishes: []
       };
 
@@ -79,10 +68,6 @@ export function EventPage({ id }: EventPageProps) {
         variant: "destructive"
       });
     }
-  };
-
-  const handleAddGuest = (guest: EventGuest) => {
-    setGuests([...guests, guest]);
   };
 
   return (
@@ -141,42 +126,6 @@ export function EventPage({ id }: EventPageProps) {
             onChange={(e) => setLocation(prev => ({ ...prev, address: e.target.value }))}
           />
         </div>
-      </Card>
-
-      <GuestList guests={guests} onAddGuest={handleAddGuest} />
-
-      <Card className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-lg">
-            <span className="font-medium">What's cooking?</span>
-          </div>
-          <Dialog open={showRecipeDialog} onOpenChange={setShowRecipeDialog}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Recipe
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Select Recipe</DialogTitle>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[60vh] overflow-y-auto p-4">
-                {recipes?.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    {...recipe}
-                    onClick={() => {
-                      // Handle recipe selection
-                      setShowRecipeDialog(false);
-                    }}
-                  />
-                ))}
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <EventMenu dishes={[]} />
       </Card>
 
       <div className="flex justify-end space-x-4">
