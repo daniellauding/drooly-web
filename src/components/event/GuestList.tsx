@@ -1,17 +1,10 @@
 import { Users, Heart, UtensilsCrossed } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-
-interface Guest {
-  name: string;
-  status: "coming" | "not-coming" | "pending";
-  plusOne: boolean;
-  dietaryRestrictions: string;
-  cooking: string;
-}
+import { EventGuest } from "@/types/event";
 
 interface GuestListProps {
-  guests: Guest[];
+  guests: EventGuest[];
 }
 
 export function GuestList({ guests }: GuestListProps) {
@@ -44,7 +37,7 @@ export function GuestList({ guests }: GuestListProps) {
             </thead>
             <tbody>
               {guests.map((guest) => (
-                <tr key={guest.name} className="border-t">
+                <tr key={guest.id} className="border-t">
                   <td className="p-3">{guest.name}</td>
                   <td className="p-3">
                     <Checkbox checked={guest.status === "coming"} />
@@ -53,7 +46,7 @@ export function GuestList({ guests }: GuestListProps) {
                     <Checkbox checked={guest.plusOne} />
                   </td>
                   <td className="p-3">{guest.dietaryRestrictions}</td>
-                  <td className="p-3">{guest.cooking}</td>
+                  <td className="p-3">{guest.cooking?.recipeName}</td>
                 </tr>
               ))}
             </tbody>

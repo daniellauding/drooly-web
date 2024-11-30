@@ -1,105 +1,74 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "lucide-react";
-import { MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, MapPin } from "lucide-react";
 import { GuestList } from "./GuestList";
 import { EventMenu } from "./EventMenu";
 import { EventDiscussion } from "./EventDiscussion";
 import { EventTimeline } from "./EventTimeline";
+import { createEvent } from "@/services/eventService";
+import { useToast } from "@/components/ui/use-toast";
+import { Event } from "@/types/event";
 
 interface EventPageProps {
   id?: string;
 }
 
 export function EventPage({ id }: EventPageProps) {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
   const [title, setTitle] = useState("Potluck Dinner Party");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState("June 20, 2024");
-  const [time, setTime] = useState("7:00 PM");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [location, setLocation] = useState({
-    name: "1 Nevern Square",
-    address: "1 Nevern Square, London SW5 9NW, UK"
+    name: "",
+    address: ""
   });
 
-  const guests = [
-    { 
-      name: "Flavien",
-      status: "coming",
-      plusOne: false,
-      dietaryRestrictions: "",
-      cooking: "Rhubarb & Cherry Crumble"
-    },
-    {
-      name: "Xenia",
-      status: "coming",
-      plusOne: true,
-      dietaryRestrictions: "",
-      cooking: "Apple & Fennel Salad"
-    },
-    {
-      name: "William K",
-      status: "pending",
-      plusOne: false,
-      dietaryRestrictions: "",
-      cooking: "Chocolate Tart"
-    },
-    {
-      name: "Shivani",
-      status: "coming",
-      plusOne: false,
-      dietaryRestrictions: "",
-      cooking: "Japanese Curry"
-    },
-    {
-      name: "Andreas & Jodie",
-      status: "coming",
-      plusOne: true,
-      dietaryRestrictions: "Gluten",
-      cooking: ""
+  const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to create an event",
+        variant: "destructive"
+      });
+      return;
     }
-  ];
 
-  const dishes = [
-    {
-      name: "Rhubarb & Cherry Crumble",
-      assignedTo: "Flavien",
-      ingredients: ["Rhubarb", "Cherries", "Flour", "Butter", "Sugar"]
-    },
-    {
-      name: "Japanese Curry",
-      assignedTo: "Shivani",
-      ingredients: ["Chicken", "Curry Roux", "Potatoes", "Carrots"],
-      notes: "Don't make it too spicy!"
-    },
-    {
-      name: "Chocolate Tart",
-      assignedTo: "William K",
-      ingredients: ["Chocolate", "Cream", "Butter", "Flour"],
-      notes: "Make berry compote to top off"
-    },
-    {
-      name: "Apple & Fennel Salad",
-      assignedTo: "Xenia",
-      ingredients: ["Apple", "Fennel", "Radish", "Herbs", "Olive Oil"]
-    }
-  ];
+    try {
+      const eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'> = {
+        title,
+        description,
+        date,
+        time,
+        location,
+        createdBy: user.uid,
+        guests: [],
+        dishes: []
+      };
 
-  const messages = [
-    {
-      id: "1",
-      sender: "Flavien",
-      text: "I'll bring some wine too!",
-      timestamp: new Date()
-    },
-    {
-      id: "2",
-      sender: "Xenia",
-      text: "Great! I can help with setup if needed",
-      timestamp: new Date()
+      const eventId = await createEvent(eventData);
+      toast({
+        title: "Success!",
+        description: "Your event has been created"
+      });
+      navigate(`/plan/${eventId}`);
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create event. Please try again.",
+        variant: "destructive"
+      });
     }
-  ];
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
@@ -124,11 +93,19 @@ export function EventPage({ id }: EventPageProps) {
           <Calendar className="h-5 w-5" />
           <span className="font-medium">When?</span>
         </div>
-        <div className="pl-7">
-          <p className="text-lg">{date} {time}</p>
-          <p className="text-muted-foreground mt-2">
-            Feel free to arrive early and help in the kitchen, wine in hand 😉
-          </p>
+        <div className="pl-7 space-y-4">
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full"
+          />
+          <Input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="w-full"
+          />
         </div>
       </Card>
 
@@ -137,39 +114,28 @@ export function EventPage({ id }: EventPageProps) {
           <MapPin className="h-5 w-5" />
           <span className="font-medium">Where?</span>
         </div>
-        <div className="pl-7">
-          <p className="text-lg">{location.name}</p>
-          <p className="text-muted-foreground">{location.address}</p>
-          <div className="mt-4 aspect-video w-full rounded-lg overflow-hidden">
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2484.1463405825873!2d-0.1946371!3d51.4923031!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x48760f8c2f71b8e9%3A0x61e05540751c6c80!2s1%20Nevern%20Square%2C%20London%20SW5%209NW!5e0!3m2!1sen!2suk!4v1648132442642!5m2!1sen!2suk"
-              className="w-full h-full border-0"
-              loading="lazy"
-            />
-          </div>
+        <div className="pl-7 space-y-4">
+          <Input
+            placeholder="Location name"
+            value={location.name}
+            onChange={(e) => setLocation(prev => ({ ...prev, name: e.target.value }))}
+          />
+          <Input
+            placeholder="Address"
+            value={location.address}
+            onChange={(e) => setLocation(prev => ({ ...prev, address: e.target.value }))}
+          />
         </div>
       </Card>
 
-      <GuestList guests={guests} />
-      
-      <div className="space-y-6">
-        <h2 className="text-2xl font-semibold">What's cooking?</h2>
-        <EventMenu dishes={dishes} />
+      <div className="flex justify-end space-x-4">
+        <Button variant="outline" onClick={() => navigate('/plan')}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave}>
+          Create Event
+        </Button>
       </div>
-
-      <EventDiscussion messages={messages} />
-
-      <EventTimeline 
-        events={[
-          {
-            id: "1",
-            time: "10:30 AM",
-            description: "Flavien suggested Rhubarb & Cherry Crumble",
-            user: "Flavien",
-            avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80"
-          }
-        ]} 
-      />
     </div>
   );
 }
