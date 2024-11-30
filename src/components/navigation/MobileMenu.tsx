@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 interface MobileMenuProps {
   onAuthModalOpen: () => void;
   onEditProfileOpen: () => void;
-  onSearchClick?: () => void;  // Made optional with ?
+  onSearchClick: () => void;
   unreadNotifications: number;
   unreadMessages: number;
   isVerifiedOrSuperadmin: boolean;
@@ -26,6 +26,7 @@ interface MobileMenuProps {
 export function MobileMenu({ 
   onAuthModalOpen, 
   onEditProfileOpen,
+  onSearchClick,
   unreadNotifications,
   unreadMessages,
   isVerifiedOrSuperadmin,
@@ -78,6 +79,13 @@ export function MobileMenu({
           </SheetTitle>
         </SheetHeader>
         <div className="py-4 space-y-4">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start" 
+            onClick={onSearchClick}
+          >
+            Search
+          </Button>
           <Button 
             variant="ghost" 
             className="w-full justify-start" 

@@ -70,22 +70,7 @@ export interface Recipe {
     isDairyFree: boolean;
     containsNuts: boolean;
   };
-  energyInfo?: {
-    calories: number;
-    kilojoules: number;
-    protein: number;
-    carbohydrates: number;
-    fat: number;
-    fiber: number;
-  };
 }
-
-export const DIFFICULTY_OPTIONS = [
-  "Easy",
-  "Medium",
-  "Hard",
-  "Expert"
-];
 
 export const CUISINES = [
   "American", "Italian", "Japanese", "Mexican", "Indian", "French", "Thai", 
@@ -209,4 +194,3 @@ export interface ValidationResult {
     message: string;
   }[];
 }
-

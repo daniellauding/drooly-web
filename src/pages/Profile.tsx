@@ -13,7 +13,6 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileStats } from "@/components/profile/ProfileStats";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileRecipeGrid } from "@/components/profile/ProfileRecipeGrid";
-import { GamificationStatus } from "@/components/profile/GamificationStatus";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -165,8 +164,6 @@ export default function Profile() {
           onEditProfile={() => setEditProfileOpen(true)}
           onInvite={() => setInviteModalOpen(true)}
         />
-
-        {isOwnProfile && <GamificationStatus />}
 
         <ProfileStats 
           userId={targetUserId}

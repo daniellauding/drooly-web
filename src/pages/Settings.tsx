@@ -6,13 +6,10 @@ import { useAccountDeletion } from "@/hooks/useAccountDeletion";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
 import { useState } from "react";
-import { LanguageSelector } from "@/components/settings/LanguageSelector";
-import { useTranslation } from "react-i18next";
 
 export default function Settings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { deleteAccount } = useAccountDeletion();
-  const { t } = useTranslation();
 
   const handleDeleteAccount = async () => {
     await deleteAccount();
@@ -23,25 +20,20 @@ export default function Settings() {
     <div className="min-h-screen pb-20">
       <TopBar />
       <main className="container max-w-2xl mx-auto py-6 px-4 space-y-8">
-        <h1 className="text-2xl font-bold">{t('common.settings')}</h1>
+        <h1 className="text-2xl font-bold">Settings</h1>
         
-        <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="profile" className="w-full [&_:focus]:outline-none [&_:focus-visible]:outline-none [&_:focus]:ring-0">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="profile">
+          <TabsContent value="profile" className="outline-none ring-0 focus:ring-0 focus-visible:ring-0 focus:outline-none focus-visible:outline-none">
             <ProfileSettings />
           </TabsContent>
           
-          <TabsContent value="privacy">
+          <TabsContent value="privacy" className="outline-none ring-0 focus:ring-0 focus-visible:ring-0 focus:outline-none focus-visible:outline-none">
             <PrivacySettings />
-          </TabsContent>
-
-          <TabsContent value="preferences" className="space-y-6">
-            <LanguageSelector />
           </TabsContent>
         </Tabs>
 

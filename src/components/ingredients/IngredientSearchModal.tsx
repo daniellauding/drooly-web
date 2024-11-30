@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { IngredientSuggestions } from "./IngredientSuggestions";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2, RefreshCw } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { RecipeCardStack } from "./RecipeCardStack";
-import { generateDetailedRecipes } from "@/services/recipe/recipeGenerator";
 
 interface IngredientSearchModalProps {
   open: boolean;
@@ -23,6 +23,7 @@ export function IngredientSearchModal({
 }: IngredientSearchModalProps) {
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [showCloseAlert, setShowCloseAlert] = useState(false);
   const { toast } = useToast();
 
@@ -46,10 +47,10 @@ export function IngredientSearchModal({
       return;
     }
 
+    setIsGenerating(true);
     try {
-      const recipes = await generateDetailedRecipes(selectedIngredients);
-      setGeneratedRecipes(recipes);
-      onRecipesGenerated(selectedIngredients);
+      console.log("Generating recipes for ingredients:", selectedIngredients);
+      await onRecipesGenerated(selectedIngredients);
     } catch (error) {
       console.error("Error generating recipes:", error);
       toast({
@@ -57,32 +58,22 @@ export function IngredientSearchModal({
         description: "Failed to generate recipes. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
-  const handleCloseAttempt = () => {
+  const handleCloseAttempt = useCallback(() => {
     if (generatedRecipes.length > 0) {
       setShowCloseAlert(true);
     } else {
       onOpenChange(false);
     }
-  };
+  }, [generatedRecipes.length, onOpenChange]);
 
-  const handleSaveRecipe = (recipe: Recipe) => {
-    console.log('Saving recipe:', recipe.id);
-    // Add save logic here
-    toast({
-      title: "Recipe saved",
-      description: "Added to your saved recipes"
-    });
-  };
-
-  const handleDismissRecipe = (recipe: Recipe) => {
-    console.log('Dismissing recipe:', recipe.id);
-    toast({
-      title: "Recipe dismissed",
-      description: "You won't see this recipe again"
-    });
+  const handleConfirmClose = () => {
+    setShowCloseAlert(false);
+    onOpenChange(false);
   };
 
   return (
@@ -93,45 +84,64 @@ export function IngredientSearchModal({
             <DialogTitle>What's in your kitchen?</DialogTitle>
           </DialogHeader>
 
-          {generatedRecipes.length === 0 ? (
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Selected Ingredients:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {selectedIngredients.map(ingredient => (
-                    <Button
-                      key={ingredient}
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => handleRemoveIngredient(ingredient)}
-                    >
-                      {ingredient} ×
-                    </Button>
-                  ))}
-                </div>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Selected Ingredients:</h3>
+              <div className="flex flex-wrap gap-2">
+                {selectedIngredients.map(ingredient => (
+                  <Button
+                    key={ingredient}
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleRemoveIngredient(ingredient)}
+                  >
+                    {ingredient} ×
+                  </Button>
+                ))}
               </div>
-
-              <IngredientSuggestions
-                onSelect={handleIngredientSelect}
-                onClose={() => {}}
-              />
-
-              <Button 
-                onClick={handleGenerateRecipes}
-                disabled={isLoading || selectedIngredients.length === 0}
-                className="w-full"
-              >
-                Find Recipes
-              </Button>
             </div>
-          ) : (
-            <RecipeCardStack
-              recipes={generatedRecipes}
-              onRegenerate={handleGenerateRecipes}
-              onSave={handleSaveRecipe}
-              onDismiss={handleDismissRecipe}
+
+            <IngredientSuggestions
+              onSelect={handleIngredientSelect}
+              onClose={() => {}}
             />
-          )}
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleGenerateRecipes} 
+                className="flex-1"
+                disabled={isGenerating || isLoading}
+              >
+                {isGenerating || isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Finding Recipes...
+                  </>
+                ) : (
+                  "Find Recipes"
+                )}
+              </Button>
+              {generatedRecipes.length > 0 && (
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateRecipes}
+                  disabled={isGenerating || isLoading}
+                >
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Generate New
+                </Button>
+              )}
+            </div>
+
+            {generatedRecipes.length > 0 && (
+              <div className="mt-8">
+                <RecipeCardStack 
+                  recipes={generatedRecipes}
+                  onEmpty={handleGenerateRecipes}
+                />
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -145,7 +155,7 @@ export function IngredientSearchModal({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onOpenChange(false)}>Close</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmClose}>Close</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

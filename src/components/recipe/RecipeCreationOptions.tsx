@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Globe, Camera, Instagram, Youtube, ChevronDown, Trello, Clipboard } from "lucide-react";
+import { Globe, Bot, Instagram, Youtube, ChevronDown, Camera, Trello, Clipboard } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,26 +15,15 @@ import { ClipboardImportDialog } from "./ClipboardImportDialog";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeCreationOptionsProps {
-  onRecipeImported: (recipes: Partial<Recipe>[]) => void;
-  onStepBasedChange: (enabled: boolean) => void;
+  onRecipeImported: (recipe: Partial<Recipe>) => void;
 }
 
-export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: RecipeCreationOptionsProps) {
+export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOptionsProps) {
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [showImageRecognitionDialog, setShowImageRecognitionDialog] = useState(false);
   const [showTrelloDialog, setShowTrelloDialog] = useState(false);
   const [showInstagramDialog, setShowInstagramDialog] = useState(false);
   const [showClipboardDialog, setShowClipboardDialog] = useState(false);
-
-  const handleSingleRecipeImport = (recipe: Partial<Recipe>) => {
-    onRecipeImported([recipe]);
-    onStepBasedChange(true);
-  };
-
-  const handleMultipleRecipesImport = (recipes: Partial<Recipe>[]) => {
-    onRecipeImported(recipes);
-    onStepBasedChange(true);
-  };
 
   return (
     <>
@@ -46,14 +35,6 @@ export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: R
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
-            <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
-              <Camera className="mr-2 h-4 w-4" />
-              Take Photo & Scan
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
-              <Camera className="mr-2 h-4 w-4" />
-              Recipe from Photo
-            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowUrlDialog(true)}>
               <Globe className="mr-2 h-4 w-4" />
               Web Scrape URL
@@ -62,9 +43,17 @@ export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: R
               <Trello className="mr-2 h-4 w-4" />
               Import from Trello
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowImageRecognitionDialog(true)}>
+              <Camera className="mr-2 h-4 w-4" />
+              Take Photo & Scan
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowClipboardDialog(true)}>
               <Clipboard className="mr-2 h-4 w-4" />
               Paste from Clipboard
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Bot className="mr-2 h-4 w-4" />
+              AI Assistant
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setShowInstagramDialog(true)}>
               <Instagram className="mr-2 h-4 w-4" />
@@ -81,31 +70,31 @@ export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: R
       <RecipeUrlDialog
         open={showUrlDialog}
         onOpenChange={setShowUrlDialog}
-        onRecipeScraped={handleSingleRecipeImport}
+        onRecipeScraped={onRecipeImported}
       />
 
       <ImageRecognitionDialog
         open={showImageRecognitionDialog}
         onOpenChange={setShowImageRecognitionDialog}
-        onRecipeScanned={handleMultipleRecipesImport}
+        onRecipeScanned={onRecipeImported}
       />
 
       <TrelloImportDialog
         open={showTrelloDialog}
         onOpenChange={setShowTrelloDialog}
-        onRecipeImported={handleSingleRecipeImport}
+        onRecipeImported={onRecipeImported}
       />
 
       <InstagramImportDialog
         open={showInstagramDialog}
         onOpenChange={setShowInstagramDialog}
-        onRecipeImported={handleSingleRecipeImport}
+        onRecipeImported={onRecipeImported}
       />
 
       <ClipboardImportDialog
         open={showClipboardDialog}
         onOpenChange={setShowClipboardDialog}
-        onRecipeImported={handleSingleRecipeImport}
+        onRecipeImported={onRecipeImported}
       />
     </>
   );

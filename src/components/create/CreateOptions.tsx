@@ -1,4 +1,4 @@
-import { Edit3, Users, ImageIcon } from "lucide-react";
+import { Edit3, Users, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const createOptions = [
@@ -12,12 +12,12 @@ export const createOptions = [
     title: "Plan Together",
     description: "Create meal plans and organize food events with loved ones.",
     icon: Users,
-    path: "/create-event"
+    path: "/plan"
   },
   {
     title: "Share Stories",
     description: "Share your weekly food adventures and inspire others.",
-    icon: ImageIcon,
+    icon: Camera,
     path: "/stories/create"
   }
 ];

@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipeById, Recipe } from "@/services/recipeService";
 import { validateRecipe } from "@/types/recipe";
@@ -10,22 +10,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Timestamp } from "firebase/firestore";
 import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
-import { RecipeHeaderSection } from "@/components/recipe/sections/RecipeHeaderSection";
-import { ScannedRecipesNav } from "@/components/recipe/sections/ScannedRecipesNav";
+import { RecipeHeader } from "@/components/recipe/RecipeHeader";
 import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
-import { Save, Camera } from "lucide-react";
+import { Save } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
 import { BetaStrip } from "@/components/home/BetaStrip";
-import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
-import { updateAchievementProgress, achievements } from "@/services/achievementService";
-import { AchievementToast } from "@/components/achievements/AchievementToast";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 export default function CreateRecipe() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const mode = searchParams.get('mode');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -35,8 +27,8 @@ export default function CreateRecipe() {
   const [isStepBased, setIsStepBased] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showExitPrompt, setShowExitPrompt] = useState(false);
-  const [showImageRecognition, setShowImageRecognition] = useState(mode === 'photo');
   const { handleSaveRecipe } = useRecipeSaveHandler(isEditing, id);
+
   const [recipe, setRecipe] = useState<Recipe>({
     id: '',
     title: "",
@@ -78,9 +70,6 @@ export default function CreateRecipe() {
       comments: 0
     }
   });
-  
-  const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>([]);
-  const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
 
   const { data: existingRecipe, isLoading } = useQuery({
     queryKey: ['recipe', id],
@@ -152,24 +141,6 @@ export default function CreateRecipe() {
     }
 
     await handleSaveRecipe(recipe, user.uid, user.displayName || "", false);
-    
-    // Check for first recipe and recipe streak achievements
-    const firstRecipeAchieved = await updateAchievementProgress(user.uid, 'firstRecipe', 1);
-    if (firstRecipeAchieved) {
-      toast({
-        title: "Achievement Unlocked!",
-        description: <AchievementToast achievement={achievements.firstRecipe} />,
-      });
-    }
-    
-    const streakAchieved = await updateAchievementProgress(user.uid, 'recipeStreak', 1);
-    if (streakAchieved) {
-      toast({
-        title: "Achievement Unlocked!",
-        description: <AchievementToast achievement={achievements.recipeStreak} />,
-      });
-    }
-    
     setHasUnsavedChanges(false);
   };
 
@@ -230,53 +201,21 @@ export default function CreateRecipe() {
     }));
   };
 
-  const handleRecipeScanned = async (recipes: Partial<Recipe>[]) => {
-    console.log("Received scanned recipes:", recipes.length);
-    setScannedRecipes(recipes);
-    if (recipes.length > 0) {
-      const firstRecipe = recipes[0];
-      setRecipe(prev => ({
-        ...prev,
-        ...firstRecipe,
-        title: firstRecipe.title || prev.title,
-        description: firstRecipe.description || prev.description,
-        ingredients: firstRecipe.ingredients || prev.ingredients,
-        instructions: firstRecipe.instructions || prev.instructions,
-        steps: firstRecipe.steps || prev.steps,
-      }));
-      setIsStepBased(true);
-      
-      // Open relevant sections when data is available
-      const sectionsToOpen = ["basic-info"];
-      if (firstRecipe.ingredients?.length) sectionsToOpen.push("ingredients");
-      if (firstRecipe.steps?.length) sectionsToOpen.push("steps");
-      setOpenSections(sectionsToOpen);
-    }
-    setShowImageRecognition(false);
-    toast({
-      title: `Recipe created from photo`,
-      description: "You can now edit and customize the recipe details."
-    });
-  };
-
   return (
     <div className="min-h-screen pb-20">
       <BetaStrip />
       <TopBar />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
-        <div className="flex items-center justify-between">
-          <RecipeHeaderSection isEditing={isEditing} />
-        </div>
-
-        <ScannedRecipesNav
-          scannedRecipes={scannedRecipes}
-          activeRecipeIndex={activeRecipeIndex}
-          onRecipeSelect={setActiveRecipeIndex}
+        <RecipeHeader
+          isEditing={isEditing}
+          recipe={recipe}
+          onSaveAsDraft={handleSaveAsDraft}
         />
 
         <RecipeCreationOptions 
-          onRecipeImported={handleRecipeScanned}
-          onStepBasedChange={setIsStepBased}
+          onRecipeImported={(importedRecipe) => {
+            handleRecipeChange(importedRecipe);
+          }} 
         />
 
         <RecipeAccordions
@@ -291,24 +230,32 @@ export default function CreateRecipe() {
         />
 
         <div className="flex justify-end gap-4">
+          <Button 
+            variant="outline" 
+            onClick={handleSaveAsDraft}
+            className="flex items-center gap-2"
+          >
+            <Save className="h-4 w-4" />
+            Save as Draft
+          </Button>
           <Button onClick={handleSave}>
             {isEditing ? "Update Recipe" : "Publish Recipe"}
           </Button>
         </div>
-
-        <DeleteConfirmationDialog
-          open={showExitPrompt}
-          onOpenChange={setShowExitPrompt}
-          onConfirm={() => {
-            setShowExitPrompt(false);
-            navigate(-1);
-          }}
-          title="Unsaved Changes"
-          description="You have unsaved changes. Are you sure you want to leave? Your changes will be lost."
-          confirmText="Leave"
-          cancelText="Stay"
-        />
       </main>
+
+      <DeleteConfirmationDialog
+        open={showExitPrompt}
+        onOpenChange={setShowExitPrompt}
+        onConfirm={() => {
+          setShowExitPrompt(false);
+          navigate(-1);
+        }}
+        title="Unsaved Changes"
+        description="You have unsaved changes. Are you sure you want to leave? Your changes will be lost."
+        confirmText="Leave"
+        cancelText="Stay"
+      />
     </div>
   );
 }

@@ -34,7 +34,7 @@ export function ClipboardImportDialog({ open, onOpenChange, onRecipeImported }: 
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = () => {
     if (!text.trim()) {
       toast({
         title: "No text to analyze",
@@ -46,7 +46,7 @@ export function ClipboardImportDialog({ open, onOpenChange, onRecipeImported }: 
 
     setLoading(true);
     try {
-      const recipe = await analyzeRecipeText(text);
+      const recipe = analyzeRecipeText(text);
       setParsedRecipe(recipe);
     } catch (error) {
       console.error("Error analyzing recipe text:", error);

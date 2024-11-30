@@ -6,9 +6,6 @@ import { doc, updateDoc, arrayUnion, arrayRemove } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { updateAchievementProgress } from "@/services/achievementService";
-import { AchievementToast } from "../achievements/AchievementToast";
-import { achievements } from "@/services/achievementService";
 
 interface ProfileActionsProps {
   userId: string;
@@ -48,16 +45,6 @@ export function ProfileActions({ userId, isFollowing }: ProfileActionsProps) {
         await updateDoc(targetUserRef, {
           followers: arrayUnion(user.uid)
         });
-        
-        // Check for first follow achievement
-        const achieved = await updateAchievementProgress(user.uid, 'firstFollow', 1);
-        if (achieved) {
-          toast({
-            title: "Achievement Unlocked!",
-            description: <AchievementToast achievement={achievements.firstFollow} />,
-          });
-        }
-        
         setFollowing(true);
         toast({
           title: "Following successfully"
@@ -71,6 +58,10 @@ export function ProfileActions({ userId, isFollowing }: ProfileActionsProps) {
         description: "Failed to update follow status"
       });
     }
+  };
+
+  const handleMessage = () => {
+    navigate(`/messages?userId=${userId}`);
   };
 
   return (
@@ -92,7 +83,7 @@ export function ProfileActions({ userId, isFollowing }: ProfileActionsProps) {
           </>
         )}
       </Button>
-      <Button variant="outline" onClick={() => navigate(`/messages?userId=${userId}`)}>
+      <Button variant="outline" onClick={handleMessage}>
         <MessageSquare className="h-4 w-4 mr-2" />
         Message
       </Button>
