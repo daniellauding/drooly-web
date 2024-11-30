@@ -3,23 +3,73 @@ import { getUserEvents } from "@/services/eventService";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, CalendarDays, History, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventCard } from "@/components/event/EventCard";
 import { useAuth } from "@/contexts/AuthContext";
 import { Event } from "@/types/event";
+import { useEffect } from "react";
+import { getInviteByCode, acceptInvite } from "@/services/inviteService";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Events() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const inviteCode = searchParams.get('invite');
 
-  const { data: events = [], isLoading } = useQuery({
+  const { data: events = [], isLoading, refetch } = useQuery({
     queryKey: ['events', user?.uid],
     queryFn: () => getUserEvents(user?.uid || ''),
     enabled: !!user?.uid,
   });
 
-  // Filter events based on privacy and user access
+  useEffect(() => {
+    const handleInvite = async () => {
+      if (!inviteCode || !user) return;
+
+      try {
+        console.log('Processing invite code:', inviteCode);
+        const invite = await getInviteByCode(inviteCode);
+        
+        if (!invite) {
+          toast({
+            title: "Invalid invite",
+            description: "This invite link is invalid or has expired.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (invite.status === 'accepted') {
+          toast({
+            title: "Already accepted",
+            description: "You have already accepted this invite.",
+          });
+          return;
+        }
+
+        await acceptInvite(invite.id);
+        await refetch();
+
+        toast({
+          title: "Invite accepted",
+          description: "You have been added to the event.",
+        });
+      } catch (error) {
+        console.error('Error processing invite:', error);
+        toast({
+          title: "Error",
+          description: "Failed to process the invite. Please try again.",
+          variant: "destructive"
+        });
+      }
+    };
+
+    handleInvite();
+  }, [inviteCode, user, toast, refetch]);
+
   const filterEvents = (events: Event[]) => {
     return events.filter(event => {
       // Show if user is creator
