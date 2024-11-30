@@ -33,12 +33,12 @@ export function ImageRecognitionDialog({
       console.log("Tesseract worker created successfully");
       
       const { data: { text } } = await worker.recognize(file);
-      console.log("Recognized text:", text);
+      console.log("Recognized text from image:", file.name, text);
       
       await worker.terminate();
 
       const analyzedRecipe = await analyzeRecipeText(text);
-      console.log("Recipe analyzed:", analyzedRecipe);
+      console.log("Recipe analyzed from image:", file.name, analyzedRecipe);
       
       return {
         ...analyzedRecipe,
@@ -46,12 +46,13 @@ export function ImageRecognitionDialog({
         featuredImageIndex: 0
       };
     } catch (error) {
-      console.error("Error processing image:", error);
+      console.error("Error processing image:", file.name, error);
       throw error;
     }
   };
 
   const handleImageCapture = async (files: FileList) => {
+    console.log("Starting to process", files.length, "images");
     setLoading(true);
     const recipes: Partial<Recipe>[] = [];
     const newProcessedFiles = new Set(processedFiles);
@@ -61,14 +62,15 @@ export function ImageRecognitionDialog({
         const file = files[i];
         const fileId = `${file.name}-${file.size}-${file.lastModified}`;
         
-        // Skip if this file has already been processed
         if (newProcessedFiles.has(fileId)) {
           console.log("Skipping duplicate file:", file.name);
           continue;
         }
 
+        console.log("Processing file:", file.name);
         const processedRecipe = await processImage(file);
         if (processedRecipe) {
+          console.log("Successfully processed recipe from:", file.name);
           recipes.push(processedRecipe);
           newProcessedFiles.add(fileId);
         }
@@ -78,13 +80,14 @@ export function ImageRecognitionDialog({
         throw new Error("No recipes could be extracted from the images");
       }
 
+      console.log("Successfully processed all images. Total recipes:", recipes.length);
       setProcessedFiles(newProcessedFiles);
       onRecipeScanned(recipes);
       onOpenChange(false);
       
       toast({
-        title: "Recipe scanned successfully",
-        description: `Found ${recipes.length} recipe${recipes.length > 1 ? 's' : ''} in your images`,
+        title: `Recipe${recipes.length > 1 ? 's' : ''} created from photo${recipes.length > 1 ? 's' : ''}`,
+        description: "You can now edit and customize the recipe details."
       });
     } catch (error) {
       console.error("Error processing images:", error);
