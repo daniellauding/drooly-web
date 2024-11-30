@@ -10,6 +10,7 @@ import { Button } from "../ui/button";
 import { Plus } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface RecipeAccordionsProps {
   recipe: Recipe;
@@ -33,12 +34,34 @@ export function RecipeAccordions({
   onStepBasedChange
 }: RecipeAccordionsProps) {
   return (
-    <Accordion
-      type="multiple"
-      value={openSections}
-      onValueChange={onOpenSectionsChange}
-      className="space-y-4"
-    >
+    <div className="space-y-4">
+      {recipe.images.length > 0 && (
+        <Tabs defaultValue="0">
+          <TabsList className="w-full">
+            {recipe.images.map((_, index) => (
+              <TabsTrigger key={index} value={index.toString()}>
+                Recipe Image {index + 1}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {recipe.images.map((image, index) => (
+            <TabsContent key={index} value={index.toString()}>
+              <img
+                src={image}
+                alt={`Recipe ${index + 1}`}
+                className="w-full h-64 object-cover rounded-lg mb-4"
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
+
+      <Accordion
+        type="multiple"
+        value={openSections}
+        onValueChange={onOpenSectionsChange}
+        className="space-y-4"
+      >
       <AccordionItem value="basic-info" className="border rounded-lg">
         <AccordionTrigger className="px-4">
           <div className="flex items-center gap-2">
@@ -170,6 +193,7 @@ export function RecipeAccordions({
           </div>
         </AccordionContent>
       </AccordionItem>
-    </Accordion>
+      </Accordion>
+    </div>
   );
 }

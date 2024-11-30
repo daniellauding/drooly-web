@@ -4,9 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Camera, Upload } from "lucide-react";
 import { Recipe } from "@/types/recipe";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { createWorker } from 'tesseract.js';
 
 interface ImageRecognitionDialogProps {
@@ -21,9 +18,6 @@ export function ImageRecognitionDialog({
   onRecipeScanned 
 }: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [capturedImages, setCapturedImages] = useState<{ url: string; text?: string }[]>([]);
-  const [multipleMode, setMultipleMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("0");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -56,8 +50,20 @@ export function ImageRecognitionDialog({
         newImages.push(processedImage);
       }
 
-      setCapturedImages(prev => [...prev, ...newImages]);
-      setActiveTab((capturedImages.length).toString());
+      const recipe: Partial<Recipe> = {
+        images: newImages.map(img => img.url),
+        title: "Recipe from Photo",
+        description: newImages[0].text || "",
+        ingredients: [],
+        steps: [{
+          title: "Instructions",
+          instructions: newImages[0].text || "",
+          duration: "",
+          media: []
+        }]
+      };
+
+      onRecipeScanned(recipe);
     } catch (error) {
       console.error("Error processing images:", error);
       toast({
@@ -67,26 +73,6 @@ export function ImageRecognitionDialog({
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleCreateRecipe = (imageData: { url: string; text?: string }) => {
-    const recipe: Partial<Recipe> = {
-      images: [imageData.url],
-      title: "Recipe from Photo",
-      description: imageData.text || "",
-      ingredients: [],
-      steps: [{
-        title: "Instructions",
-        instructions: imageData.text || "",
-        duration: "",
-        media: []
-      }]
-    };
-
-    onRecipeScanned(recipe);
-    if (!multipleMode) {
-      onOpenChange(false);
     }
   };
 
@@ -101,15 +87,6 @@ export function ImageRecognitionDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={multipleMode}
-              onCheckedChange={setMultipleMode}
-              id="multiple-mode"
-            />
-            <Label htmlFor="multiple-mode">Enable multiple recipe mode</Label>
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <Button
               onClick={() => cameraInputRef.current?.click()}
@@ -136,42 +113,13 @@ export function ImageRecognitionDialog({
               <span className="ml-2">Processing images...</span>
             </div>
           )}
-
-          {capturedImages.length > 0 && (
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full">
-                {capturedImages.map((_, index) => (
-                  <TabsTrigger key={index} value={index.toString()}>
-                    Recipe {index + 1}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {capturedImages.map((image, index) => (
-                <TabsContent key={index} value={index.toString()}>
-                  <div className="space-y-4">
-                    <img
-                      src={image.url}
-                      alt={`Recipe ${index + 1}`}
-                      className="w-full h-64 object-cover rounded-lg"
-                    />
-                    <Button 
-                      onClick={() => handleCreateRecipe(image)}
-                      className="w-full"
-                    >
-                      Create Recipe {index + 1}
-                    </Button>
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
-          )}
         </div>
 
         <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          multiple={multipleMode}
+          multiple
           className="hidden"
           onChange={(e) => {
             if (e.target.files?.length) handleImageCapture(e.target.files);
@@ -182,7 +130,7 @@ export function ImageRecognitionDialog({
           type="file"
           accept="image/*"
           capture="environment"
-          multiple={multipleMode}
+          multiple
           className="hidden"
           onChange={(e) => {
             if (e.target.files?.length) handleImageCapture(e.target.files);
