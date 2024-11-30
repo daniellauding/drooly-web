@@ -1,21 +1,10 @@
-import { collection, addDoc, updateDoc, doc, getDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query, where, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Event } from '@/types/event';
-import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
 
 export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) => {
   console.log('Creating new event:', eventData);
   
-  // Check if user is logged in
-  if (!auth.currentUser) {
-    throw new Error('You must be logged in to create an event');
-  }
-
-  if (!auth.currentUser.emailVerified) {
-    throw new Error('Please verify your email before creating events. Check your inbox for a verification link.');
-  }
-
   try {
     const eventsRef = collection(db, 'events');
     const newEvent = {
@@ -32,6 +21,30 @@ export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'u
     return docRef.id;
   } catch (error) {
     console.error('Error creating event:', error);
-    throw new Error('Failed to create event. Please ensure you are logged in and verified.');
+    throw error;
+  }
+};
+
+export const getUserEvents = async (userId: string) => {
+  console.log('Fetching events for user:', userId);
+  
+  try {
+    const eventsRef = collection(db, 'events');
+    const q = query(
+      eventsRef,
+      where('createdBy', '==', userId)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const events = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Event[];
+    
+    console.log('Retrieved events:', events);
+    return events;
+  } catch (error) {
+    console.error('Error fetching user events:', error);
+    throw error;
   }
 };
