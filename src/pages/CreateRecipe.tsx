@@ -13,7 +13,7 @@ import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions
 import { RecipeHeaderSection } from "@/components/recipe/sections/RecipeHeaderSection";
 import { ScannedRecipesNav } from "@/components/recipe/sections/ScannedRecipesNav";
 import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
-import { Save } from "lucide-react";
+import { Save, Camera } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
 import { BetaStrip } from "@/components/home/BetaStrip";
 import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
@@ -276,9 +276,16 @@ export default function CreateRecipe() {
       <BetaStrip />
       <TopBar />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
-        <RecipeHeaderSection
-          isEditing={isEditing}
-        />
+        <div className="flex items-center justify-between">
+          <RecipeHeaderSection isEditing={isEditing} />
+          <Button
+            onClick={() => setShowImageRecognition(true)}
+            className="flex items-center gap-2"
+          >
+            <Camera className="w-4 h-4" />
+            Take Photo & Scan
+          </Button>
+        </div>
 
         <ScannedRecipesNav
           scannedRecipes={scannedRecipes}
@@ -302,14 +309,6 @@ export default function CreateRecipe() {
         />
 
         <div className="flex justify-end gap-4">
-          <Button 
-            variant="outline" 
-            onClick={handleSaveAsDraft}
-            className="flex items-center gap-2"
-          >
-            <Save className="h-4 w-4" />
-            Save as Draft
-          </Button>
           <Button onClick={handleSave}>
             {isEditing ? "Update Recipe" : "Publish Recipe"}
           </Button>

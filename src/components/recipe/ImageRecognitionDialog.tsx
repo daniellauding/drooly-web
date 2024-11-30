@@ -35,6 +35,7 @@ export function ImageRecognitionDialog({
       await worker.terminate();
 
       const analyzedRecipe = await analyzeRecipeText(text);
+      console.log("Recipe analyzed:", analyzedRecipe);
       return { ...analyzedRecipe, images: [imageUrl] };
     } catch (error) {
       console.error("Error processing image:", error);
@@ -53,6 +54,7 @@ export function ImageRecognitionDialog({
       }
 
       onRecipeScanned(recipes);
+      onOpenChange(false);
     } catch (error) {
       console.error("Error processing images:", error);
       toast({
@@ -72,6 +74,7 @@ export function ImageRecognitionDialog({
           <DialogTitle>Take Photos of Your Recipes</DialogTitle>
           <DialogDescription>
             Take clear photos of your recipes and we'll help you digitize them.
+            You can upload multiple recipe photos - each will be processed separately.
           </DialogDescription>
         </DialogHeader>
 
