@@ -39,4 +39,6 @@ export interface Event {
   guests: EventGuest[];
   dishes: EventDish[];
   notes?: string;
+  isPrivate: boolean;
+  password?: string;
 }

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventCard } from "@/components/event/EventCard";
 import { useAuth } from "@/contexts/AuthContext";
+import { Event } from "@/types/event";
 
 export default function Events() {
   const { user } = useAuth();
@@ -18,8 +19,25 @@ export default function Events() {
     enabled: !!user?.uid,
   });
 
-  const upcomingEvents = events.filter(event => new Date(event.date) > new Date());
-  const pastEvents = events.filter(event => new Date(event.date) <= new Date());
+  // Filter events based on privacy and user access
+  const filterEvents = (events: Event[]) => {
+    return events.filter(event => {
+      // Show if user is creator
+      if (event.createdBy === user?.uid) return true;
+      
+      // Show if user is invited guest
+      if (event.guests.some(guest => guest.id === user?.uid)) return true;
+      
+      // Show if event is not private
+      if (!event.isPrivate) return true;
+      
+      return false;
+    });
+  };
+
+  const filteredEvents = filterEvents(events);
+  const upcomingEvents = filteredEvents.filter(event => new Date(event.date) > new Date());
+  const pastEvents = filteredEvents.filter(event => new Date(event.date) <= new Date());
 
   return (
     <div className="min-h-screen bg-background">

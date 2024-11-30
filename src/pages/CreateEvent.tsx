@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Lock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventGuest } from "@/types/event";
 import { createEvent } from "@/services/eventService";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function CreateEvent() {
   const [title, setTitle] = useState("");
@@ -19,6 +21,8 @@ export default function CreateEvent() {
   const [time, setTime] = useState("");
   const [location, setLocation] = useState("");
   const [guests, setGuests] = useState<EventGuest[]>([]);
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [password, setPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -53,7 +57,9 @@ export default function CreateEvent() {
         dishes: [],
         createdBy: user.uid,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        isPrivate,
+        ...(isPrivate && password ? { password } : {})
       };
 
       await createEvent(eventData);
@@ -152,6 +158,37 @@ export default function CreateEvent() {
                     placeholder="Where is it happening?"
                     required
                   />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label>Private Event</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Only invited guests can see this event
+                      </p>
+                    </div>
+                    <Switch
+                      checked={isPrivate}
+                      onCheckedChange={setIsPrivate}
+                    />
+                  </div>
+
+                  {isPrivate && (
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-medium mb-1">
+                        <Lock className="w-4 h-4 inline-block mr-1" />
+                        Event Password
+                      </label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Optional: Set a password for uninvited guests"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
