@@ -8,7 +8,11 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
-const EventPage = () => {
+interface EventPageProps {
+  onCreateNew?: () => void;
+}
+
+const EventPage = ({ onCreateNew }: EventPageProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: events = [], isLoading } = useQuery({
@@ -20,11 +24,19 @@ const EventPage = () => {
   const upcomingEvents = events.filter(event => new Date(event.date) > new Date());
   const pastEvents = events.filter(event => new Date(event.date) <= new Date());
 
+  const handleCreateNew = () => {
+    if (onCreateNew) {
+      onCreateNew();
+    } else {
+      navigate('/create-event');
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-semibold">Plan Together</h1>
-        <Button onClick={() => navigate('/create-event')}>
+        <Button onClick={handleCreateNew}>
           <Plus className="w-4 h-4 mr-2" />
           New Event
         </Button>
@@ -38,7 +50,7 @@ const EventPage = () => {
               <p>No upcoming events</p>
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/create-event')}
+                onClick={handleCreateNew}
                 className="mt-4"
               >
                 Create your first event
