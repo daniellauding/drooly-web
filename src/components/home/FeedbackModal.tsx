@@ -76,7 +76,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       toast({
         variant: "destructive",
         title: "Error sending feedback",
-        description: "Please try again later.",
+        description: "Please ensure you're connected and try again.",
       });
     } finally {
       setSending(false);

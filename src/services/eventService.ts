@@ -13,11 +13,11 @@ export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'u
     };
     
     const docRef = await addDoc(eventsRef, newEvent);
-    console.log('Event created with ID:', docRef.id);
+    console.log('Event created successfully with ID:', docRef.id);
     return docRef.id;
   } catch (error) {
     console.error('Error creating event:', error);
-    throw error;
+    throw new Error('Failed to create event. Please ensure you are logged in and try again.');
   }
 };
 
@@ -32,7 +32,7 @@ export const updateEvent = async (eventId: string, updates: Partial<Event>) => {
     console.log('Event updated successfully');
   } catch (error) {
     console.error('Error updating event:', error);
-    throw error;
+    throw new Error('Failed to update event. Please ensure you have permission and try again.');
   }
 };
 
@@ -54,7 +54,7 @@ export const getEvent = async (eventId: string): Promise<Event | null> => {
     } as Event;
   } catch (error) {
     console.error('Error fetching event:', error);
-    throw error;
+    throw new Error('Failed to fetch event. Please try again later.');
   }
 };
 
@@ -68,12 +68,13 @@ export const getUserEvents = async (userId: string) => {
     );
     
     const querySnapshot = await getDocs(q);
+    console.log(`Found ${querySnapshot.size} events for user`);
     return querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     })) as Event[];
   } catch (error) {
     console.error('Error fetching user events:', error);
-    throw error;
+    throw new Error('Failed to fetch events. Please ensure you are logged in and try again.');
   }
 };
