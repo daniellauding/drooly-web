@@ -5,9 +5,9 @@ export default function PlanTogether() {
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
-      <div className="container mx-auto pt-20">
+      <main className="container max-w-6xl mx-auto px-4 py-6">
         <EventPage />
-      </div>
+      </main>
     </div>
   );
 }
