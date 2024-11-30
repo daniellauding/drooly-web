@@ -11,8 +11,10 @@ service cloud.firestore {
                   resource.data.guests[request.auth.uid] != null ||
                   !resource.data.isPrivate);
       
-      // Allow creating if user is authenticated
-      allow create: if request.auth != null;
+      // Allow creating if user is authenticated and verified
+      allow create: if request.auth != null && 
+                   (request.auth.token.email_verified == true || 
+                    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.manuallyVerified == true);
       
       // Allow updating if user is authenticated and is the creator
       allow update: if request.auth != null && 

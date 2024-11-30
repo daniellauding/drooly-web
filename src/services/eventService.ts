@@ -8,6 +8,9 @@ export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'u
     const eventsRef = collection(db, 'events');
     const newEvent = {
       ...eventData,
+      guests: eventData.guests || [],
+      dishes: eventData.dishes || [],
+      isPrivate: eventData.isPrivate || false,
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now()
     };
@@ -17,7 +20,7 @@ export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'u
     return docRef.id;
   } catch (error) {
     console.error('Error creating event:', error);
-    throw new Error('Failed to create event. Please ensure you are logged in and try again.');
+    throw new Error('Failed to create event. Please ensure you are logged in and verified.');
   }
 };
 
