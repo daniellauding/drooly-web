@@ -34,7 +34,7 @@ const defaultEnergyInfo: EnergyInfo = {
 
 export function EnergyInfoSection({ energyInfo, onChange }: EnergyInfoProps) {
   // Merge default values with provided energyInfo
-  const currentValues = { ...defaultEnergyInfo, ...energyInfo };
+  const currentValues: EnergyInfo = { ...defaultEnergyInfo, ...energyInfo };
 
   const handleChange = (field: keyof EnergyInfo) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value === '' ? 0 : Number(e.target.value);
