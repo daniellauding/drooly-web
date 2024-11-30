@@ -31,6 +31,11 @@ export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: R
     onStepBasedChange(true);
   };
 
+  const handleMultipleRecipesImport = (recipes: Partial<Recipe>[]) => {
+    onRecipeImported(recipes);
+    onStepBasedChange(true);
+  };
+
   return (
     <>
       <div className="mb-8 flex gap-4">
@@ -82,7 +87,7 @@ export function RecipeCreationOptions({ onRecipeImported, onStepBasedChange }: R
       <ImageRecognitionDialog
         open={showImageRecognitionDialog}
         onOpenChange={setShowImageRecognitionDialog}
-        onRecipeScanned={handleSingleRecipeImport}
+        onRecipeScanned={handleMultipleRecipesImport}
       />
 
       <TrelloImportDialog
