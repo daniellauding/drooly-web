@@ -1,14 +1,15 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Plus } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { RecipeBasicInfo } from "./RecipeBasicInfo";
 import { RecipeDetails } from "./RecipeDetails";
 import { IngredientInput } from "../IngredientInput";
 import { RecipeStepInput } from "../RecipeStepInput";
 import { Button } from "../ui/button";
-import { Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface RecipeAccordionsProps {
   recipe: Recipe;
@@ -18,6 +19,7 @@ interface RecipeAccordionsProps {
   onOpenSectionsChange: (sections: string[]) => void;
   onRecipeChange: (updates: Partial<Recipe>) => void;
   onAddStep: () => void;
+  onStepBasedChange: (enabled: boolean) => void;
 }
 
 export function RecipeAccordions({
@@ -27,7 +29,8 @@ export function RecipeAccordions({
   isStepBased,
   onOpenSectionsChange,
   onRecipeChange,
-  onAddStep
+  onAddStep,
+  onStepBasedChange
 }: RecipeAccordionsProps) {
   return (
     <div className="space-y-4">
@@ -143,47 +146,56 @@ export function RecipeAccordions({
             />
           </AccordionContent>
         </AccordionItem>
-
-        {isStepBased && (
-          <AccordionItem value="steps" className="border rounded-lg">
-            <AccordionTrigger className="px-4">
-              <div className="flex items-center gap-2">
-                <span>Recipe Steps</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              <div className="space-y-4">
-                {recipe.steps.map((step, index) => (
-                  <RecipeStepInput
-                    key={index}
-                    step={step}
-                    onChange={(updatedStep) => {
-                      const newSteps = [...recipe.steps];
-                      newSteps[index] = updatedStep;
-                      onRecipeChange({ steps: newSteps });
-                    }}
-                    onDelete={() => {
-                      if (recipe.steps.length > 1) {
-                        const newSteps = recipe.steps.filter((_, i) => i !== index);
-                        onRecipeChange({ steps: newSteps });
-                      }
-                    }}
-                    ingredientGroups={["Main Ingredients", "Sauce", "Marinade", "Garnish"]}
-                  />
-                ))}
-                <Button
-                  variant="outline"
-                  onClick={onAddStep}
-                  className="w-full gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Step
-                </Button>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        )}
       </Accordion>
+
+      <div className="flex items-center gap-2 p-4 border rounded-lg">
+        <Switch
+          checked={isStepBased}
+          onCheckedChange={onStepBasedChange}
+          id="step-based"
+        />
+        <Label htmlFor="step-based">Step-based Recipe</Label>
+      </div>
+
+      {isStepBased && (
+        <AccordionItem value="steps" className="border rounded-lg">
+          <AccordionTrigger className="px-4">
+            <div className="flex items-center gap-2">
+              <span>Recipe Steps</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pb-4">
+            <div className="space-y-4">
+              {recipe.steps.map((step, index) => (
+                <RecipeStepInput
+                  key={index}
+                  step={step}
+                  onChange={(updatedStep) => {
+                    const newSteps = [...recipe.steps];
+                    newSteps[index] = updatedStep;
+                    onRecipeChange({ steps: newSteps });
+                  }}
+                  onDelete={() => {
+                    if (recipe.steps.length > 1) {
+                      const newSteps = recipe.steps.filter((_, i) => i !== index);
+                      onRecipeChange({ steps: newSteps });
+                    }
+                  }}
+                  ingredientGroups={["Main Ingredients", "Sauce", "Marinade", "Garnish"]}
+                />
+              ))}
+              <Button
+                variant="outline"
+                onClick={onAddStep}
+                className="w-full gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Step
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      )}
     </div>
   );
 }
