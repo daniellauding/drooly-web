@@ -1,6 +1,6 @@
 import { TopBar } from "@/components/TopBar";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventGuest } from "@/types/event";
 import { createEvent } from "@/services/eventService";
@@ -69,7 +69,7 @@ export default function CreateEvent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-32 md:pb-6">
       <TopBar />
       <main className="container max-w-3xl mx-auto px-4 py-6">
         <div className="space-y-6">

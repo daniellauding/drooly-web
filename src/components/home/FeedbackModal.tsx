@@ -58,7 +58,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     setSending(true);
 
     try {
-      console.log("Starting feedback submission process...");
+      const feedbackRef = collection(db, "feedback");
       
       const feedbackData = {
         email,
@@ -68,12 +68,12 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         userId: user?.uid || null,
         status: 'new'
       };
+
+      console.log("Submitting feedback:", feedbackData);
       
-      console.log("Prepared feedback data:", feedbackData);
+      await addDoc(feedbackRef, feedbackData);
       
-      const feedbackRef = await addDoc(collection(db, "feedback"), feedbackData);
-      
-      console.log("Feedback successfully saved with ID:", feedbackRef.id);
+      console.log("Feedback submitted successfully");
 
       toast({
         title: "Thank you for your feedback!",
@@ -88,7 +88,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       toast({
         variant: "destructive",
         title: "Error sending feedback",
-        description: "Please ensure you're connected and try again.",
+        description: "Please try again later.",
       });
     } finally {
       setSending(false);
