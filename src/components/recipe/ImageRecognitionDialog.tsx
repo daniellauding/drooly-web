@@ -5,11 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Camera, Upload } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { createWorker } from 'tesseract.js';
+import { analyzeRecipeText } from "@/utils/recipeTextAnalysis";
 
 interface ImageRecognitionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRecipeScanned: (recipe: Partial<Recipe>) => void;
+  onRecipeScanned: (recipes: Partial<Recipe>[]) => void;
 }
 
 export function ImageRecognitionDialog({ 
@@ -33,37 +34,25 @@ export function ImageRecognitionDialog({
       console.log("Text recognized:", text.substring(0, 100) + "...");
       await worker.terminate();
 
-      return { url: imageUrl, text };
+      const analyzedRecipe = await analyzeRecipeText(text);
+      return { ...analyzedRecipe, images: [imageUrl] };
     } catch (error) {
       console.error("Error processing image:", error);
-      return { url: imageUrl };
+      return { images: [imageUrl] };
     }
   };
 
   const handleImageCapture = async (files: FileList) => {
     setLoading(true);
-    const newImages = [];
+    const recipes: Partial<Recipe>[] = [];
 
     try {
       for (let i = 0; i < files.length; i++) {
-        const processedImage = await processImage(files[i]);
-        newImages.push(processedImage);
+        const processedRecipe = await processImage(files[i]);
+        recipes.push(processedRecipe);
       }
 
-      const recipe: Partial<Recipe> = {
-        images: newImages.map(img => img.url),
-        title: "Recipe from Photo",
-        description: newImages[0].text || "",
-        ingredients: [],
-        steps: [{
-          title: "Instructions",
-          instructions: newImages[0].text || "",
-          duration: "",
-          media: []
-        }]
-      };
-
-      onRecipeScanned(recipe);
+      onRecipeScanned(recipes);
     } catch (error) {
       console.error("Error processing images:", error);
       toast({

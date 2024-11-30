@@ -75,6 +75,9 @@ export default function CreateRecipe() {
       comments: 0
     }
   });
+  
+  const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>([]);
+  const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
 
   const { data: existingRecipe, isLoading } = useQuery({
     queryKey: ['recipe', id],
@@ -224,13 +227,23 @@ export default function CreateRecipe() {
     }));
   };
 
-  const handleRecipeScanned = (scannedRecipe: Partial<Recipe>) => {
-    handleRecipeChange(scannedRecipe);
+  const handleRecipeScanned = (recipes: Partial<Recipe>[]) => {
+    console.log("Received scanned recipes:", recipes.length);
+    setScannedRecipes(recipes);
+    if (recipes.length > 0) {
+      handleRecipeChange(recipes[0]);
+    }
     setShowImageRecognition(false);
     toast({
-      title: "Recipe created from photo",
+      title: `${recipes.length} recipe${recipes.length > 1 ? 's' : ''} created from photos`,
       description: "You can now edit and customize the recipe details."
     });
+  };
+
+  const handleRecipeTabChange = (index: number) => {
+    console.log("Switching to recipe:", index);
+    setActiveRecipeIndex(index);
+    handleRecipeChange(scannedRecipes[index]);
   };
 
   return (
@@ -243,6 +256,20 @@ export default function CreateRecipe() {
           recipe={recipe}
           onSaveAsDraft={handleSaveAsDraft}
         />
+
+        {scannedRecipes.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {scannedRecipes.map((_, index) => (
+              <Button
+                key={index}
+                variant={activeRecipeIndex === index ? "default" : "outline"}
+                onClick={() => handleRecipeTabChange(index)}
+              >
+                Recipe {index + 1}
+              </Button>
+            ))}
+          </div>
+        )}
 
         <RecipeCreationOptions 
           onRecipeImported={(importedRecipe) => {
