@@ -11,7 +11,7 @@ export const createOptions = [
   {
     title: "Recipe from Photo",
     description: "Take a photo of any dish and let AI suggest a recipe.",
-    icon: ImageIcon,
+    icon: Camera,
     path: "/create-recipe?mode=photo"
   },
   {
@@ -23,7 +23,7 @@ export const createOptions = [
   {
     title: "Share Stories",
     description: "Share your weekly food adventures and inspire others.",
-    icon: Camera,
+    icon: ImageIcon,
     path: "/stories/create"
   }
 ];
