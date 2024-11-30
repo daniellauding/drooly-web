@@ -2,8 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
 import { getUserEvents } from "@/services/eventService";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { Plus, Clock, CalendarDays, History, CalendarClock } from "lucide-react";
+import { Plus, CalendarDays, History, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,7 +23,7 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-[#191919] text-white">
-      <TopBar className="bg-transparent border-none" />
+      <TopBar />
       
       <main className="container max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-8">
