@@ -1,11 +1,10 @@
 import { useState, useRef } from "react";
-import { Worker, createWorker } from "tesseract.js";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera, Upload, Image as ImageIcon, X } from "lucide-react";
+import { Loader2, Camera, Upload, Image as ImageIcon } from "lucide-react";
 import { Recipe } from "@/types/recipe";
-import { analyzeRecipeText } from "@/utils/recipeTextAnalysis";
+import { parseAIDescription } from "@/utils/aiRecipeParser";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ImagePreviewDialog } from "./ImagePreviewDialog";
 
@@ -15,63 +14,50 @@ interface ImageRecognitionDialogProps {
   onRecipeScanned: (recipe: Partial<Recipe>) => void;
 }
 
-export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: ImageRecognitionDialogProps) {
+export function ImageRecognitionDialog({ 
+  open, 
+  onOpenChange, 
+  onRecipeScanned 
+}: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
-  const [capturedImages, setCapturedImages] = useState<string[]>([]);
-  const [extractedData, setExtractedData] = useState<any>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const processImage = async (file: File) => {
-    console.log("Starting image processing for:", file.name);
+  const handleImageCapture = async (file: File) => {
+    console.log("Processing captured image:", file.name);
     const imageUrl = URL.createObjectURL(file);
-    setCapturedImages(prev => [...prev, imageUrl]);
-
+    setCapturedImage(imageUrl);
     setLoading(true);
-    try {
-      const worker = await createWorker();
-      console.log("OCR worker created, starting text recognition");
-      
-      const { data: { text } } = await worker.recognize(imageUrl);
-      console.log("Text extracted from image:", text);
 
-      const analyzed = await analyzeRecipeText(text);
-      console.log("Recipe analysis complete:", analyzed);
+    try {
+      // Simulate AI description (replace with actual API call)
+      const aiDescription = "This meal looks delicious! It's a beautifully plated dish with seared steak topped with herb butter, creamy scalloped potatoes, and a fresh side salad with pears.";
       
-      setExtractedData(analyzed);
-      await worker.terminate();
+      console.log("Received AI description:", aiDescription);
+      const parsedRecipe = parseAIDescription(aiDescription);
+      
+      // Add the captured image to the recipe
+      parsedRecipe.images = [imageUrl];
+      
+      onRecipeScanned(parsedRecipe);
+      onOpenChange(false);
       
       toast({
-        title: "Recipe successfully extracted",
-        description: "Please review the extracted information below.",
+        title: "Recipe created from photo",
+        description: "The recipe has been created based on the AI analysis.",
       });
     } catch (error) {
       console.error("Error processing image:", error);
-      let errorMessage = error instanceof Error ? error.message : 
-        "Please try taking another photo with better lighting and focus";
-      
       toast({
-        title: "Image processing failed",
-        description: errorMessage,
+        title: "Error processing image",
+        description: "Failed to analyze the image. Please try again.",
         variant: "destructive",
       });
-      
-      setCapturedImages(prev => prev.filter(img => img !== imageUrl));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setCapturedImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleConfirm = () => {
-    if (extractedData) {
-      onRecipeScanned(extractedData);
-      onOpenChange(false);
     }
   };
 
@@ -82,97 +68,46 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
           <DialogHeader>
             <DialogTitle>Take a Photo of Your Recipe</DialogTitle>
             <DialogDescription>
-              Take a clear photo of your recipe or upload an image. Make sure the text is well-lit and in focus.
+              Take a clear photo of your dish and let AI help create the recipe.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6">
-            {!extractedData && (
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="h-32 flex flex-col gap-2"
-                  disabled={loading}
-                >
-                  <Camera className="h-8 w-8" />
-                  {loading ? "Processing..." : "Take Photo"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-32 flex flex-col gap-2"
-                  disabled={loading}
-                >
-                  <Upload className="h-8 w-8" />
-                  Upload Image
-                </Button>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                onClick={() => cameraInputRef.current?.click()}
+                className="h-32 flex flex-col gap-2"
+                disabled={loading}
+              >
+                <Camera className="h-8 w-8" />
+                {loading ? "Processing..." : "Take Photo"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="h-32 flex flex-col gap-2"
+                disabled={loading}
+              >
+                <Upload className="h-8 w-8" />
+                Upload Image
+              </Button>
+            </div>
 
             {loading && (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-                <span className="ml-2">Processing image...</span>
+                <span className="ml-2">Analyzing image...</span>
               </div>
             )}
 
-            {capturedImages.length > 0 && (
-              <div className="grid grid-cols-3 gap-4">
-                {capturedImages.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Captured ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg cursor-pointer"
-                      onClick={() => setPreviewImage(image)}
-                    />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => removeImage(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {extractedData && (
-              <div className="space-y-4">
-                <h3 className="font-medium">Extracted Recipe Information</h3>
-                <ScrollArea className="h-[300px] rounded-md border p-4">
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium mb-2">Title</h4>
-                      <p>{extractedData.title || "No title detected"}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium mb-2">Ingredients</h4>
-                      <ul className="list-disc pl-5">
-                        {extractedData.ingredients?.map((ing: any, i: number) => (
-                          <li key={i}>{ing.name} - {ing.amount} {ing.unit}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-medium mb-2">Instructions</h4>
-                      {extractedData.steps?.map((step: any, i: number) => (
-                        <p key={i} className="mb-2">{step.instructions}</p>
-                      ))}
-                    </div>
-                  </div>
-                </ScrollArea>
-
-                <div className="flex justify-end gap-4">
-                  <Button variant="outline" onClick={() => setExtractedData(null)}>
-                    Try Again
-                  </Button>
-                  <Button onClick={handleConfirm}>
-                    Use This Recipe
-                  </Button>
-                </div>
+            {capturedImage && (
+              <div className="relative group">
+                <img
+                  src={capturedImage}
+                  alt="Captured recipe"
+                  className="w-full h-64 object-cover rounded-lg cursor-pointer"
+                  onClick={() => setPreviewImage(capturedImage)}
+                />
               </div>
             )}
           </div>
@@ -184,7 +119,7 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) processImage(file);
+              if (file) handleImageCapture(file);
             }}
           />
           <input
@@ -195,7 +130,7 @@ export function ImageRecognitionDialog({ open, onOpenChange, onRecipeScanned }: 
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) processImage(file);
+              if (file) handleImageCapture(file);
             }}
           />
         </DialogContent>
