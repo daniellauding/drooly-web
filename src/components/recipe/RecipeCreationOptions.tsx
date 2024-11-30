@@ -15,7 +15,7 @@ import { ClipboardImportDialog } from "./ClipboardImportDialog";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeCreationOptionsProps {
-  onRecipeImported: (recipe: Partial<Recipe>) => void;
+  onRecipeImported: (recipes: Partial<Recipe>[]) => void;
 }
 
 export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOptionsProps) {
@@ -24,6 +24,10 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
   const [showTrelloDialog, setShowTrelloDialog] = useState(false);
   const [showInstagramDialog, setShowInstagramDialog] = useState(false);
   const [showClipboardDialog, setShowClipboardDialog] = useState(false);
+
+  const handleSingleRecipeImport = (recipe: Partial<Recipe>) => {
+    onRecipeImported([recipe]);
+  };
 
   return (
     <>
@@ -66,7 +70,7 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
       <RecipeUrlDialog
         open={showUrlDialog}
         onOpenChange={setShowUrlDialog}
-        onRecipeScraped={onRecipeImported}
+        onRecipeScraped={handleSingleRecipeImport}
       />
 
       <ImageRecognitionDialog
@@ -78,19 +82,19 @@ export function RecipeCreationOptions({ onRecipeImported }: RecipeCreationOption
       <TrelloImportDialog
         open={showTrelloDialog}
         onOpenChange={setShowTrelloDialog}
-        onRecipeImported={onRecipeImported}
+        onRecipeImported={handleSingleRecipeImport}
       />
 
       <InstagramImportDialog
         open={showInstagramDialog}
         onOpenChange={setShowInstagramDialog}
-        onRecipeImported={onRecipeImported}
+        onRecipeImported={handleSingleRecipeImport}
       />
 
       <ClipboardImportDialog
         open={showClipboardDialog}
         onOpenChange={setShowClipboardDialog}
-        onRecipeImported={onRecipeImported}
+        onRecipeImported={handleSingleRecipeImport}
       />
     </>
   );
