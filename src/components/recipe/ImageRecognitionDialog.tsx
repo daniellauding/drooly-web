@@ -24,9 +24,8 @@ export function ImageRecognitionDialog({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const processImage = async (file: File) => {
+  const processImage = async (file: File): Promise<Partial<Recipe> | null> => {
     console.log("Processing captured image:", file.name);
-    const imageUrl = URL.createObjectURL(file);
     
     try {
       const worker = await createWorker('eng+swe');
@@ -40,14 +39,18 @@ export function ImageRecognitionDialog({
       const analyzedRecipe = await analyzeRecipeText(text);
       console.log("Recipe analyzed from image:", file.name, analyzedRecipe);
       
+      // Create blob URL for the image
+      const imageUrl = URL.createObjectURL(file);
+      
       return {
         ...analyzedRecipe,
         images: [imageUrl],
-        featuredImageIndex: 0
+        featuredImageIndex: 0,
+        sourceFile: file.name // Add this to help track which file created which recipe
       };
     } catch (error) {
       console.error("Error processing image:", file.name, error);
-      throw error;
+      return null;
     }
   };
 
@@ -82,7 +85,14 @@ export function ImageRecognitionDialog({
 
       console.log("Successfully processed all images. Total recipes:", recipes.length);
       setProcessedFiles(newProcessedFiles);
-      onRecipeScanned(recipes);
+      
+      // Ensure each recipe has a unique ID
+      const recipesWithIds = recipes.map((recipe, index) => ({
+        ...recipe,
+        id: `scanned-${Date.now()}-${index}`
+      }));
+      
+      onRecipeScanned(recipesWithIds);
       onOpenChange(false);
       
       toast({

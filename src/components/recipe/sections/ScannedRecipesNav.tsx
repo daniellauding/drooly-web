@@ -18,11 +18,19 @@ export function ScannedRecipesNav({
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Scanned Recipes</h3>
-      <Tabs defaultValue={activeRecipeIndex.toString()} onValueChange={(value) => onRecipeSelect(parseInt(value))}>
+      <Tabs 
+        value={activeRecipeIndex.toString()} 
+        onValueChange={(value) => onRecipeSelect(parseInt(value))}
+        className="w-full"
+      >
         <TabsList className="w-full">
-          {scannedRecipes.map((_, index) => (
-            <TabsTrigger key={index} value={index.toString()}>
-              Recipe {index + 1}
+          {scannedRecipes.map((recipe, index) => (
+            <TabsTrigger 
+              key={recipe.id || index} 
+              value={index.toString()}
+              className="flex-1"
+            >
+              Recipe {index + 1} {recipe.sourceFile ? `(${recipe.sourceFile})` : ''}
             </TabsTrigger>
           ))}
         </TabsList>
