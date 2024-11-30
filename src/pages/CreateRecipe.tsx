@@ -231,7 +231,12 @@ export default function CreateRecipe() {
     console.log("Received scanned recipes:", recipes.length);
     setScannedRecipes(recipes);
     if (recipes.length > 0) {
-      handleRecipeChange(recipes[0]);
+      const firstRecipe = recipes[0];
+      // Ensure we spread the existing recipe properties and only update with new ones
+      setRecipe(prev => ({
+        ...prev,
+        ...firstRecipe
+      }));
     }
     setShowImageRecognition(false);
     toast({
@@ -243,7 +248,11 @@ export default function CreateRecipe() {
   const handleRecipeTabChange = (index: number) => {
     console.log("Switching to recipe:", index);
     setActiveRecipeIndex(index);
-    handleRecipeChange(scannedRecipes[index]);
+    const selectedRecipe = scannedRecipes[index];
+    setRecipe(prev => ({
+      ...prev,
+      ...selectedRecipe
+    }));
   };
 
   return (
@@ -272,9 +281,7 @@ export default function CreateRecipe() {
         )}
 
         <RecipeCreationOptions 
-          onRecipeImported={(importedRecipe) => {
-            handleRecipeChange(importedRecipe);
-          }} 
+          onRecipeImported={handleRecipeScanned}
         />
 
         <RecipeAccordions
