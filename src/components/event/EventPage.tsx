@@ -28,7 +28,7 @@ const EventPage = ({ onCreateNew }: EventPageProps) => {
     if (onCreateNew) {
       onCreateNew();
     } else {
-      navigate('/create-event');
+      navigate('/plan');
     }
   };
 
