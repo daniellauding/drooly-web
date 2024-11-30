@@ -10,7 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Timestamp } from "firebase/firestore";
 import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
 import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions";
-import { RecipeHeader } from "@/components/recipe/RecipeHeader";
+import { RecipeHeaderSection } from "@/components/recipe/sections/RecipeHeaderSection";
+import { ScannedRecipesNav } from "@/components/recipe/sections/ScannedRecipesNav";
 import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
 import { Save } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
@@ -227,16 +228,26 @@ export default function CreateRecipe() {
     }));
   };
 
-  const handleRecipeScanned = (recipes: Partial<Recipe>[]) => {
+  const handleRecipeScanned = async (recipes: Partial<Recipe>[]) => {
     console.log("Received scanned recipes:", recipes.length);
     setScannedRecipes(recipes);
     if (recipes.length > 0) {
       const firstRecipe = recipes[0];
-      // Ensure we spread the existing recipe properties and only update with new ones
       setRecipe(prev => ({
         ...prev,
-        ...firstRecipe
+        ...firstRecipe,
+        title: firstRecipe.title || prev.title,
+        description: firstRecipe.description || prev.description,
+        ingredients: firstRecipe.ingredients || prev.ingredients,
+        instructions: firstRecipe.instructions || prev.instructions,
+        steps: firstRecipe.steps || prev.steps,
       }));
+      
+      // Open relevant sections when data is available
+      const sectionsToOpen = ["basic-info"];
+      if (firstRecipe.ingredients?.length) sectionsToOpen.push("ingredients");
+      if (firstRecipe.steps?.length) sectionsToOpen.push("steps");
+      setOpenSections(sectionsToOpen);
     }
     setShowImageRecognition(false);
     toast({
@@ -251,7 +262,12 @@ export default function CreateRecipe() {
     const selectedRecipe = scannedRecipes[index];
     setRecipe(prev => ({
       ...prev,
-      ...selectedRecipe
+      ...selectedRecipe,
+      title: selectedRecipe.title || prev.title,
+      description: selectedRecipe.description || prev.description,
+      ingredients: selectedRecipe.ingredients || prev.ingredients,
+      instructions: selectedRecipe.instructions || prev.instructions,
+      steps: selectedRecipe.steps || prev.steps,
     }));
   };
 
@@ -260,25 +276,15 @@ export default function CreateRecipe() {
       <BetaStrip />
       <TopBar />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
-        <RecipeHeader
+        <RecipeHeaderSection
           isEditing={isEditing}
-          recipe={recipe}
-          onSaveAsDraft={handleSaveAsDraft}
         />
 
-        {scannedRecipes.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {scannedRecipes.map((_, index) => (
-              <Button
-                key={index}
-                variant={activeRecipeIndex === index ? "default" : "outline"}
-                onClick={() => handleRecipeTabChange(index)}
-              >
-                Recipe {index + 1}
-              </Button>
-            ))}
-          </div>
-        )}
+        <ScannedRecipesNav
+          scannedRecipes={scannedRecipes}
+          activeRecipeIndex={activeRecipeIndex}
+          onRecipeSelect={handleRecipeTabChange}
+        />
 
         <RecipeCreationOptions 
           onRecipeImported={handleRecipeScanned}
