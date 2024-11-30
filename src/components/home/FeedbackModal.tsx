@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -36,15 +36,32 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     }
   }, [user]);
 
+  const resetForm = () => {
+    setSubject("");
+    setEmail("");
+    setMessage("");
+    setSending(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !subject || !message) {
+      toast({
+        variant: "destructive",
+        title: "Missing fields",
+        description: "Please fill in all required fields.",
+      });
+      return;
+    }
+
     setSending(true);
 
     try {
       console.log("Starting feedback submission process...");
       
       const feedbackData = {
-        email: email,
+        email,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
         message,
         createdAt: serverTimestamp(),
@@ -54,10 +71,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       
       console.log("Prepared feedback data:", feedbackData);
       
-      const feedbackCollection = collection(db, "feedback");
-      console.log("Attempting to add document to feedback collection...");
-      
-      const feedbackRef = await addDoc(feedbackCollection, feedbackData);
+      const feedbackRef = await addDoc(collection(db, "feedback"), feedbackData);
       
       console.log("Feedback successfully saved with ID:", feedbackRef.id);
 
@@ -66,9 +80,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         description: "We appreciate your input and will review it soon.",
       });
 
-      setSubject("");
-      setEmail("");
-      setMessage("");
+      resetForm();
       onOpenChange(false);
     } catch (error) {
       console.error("Error sending feedback:", error);
