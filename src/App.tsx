@@ -16,7 +16,7 @@ import Register from "./pages/Register";
 import Backoffice from "./pages/Backoffice";
 import About from "./pages/About";
 import Events from "./pages/Events";
-import CreateEvent from "./pages/PlanTogether";
+import CreateEvent from "./pages/CreateEvent";
 
 const queryClient = new QueryClient();
 
