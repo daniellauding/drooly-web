@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera, Upload, Image as ImageIcon } from "lucide-react";
+import { Loader2, Camera, Upload } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
@@ -33,10 +33,10 @@ export function ImageRecognitionDialog({
     const imageUrl = URL.createObjectURL(file);
     
     try {
-      const worker = await createWorker();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
+      const worker = await createWorker('eng');
+      console.log("Worker created successfully");
       const { data: { text } } = await worker.recognize(file);
+      console.log("Text recognized:", text.substring(0, 100) + "...");
       await worker.terminate();
 
       return { url: imageUrl, text };
