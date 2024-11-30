@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
 import { Event } from "@/types/event";
+import { fetchRecipes } from "@/services/recipeService";
 import { getUserEvents } from "@/services/eventService";
 import { format } from "date-fns";
 import { Plus, Clock, Users } from "lucide-react";
@@ -12,14 +13,12 @@ import { useQuery } from "@tanstack/react-query";
 const EventPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: events = [], isLoading } = useQuery({
-    queryKey: ['events', user?.uid],
-    queryFn: () => getUserEvents(user?.uid || ''),
+  const { data: events = [], isLoading } = useQuery(['events', user?.uid], () => getUserEvents(user?.uid || ''), {
     enabled: !!user?.uid
   });
 
-  const upcomingEvents = (events as Event[]).filter(event => new Date(event.date) > new Date());
-  const pastEvents = (events as Event[]).filter(event => new Date(event.date) <= new Date());
+  const upcomingEvents = events.filter(event => new Date(event.date) > new Date());
+  const pastEvents = events.filter(event => new Date(event.date) <= new Date());
 
   return (
     <div className="min-h-screen bg-[#191919] text-white">

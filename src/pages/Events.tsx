@@ -1,12 +1,13 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { TopBar } from "@/components/TopBar";
 import { getUserEvents } from "@/services/eventService";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, CalendarDays, History, CalendarClock } from "lucide-react";
+import { format } from "date-fns";
+import { Plus, Clock, CalendarDays, History, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventCard } from "@/components/event/EventCard";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function Events() {
   const { user } = useAuth();
@@ -22,18 +23,18 @@ export default function Events() {
   const pastEvents = events.filter(event => new Date(event.date) <= new Date());
 
   return (
-    <div className="min-h-screen bg-background">
-      <TopBar />
+    <div className="min-h-screen bg-[#191919] text-white">
+      <TopBar className="bg-transparent border-none" />
       
       <main className="container max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2">
-            <CalendarDays className="w-8 h-8 text-primary" />
+            <CalendarDays className="w-8 h-8" />
             <h1 className="text-2xl font-semibold">Events</h1>
           </div>
           <Button 
             onClick={() => navigate('/plan')} 
-            className="bg-primary hover:bg-primary/90"
+            className="bg-white/10 hover:bg-white/20"
           >
             <Plus className="w-4 h-4 mr-2" />
             New Event
@@ -41,12 +42,12 @@ export default function Events() {
         </div>
 
         <Tabs defaultValue="upcoming" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="upcoming">
+          <TabsList className="bg-white/5">
+            <TabsTrigger value="upcoming" className="data-[state=active]:bg-white/10">
               <CalendarClock className="w-4 h-4 mr-2" />
               Upcoming
             </TabsTrigger>
-            <TabsTrigger value="past">
+            <TabsTrigger value="past" className="data-[state=active]:bg-white/10">
               <History className="w-4 h-4 mr-2" />
               Past
             </TabsTrigger>
@@ -54,7 +55,7 @@ export default function Events() {
 
           <TabsContent value="upcoming" className="space-y-4">
             {upcomingEvents.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-white/60">
                 <CalendarClock className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No upcoming events</p>
                 <Button 
@@ -76,7 +77,7 @@ export default function Events() {
 
           <TabsContent value="past" className="space-y-4">
             {pastEvents.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
+              <div className="text-center py-12 text-white/60">
                 <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No past events</p>
               </div>
