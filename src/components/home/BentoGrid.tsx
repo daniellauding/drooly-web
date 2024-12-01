@@ -205,7 +205,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       <CuisineMapDialog 
         open={showCuisineMap}
         onOpenChange={setShowCuisineMap}
-        recipes={[...recipes, ...generatedRecipes]}
+        recipes={[...recipes, ...generatedRecipes]} // Pass both regular and generated recipes
       />
 
       <AuthModal 

@@ -69,9 +69,11 @@ export function BentoInteractiveCard({
   };
 
   const handleCardClick = () => {
+    console.log("BentoInteractiveCard - Card clicked:", item.title);
     if (item.title === "What's in your kitchen?") {
       setIsModalOpen(true);
     } else if (item.title === "Explore Cuisines") {
+      console.log("BentoInteractiveCard - Opening cuisine map");
       setIsMapOpen(true);
     } else {
       item.action();
@@ -113,7 +115,7 @@ export function BentoInteractiveCard({
       <CuisineMapDialog
         open={isMapOpen}
         onOpenChange={setIsMapOpen}
-        recipes={[]} // Pass the recipes from your context/state here
+        recipes={[]} // This should be updated to pass actual recipes from context/state
       />
     </>
   );
