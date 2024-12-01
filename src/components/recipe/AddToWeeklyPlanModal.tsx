@@ -40,6 +40,7 @@ export function AddToWeeklyPlanModal({
     try {
       const weeklyPlanDoc = await addDoc(collection(db, "weeklyPlans"), {
         userId: user.uid,
+        owner: user.uid,
         userName: user.displayName || "Anonymous Chef",
         userAvatar: user.photoURL || "/placeholder.svg",
         recipeId: recipeId || null,
@@ -49,7 +50,8 @@ export function AddToWeeklyPlanModal({
         day: selectedDay,
         mealType,
         createdAt: serverTimestamp(),
-        status: "planned"
+        status: "planned",
+        collaborators: {}
       });
 
       toast({

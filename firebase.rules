@@ -77,8 +77,22 @@ service cloud.firestore {
 
     match /weeklyPlans/{planId} {
       allow read: if true;
-      allow create, update, delete: if request.auth != null && 
-        request.resource.data.userId == request.auth.uid;
+      allow create, update, delete: if request.auth != null && (
+        request.resource.data.userId == request.auth.uid ||
+        request.resource.data.collaborators[request.auth.uid] == true
+      );
+    }
+
+    match /collaborativePlans/{planId} {
+      allow read: if request.auth != null && (
+        resource.data.owner == request.auth.uid ||
+        resource.data.collaborators[request.auth.uid] == true
+      );
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && (
+        resource.data.owner == request.auth.uid ||
+        resource.data.collaborators[request.auth.uid] == true
+      );
     }
   }
 }
