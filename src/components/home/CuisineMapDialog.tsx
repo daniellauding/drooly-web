@@ -6,6 +6,8 @@ import { Recipe } from "@/types/recipe";
 import { CuisineDebugPanel } from "./map/CuisineDebugPanel";
 import { CUISINE_COORDINATES, normalizeCuisineName } from "./map/cuisineCoordinates";
 import { createCuisineMapMarker } from "./map/CuisineMapMarker";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
@@ -49,6 +51,16 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     console.groupEnd();
   };
 
+  const resetMapView = () => {
+    if (map.current) {
+      map.current.flyTo({
+        center: [0, 20],
+        zoom: 1.5,
+        duration: 1500
+      });
+    }
+  };
+
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
@@ -56,14 +68,20 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
       center: [0, 20],
-      zoom: 1.5
+      zoom: 1.5,
+      minZoom: 1,
+      maxZoom: 12
     });
+
+    const currentMap = map.current;
+
+    // Add navigation controls
+    currentMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
     // Group recipes by cuisine
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = normalizeCuisineName(recipe.cuisine);
-        console.log(`Processing recipe "${recipe.title}" with cuisine "${recipe.cuisine}" (normalized: "${cuisineKey}")`);
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
@@ -71,8 +89,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       }
       return acc;
     }, {} as Record<string, Recipe[]>);
-
-    console.log('Grouped recipes by cuisine:', recipeByCuisine);
 
     // Add markers for each cuisine that has recipes
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
@@ -83,39 +99,43 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         return;
       }
 
-      console.log(`Creating marker for ${cuisine} at coordinates:`, coordinates);
       createCuisineMapMarker({
         cuisine,
         coordinates,
         recipes: cuisineRecipes,
-        map: map.current!
+        map: currentMap
       });
     });
 
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
+      if (currentMap) {
+        currentMap.remove();
       }
     };
   }, [open, recipes]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px]">
-        <DialogTitle className="text-xl font-semibold mb-4">
+      <DialogContent className="sm:max-w-[900px] h-[80vh]">
+        <DialogTitle className="text-xl font-semibold mb-2">
           Explore Cuisines Around the World
         </DialogTitle>
         <DialogDescription className="text-sm text-muted-foreground mb-4">
-          Discover recipes from different cuisines. Click on the markers to see available recipes from each region.
+          Click on markers to zoom in and see recipes from each region. Use the home button to reset the view.
         </DialogDescription>
         
-        <CuisineDebugPanel 
-          recipes={recipes}
-          onDebug={showRecipeCuisines}
-        />
-
-        <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
+        <div className="relative flex-1 h-full min-h-[500px]">
+          <Button
+            variant="outline"
+            size="sm"
+            className="absolute top-2 left-2 z-10"
+            onClick={resetMapView}
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Reset View
+          </Button>
+          <div ref={mapContainer} className="w-full h-full rounded-lg" />
+        </div>
       </DialogContent>
     </Dialog>
   );
