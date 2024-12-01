@@ -14,6 +14,54 @@
     "instructions": "Instruktioner",
     "servings": "Portioner",
     "cookTime": "Tillagningstid",
-    "difficulty": "Svårighetsgrad"
+    "difficulty": "Svårighetsgrad",
+    "cuisines": {
+      "american": "Amerikansk",
+      "italian": "Italiensk",
+      "japanese": "Japansk",
+      "mexican": "Mexikansk",
+      "indian": "Indisk",
+      "french": "Fransk",
+      "thai": "Thailändsk",
+      "mediterranean": "Medelhavsmat",
+      "chinese": "Kinesisk",
+      "korean": "Koreansk"
+    },
+    "categories": {
+      "familyFriendly": "Familjevänlig",
+      "fastAndEasy": "Snabb & Enkel",
+      "budgetFriendly": "Budgetvänlig",
+      "mealPrep": "Matlådor",
+      "healthy": "Hälsosam",
+      "comfortFood": "Husmanskost"
+    },
+    "occasions": {
+      "christmas": "Jul",
+      "thanksgiving": "Thanksgiving",
+      "easter": "Påsk",
+      "halloween": "Halloween",
+      "newYear": "Nyår"
+    },
+    "seasons": {
+      "spring": "Vår",
+      "summer": "Sommar",
+      "fall": "Höst",
+      "winter": "Vinter",
+      "yearRound": "Året runt"
+    },
+    "equipment": {
+      "oven": "Ugn",
+      "stovetop": "Spis",
+      "grill": "Grill",
+      "slowCooker": "Slowcooker",
+      "airFryer": "Luftfritös"
+    },
+    "costs": {
+      "under5": "Under 50kr",
+      "under10": "50-100kr",
+      "under20": "100-200kr",
+      "under30": "200-300kr",
+      "over30": "300kr+"
+    }
   }
 }

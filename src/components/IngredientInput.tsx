@@ -11,28 +11,22 @@ import { AdvancedIngredientSection } from "./ingredients/AdvancedIngredientSecti
 import { IngredientGroupSection } from "./ingredients/IngredientGroupSection";
 import { IngredientSearchBar } from "./ingredients/IngredientSearchBar";
 import { Ingredient } from "@/services/recipeService";
+import { useTranslation } from "react-i18next";
 
 interface IngredientInputProps {
   ingredients: Ingredient[];
   onChange: (ingredients: Ingredient[]) => void;
 }
 
-const INGREDIENT_GROUPS = [
-  "Main Ingredients",
-  "Sauce",
-  "Marinade",
-  "Salad Dressing",
-  "Garnish",
-  "Seasoning"
-];
-
 const DEFAULT_UNIT = "piece";
 const DEFAULT_AMOUNT = "1";
 
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { t } = useTranslation();
 
   const addIngredient = (name = "", group = "Main Ingredients") => {
+    console.log("Adding ingredient:", { name, group });
     onChange([
       ...ingredients,
       { 
@@ -69,14 +63,14 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <Label className="text-sm font-medium">Ingredients</Label>
+        <Label className="text-sm font-medium">{t('recipe.ingredients')}</Label>
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="h-9"
         >
-          Advanced
+          {t('common.advanced')}
           <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
         </Button>
       </div>
@@ -105,7 +99,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
           <AdvancedIngredientSection 
             onAddIngredient={addIngredient}
             onRemoveGroup={removeGroup}
-            groups={INGREDIENT_GROUPS}
+            groups={Object.keys(groupedIngredients)}
           />
         </CollapsibleContent>
       </Collapsible>

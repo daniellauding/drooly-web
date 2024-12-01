@@ -14,6 +14,54 @@
     "instructions": "Instructions",
     "servings": "Servings",
     "cookTime": "Cooking Time",
-    "difficulty": "Difficulty"
+    "difficulty": "Difficulty",
+    "cuisines": {
+      "american": "American",
+      "italian": "Italian",
+      "japanese": "Japanese",
+      "mexican": "Mexican",
+      "indian": "Indian",
+      "french": "French",
+      "thai": "Thai",
+      "mediterranean": "Mediterranean",
+      "chinese": "Chinese",
+      "korean": "Korean"
+    },
+    "categories": {
+      "familyFriendly": "Family Friendly",
+      "fastAndEasy": "Fast & Easy",
+      "budgetFriendly": "Budget Friendly",
+      "mealPrep": "Meal Prep",
+      "healthy": "Healthy",
+      "comfortFood": "Comfort Food"
+    },
+    "occasions": {
+      "christmas": "Christmas",
+      "thanksgiving": "Thanksgiving",
+      "easter": "Easter",
+      "halloween": "Halloween",
+      "newYear": "New Year"
+    },
+    "seasons": {
+      "spring": "Spring",
+      "summer": "Summer",
+      "fall": "Fall",
+      "winter": "Winter",
+      "yearRound": "Year Round"
+    },
+    "equipment": {
+      "oven": "Oven",
+      "stovetop": "Stovetop",
+      "grill": "Grill",
+      "slowCooker": "Slow Cooker",
+      "airFryer": "Air Fryer"
+    },
+    "costs": {
+      "under5": "Under $5",
+      "under10": "$5-$10",
+      "under20": "$10-$20",
+      "under30": "$20-$30",
+      "over30": "$30+"
+    }
   }
 }
