@@ -42,6 +42,7 @@ function App() {
             <Route path="/backoffice" element={<Backoffice />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/:id" element={<EventDetailView />} />
+            <Route path="/events/edit/:id" element={<CreateEvent />} />
             <Route path="/create-event" element={<CreateEvent />} />
             <Route path="/about" element={<About />} />
           </Routes>
