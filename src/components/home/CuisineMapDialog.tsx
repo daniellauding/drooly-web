@@ -7,7 +7,6 @@ import { CUISINES } from "@/types/recipe";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
-// Normalize all keys to lowercase for consistent lookup
 const CUISINE_COORDINATES: Record<string, [number, number]> = {
   'italian': [12.4964, 41.9028],
   'french': [2.3522, 48.8566],
@@ -45,8 +44,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
-    // Debug log 1: Available cuisines from constants
-    console.log("Available cuisines from CUISINES constant:", CUISINES);
+    console.log("Starting map initialization with recipes:", recipes.length);
     
     // Group recipes by cuisine and normalize cuisine names
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
@@ -67,22 +65,10 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    // Debug log 2: Recipes grouped by cuisine
-    console.log("Recipes grouped by cuisine:", 
-      Object.entries(recipeByCuisine).map(([cuisine, recipes]) => 
-        `${cuisine}: ${recipes.length} recipes`
-      )
-    );
+    // Debug log for recipe grouping
+    console.log("Recipes grouped by cuisine:", recipeByCuisine);
 
-    // Debug log 3: Available coordinates for each cuisine
-    console.log("Cuisines with coordinates and recipe counts:", 
-      Object.keys(CUISINE_COORDINATES).map(cuisine => ({
-        cuisine: cuisine.toLowerCase(),
-        hasCoordinates: true,
-        recipeCount: recipeByCuisine[cuisine.toLowerCase()]?.length || 0
-      }))
-    );
-
+    // Initialize the map
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
@@ -90,15 +76,16 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       zoom: 1.5
     });
 
-    // Add markers for each cuisine group
+    // Add markers for each cuisine that has recipes
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
-      const coordinates = CUISINE_COORDINATES[cuisine.toLowerCase()];
+      const coordinates = CUISINE_COORDINATES[cuisine];
+      
+      console.log(`Processing cuisine ${cuisine} with ${cuisineRecipes.length} recipes. Has coordinates:`, !!coordinates);
+      
       if (!coordinates) {
-        console.log(`No coordinates found for cuisine: ${cuisine}`);
+        console.warn(`No coordinates found for cuisine: ${cuisine}`);
         return;
       }
-
-      console.log(`Adding marker for ${cuisine} with ${cuisineRecipes.length} recipes at coordinates:`, coordinates);
 
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div class="p-2">
