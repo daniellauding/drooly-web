@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query as firestoreQuery, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Recipe } from "@/types/recipe";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
@@ -17,32 +17,31 @@ export function RecipeSearch({ userId, onRecipeSelect, selectedRecipe }: RecipeS
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
   const searchRecipes = async (searchTerm: string) => {
-    if (!searchTerm || !searchTerm.trim() || !userId) return;
+    if (!searchTerm || !searchTerm.trim() || !userId) {
+      setRecipes([]);
+      return;
+    }
     
     try {
       console.log("Searching recipes with query:", searchTerm);
       const recipesRef = collection(db, "recipes");
-      const q = query(
+      const searchQueryRef = firestoreQuery(
         recipesRef,
         where("title", ">=", searchTerm.toLowerCase()),
         where("title", "<=", searchTerm.toLowerCase() + "\uf8ff")
       );
       
-      const querySnapshot = await getDocs(q);
-      const results: Recipe[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as Recipe;
-        results.push({
-          id: doc.id,
-          ...data
-        });
-      });
+      const querySnapshot = await getDocs(searchQueryRef);
+      const results = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
       
       console.log("Found recipes:", results.length);
       setRecipes(results);
     } catch (error) {
       console.error("Error searching recipes:", error);
+      setRecipes([]);
     }
   };
 
