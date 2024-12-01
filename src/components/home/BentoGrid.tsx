@@ -114,7 +114,8 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       if (interactiveIndex < interactiveCards.length) {
         items.splice(i + 2, 0, {
           isInteractive: true,
-          ...interactiveCards[interactiveIndex]
+          ...interactiveCards[interactiveIndex],
+          recipes: [...recipes, ...generatedRecipes] // Pass all recipes to interactive cards
         });
         interactiveIndex++;
       }
@@ -129,7 +130,8 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
         icon: Plus,
         action: onAuthModalOpen,
         color: "bg-green-50 hover:bg-green-100",
-        textColor: "text-green-700"
+        textColor: "text-green-700",
+        recipes: [...recipes, ...generatedRecipes] // Pass all recipes here too
       });
     }
 
@@ -167,6 +169,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
                 key={`interactive-${index}`}
                 item={item}
                 onRecipesFound={handleRecipesFound}
+                recipes={[...recipes, ...generatedRecipes]} // Pass all recipes here
               />
             );
           }

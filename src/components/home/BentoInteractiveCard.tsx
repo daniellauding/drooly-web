@@ -18,14 +18,17 @@ interface InteractiveCardProps {
   action: () => void;
   color: string;
   textColor: string;
+  recipes?: Recipe[]; // Add recipes prop
 }
 
 export function BentoInteractiveCard({ 
   item,
-  onRecipesFound
+  onRecipesFound,
+  recipes // Add recipes parameter
 }: { 
   item: InteractiveCardProps;
   onRecipesFound: (recipes: Recipe[]) => void;
+  recipes?: Recipe[]; // Add recipes type
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
@@ -73,7 +76,7 @@ export function BentoInteractiveCard({
     if (item.title === "What's in your kitchen?") {
       setIsModalOpen(true);
     } else if (item.title === "Explore Cuisines") {
-      console.log("BentoInteractiveCard - Opening cuisine map");
+      console.log("BentoInteractiveCard - Opening cuisine map with recipes:", recipes);
       setIsMapOpen(true);
     } else {
       item.action();
@@ -115,7 +118,7 @@ export function BentoInteractiveCard({
       <CuisineMapDialog
         open={isMapOpen}
         onOpenChange={setIsMapOpen}
-        recipes={[]} // This should be updated to pass actual recipes from context/state
+        recipes={recipes || []} // Pass the recipes prop
       />
     </>
   );
