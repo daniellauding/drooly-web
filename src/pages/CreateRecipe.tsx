@@ -165,9 +165,13 @@ export default function CreateRecipe() {
       return;
     }
 
-    await handleSaveRecipe(currentRecipe, user.uid, user.displayName || "", false);
+    // Save all scanned recipes that have been modified
+    const recipesToSave = scannedRecipes.length > 0 ? scannedRecipes : [currentRecipe];
+    console.log("Saving recipes:", recipesToSave.map(r => ({ id: r.id, title: r.title })));
     
-    // Check for first recipe and recipe streak achievements
+    await handleSaveRecipe(recipesToSave, user.uid, user.displayName || "", false);
+    
+    // Check for achievements
     const firstRecipeAchieved = await updateAchievementProgress(user.uid, 'firstRecipe', 1);
     if (firstRecipeAchieved) {
       toast({
