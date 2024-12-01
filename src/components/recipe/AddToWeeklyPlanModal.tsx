@@ -32,6 +32,7 @@ export function AddToWeeklyPlanModal({
   const [title, setTitle] = useState("");
   const [selectedDay, setSelectedDay] = useState(DAYS[0]);
   const [mealType, setMealType] = useState(MEAL_TYPES[0]);
+  const [customRecipeTitle, setCustomRecipeTitle] = useState("");
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -41,14 +42,14 @@ export function AddToWeeklyPlanModal({
         userId: user.uid,
         userName: user.displayName || "Anonymous Chef",
         userAvatar: user.photoURL || "/placeholder.svg",
-        recipeId,
-        recipeTitle,
-        recipeImage,
+        recipeId: recipeId || null,
+        recipeTitle: recipeId ? recipeTitle : customRecipeTitle,
+        recipeImage: recipeImage || null,
         title,
         day: selectedDay,
         mealType,
         createdAt: serverTimestamp(),
-        status: "planned" // planned, completed, cancelled
+        status: "planned"
       });
 
       toast({
@@ -82,6 +83,18 @@ export function AddToWeeklyPlanModal({
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
+          
+          {!recipeId && (
+            <div>
+              <Label>Recipe Name (Optional)</Label>
+              <Input
+                placeholder="Enter recipe name"
+                value={customRecipeTitle}
+                onChange={(e) => setCustomRecipeTitle(e.target.value)}
+              />
+            </div>
+          )}
+
           <div>
             <Label>Day</Label>
             <SingleSelect
@@ -91,6 +104,7 @@ export function AddToWeeklyPlanModal({
               placeholder="Select day"
             />
           </div>
+
           <div>
             <Label>Meal Type</Label>
             <SingleSelect
@@ -100,6 +114,7 @@ export function AddToWeeklyPlanModal({
               placeholder="Select meal type"
             />
           </div>
+
           <Button onClick={handleSubmit} className="w-full">
             Add to Plan
           </Button>
