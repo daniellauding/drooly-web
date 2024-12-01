@@ -20,6 +20,7 @@ export function ShoppingListContent() {
 
   useEffect(() => {
     if (user) {
+      console.log("Loading shopping list for user:", user.uid);
       loadCheckedItems();
       loadShoppingList();
     }
@@ -28,16 +29,22 @@ export function ShoppingListContent() {
   const loadCheckedItems = async () => {
     if (!user) return;
     try {
+      console.log("Loading checked items...");
       const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
       const listDoc = await getDoc(listRef);
       if (listDoc.exists()) {
+        console.log("Found existing checked items:", listDoc.data().checkedItems);
         setCheckedItems(new Set(listDoc.data().checkedItems || []));
+      } else {
+        console.log("No existing checked items found");
+        // Initialize empty shopping list document
+        await setDoc(listRef, { checkedItems: [], updatedAt: Timestamp.now() });
       }
     } catch (error) {
       console.error("Error loading checked items:", error);
       toast({
         title: "Error",
-        description: "Failed to load your shopping list",
+        description: "Failed to load your shopping list. Please try again.",
         variant: "destructive"
       });
     }
@@ -46,6 +53,7 @@ export function ShoppingListContent() {
   const loadShoppingList = async () => {
     if (!user) return;
     try {
+      console.log("Loading recipes for shopping list...");
       const recipesRef = collection(db, "recipes");
       const q = query(
         recipesRef,
@@ -58,6 +66,7 @@ export function ShoppingListContent() {
         ...doc.data()
       })) as Recipe[];
 
+      console.log("Fetched recipes:", fetchedRecipes.length);
       setRecipes(fetchedRecipes);
 
       const allIngredients = fetchedRecipes.flatMap(recipe =>
@@ -69,12 +78,13 @@ export function ShoppingListContent() {
         }))
       );
 
+      console.log("Total ingredients:", allIngredients.length);
       setIngredients(allIngredients);
     } catch (error) {
       console.error("Error loading shopping list:", error);
       toast({
         title: "Error",
-        description: "Failed to load your shopping list",
+        description: "Failed to load your shopping list. Please try again.",
         variant: "destructive"
       });
     }
@@ -117,36 +127,54 @@ export function ShoppingListContent() {
     await saveCheckedItems(newChecked);
   };
 
-  const handleRemoveIngredient = (ingredient: IngredientItem) => {
+  const handleRemoveIngredient = async (ingredient: IngredientItem) => {
+    console.log("Removing ingredient:", ingredient);
     setIngredients(prev => prev.filter(ing => 
       !(ing.recipeId === ingredient.recipeId && ing.name === ingredient.name)
     ));
+    
+    // Remove from checked items if it was checked
+    const key = `${ingredient.recipeId}-${ingredient.name}`;
+    if (checkedItems.has(key)) {
+      const newChecked = new Set(checkedItems);
+      newChecked.delete(key);
+      await saveCheckedItems(newChecked);
+    }
   };
 
   const saveCheckedItems = async (items: Set<string>) => {
     if (!user) return;
     try {
-      await setDoc(doc(db, "users", user.uid, "shoppingLists", "current"), {
+      console.log("Saving checked items:", Array.from(items));
+      const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
+      await setDoc(listRef, {
         checkedItems: Array.from(items),
         updatedAt: Timestamp.now()
       });
 
+      // Add to history if items were checked
       if (items.size > 0) {
         const checkedIngredients = ingredients.filter(ing => 
           items.has(`${ing.recipeId}-${ing.name}`)
         );
         
+        console.log("Adding to history:", checkedIngredients.length, "items");
         await addDoc(collection(db, "users", user.uid, "shoppingHistory"), {
           items: checkedIngredients,
           checkedAt: Timestamp.now(),
           recurrence: "none"
         });
       }
+
+      toast({
+        title: "Saved",
+        description: "Your shopping list has been updated",
+      });
     } catch (error) {
       console.error("Error saving checked items:", error);
       toast({
         title: "Error",
-        description: "Failed to save your changes",
+        description: "Failed to save your changes. Please try again.",
         variant: "destructive"
       });
     }
@@ -162,10 +190,6 @@ export function ShoppingListContent() {
       bought: false
     };
     setIngredients(prev => [...prev, customIngredient]);
-  };
-
-  const addHistoryItemsToList = (items: IngredientItem[]) => {
-    setIngredients(prev => [...prev, ...items]);
   };
 
   return (
@@ -199,7 +223,7 @@ export function ShoppingListContent() {
       <div className="mt-8">
         <ShoppingHistory 
           userId={user?.uid || ""} 
-          onAddToList={addHistoryItemsToList}
+          onAddToList={(items) => setIngredients(prev => [...prev, ...items])}
         />
       </div>
     </div>
