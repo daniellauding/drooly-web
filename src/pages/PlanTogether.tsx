@@ -29,6 +29,10 @@ export default function PlanTogether() {
     setGuests([...guests, guest]);
   };
 
+  const handleRemoveGuest = (guestId: string) => {
+    setGuests(guests.filter(guest => guest.id !== guestId));
+  };
+
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -54,7 +58,7 @@ export default function PlanTogether() {
         guests,
         dishes: [],
         createdBy: user.uid,
-        isPrivate: false, // Added the missing isPrivate property
+        isPrivate: false,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -171,7 +175,11 @@ export default function PlanTogether() {
               </div>
             </Card>
 
-            <GuestList guests={guests} onAddGuest={handleAddGuest} />
+            <GuestList 
+              guests={guests} 
+              onAddGuest={handleAddGuest}
+              onRemoveGuest={handleRemoveGuest}
+            />
 
             <div className="flex gap-4">
               <Button type="submit">Create Event</Button>
