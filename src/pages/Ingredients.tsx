@@ -1,18 +1,16 @@
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { useAuth } from "@/contexts/AuthContext";
-import { collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, getDoc, addDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Recipe } from "@/types/recipe";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { ShoppingListHeader } from "@/components/shopping/ShoppingListHeader";
 import { RecipeProgressCard } from "@/components/shopping/RecipeProgressCard";
 import { CustomIngredientAdd } from "@/components/shopping/CustomIngredientAdd";
 import { IngredientItem, RecipeProgress } from "@/components/shopping/types";
+import { ShoppingHistory } from "@/components/shopping/ShoppingHistory";
 
 export default function Ingredients() {
   const { user } = useAuth();
@@ -22,29 +20,63 @@ export default function Ingredients() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [recipeProgress, setRecipeProgress] = useState<Record<string, RecipeProgress>>({});
   const [listId, setListId] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("current");
 
   useEffect(() => {
     if (user) {
-      // Generate a unique list ID for the user if not exists
       setListId(`${user.uid}_shopping_list`);
+      loadCheckedItems();
     }
   }, [user]);
 
-  useEffect(() => {
-    const loadCheckedItems = async () => {
-      if (!user) return;
-      try {
-        const checkedItemsDoc = await getDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"));
-        if (checkedItemsDoc.exists()) {
-          setCheckedItems(new Set(checkedItemsDoc.data().items));
-        }
-      } catch (error) {
-        console.error("Error loading checked items:", error);
+  const loadCheckedItems = async () => {
+    if (!user) return;
+    try {
+      const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
+      const listDoc = await getDoc(listRef);
+      if (listDoc.exists()) {
+        setCheckedItems(new Set(listDoc.data().checkedItems || []));
       }
-    };
+    } catch (error) {
+      console.error("Error loading checked items:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your shopping list",
+        variant: "destructive"
+      });
+    }
+  };
 
-    loadCheckedItems();
-  }, [user]);
+  const saveCheckedItems = async (items: Set<string>) => {
+    if (!user) return;
+    try {
+      // Save current state
+      await setDoc(doc(db, "users", user.uid, "shoppingLists", "current"), {
+        checkedItems: Array.from(items),
+        updatedAt: Timestamp.now()
+      });
+
+      // Add to history if items were checked
+      if (items.size > 0) {
+        const checkedIngredients = ingredients.filter(ing => 
+          items.has(`${ing.recipeId}-${ing.name}`)
+        );
+        
+        await addDoc(collection(db, "users", user.uid, "shoppingHistory"), {
+          items: checkedIngredients,
+          checkedAt: Timestamp.now(),
+          recurrence: "none" // Can be "weekly", "monthly", etc.
+        });
+      }
+    } catch (error) {
+      console.error("Error saving checked items:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save your changes",
+        variant: "destructive"
+      });
+    }
+  };
 
   useEffect(() => {
     const fetchWantToCookRecipes = async () => {
@@ -136,27 +168,12 @@ export default function Ingredients() {
     updateProgressForAllRecipes(newChecked);
   };
 
-  const saveCheckedItems = async (items: Set<string>) => {
-    if (!user) return;
-    try {
-      await setDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"), {
-        items: Array.from(items)
-      });
-    } catch (error) {
-      console.error("Error saving checked items:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save your changes",
-        variant: "destructive"
-      });
-    }
-  };
-
   const clearChecked = async () => {
     if (!user) return;
-    setCheckedItems(new Set());
-    await saveCheckedItems(new Set());
-    updateProgressForAllRecipes(new Set());
+    const newChecked = new Set<string>();
+    setCheckedItems(newChecked);
+    await saveCheckedItems(newChecked);
+    updateProgressForAllRecipes(newChecked);
     toast({
       title: "Shopping list cleared",
       description: "All items have been unchecked"
@@ -192,21 +209,28 @@ export default function Ingredients() {
     <div className="min-h-screen bg-background">
       <TopBar />
       <main className="container mx-auto px-4 py-8">
-        <ShoppingListHeader
-          checkedItemsCount={checkedItems.size}
-          onClearAll={clearChecked}
-          onMarkAllBought={markAllAsBought}
-          userId={user?.uid || ""}
-          listId={listId}
-        />
-
-        <CustomIngredientAdd onAdd={handleAddCustomIngredient} />
-
-        <Tabs defaultValue="all" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
-            <TabsTrigger value="all">All Ingredients</TabsTrigger>
-            <TabsTrigger value="by-recipe">By Recipe</TabsTrigger>
+            <TabsTrigger value="current">Current List</TabsTrigger>
+            <TabsTrigger value="history">Shopping History</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="current">
+            <ShoppingListHeader
+              checkedItemsCount={checkedItems.size}
+              onClearAll={clearChecked}
+              onMarkAllBought={markAllAsBought}
+              userId={user?.uid || ""}
+              listId={listId}
+            />
+
+            <CustomIngredientAdd onAdd={handleAddCustomIngredient} />
+
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList>
+                <TabsTrigger value="all">All Ingredients</TabsTrigger>
+                <TabsTrigger value="by-recipe">By Recipe</TabsTrigger>
+              </TabsList>
 
           <TabsContent value="all" className="mt-6">
             <Card className="p-6">
@@ -242,6 +266,12 @@ export default function Ingredients() {
                 />
               ))}
             </div>
+          </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="history">
+            <ShoppingHistory userId={user?.uid || ""} />
           </TabsContent>
         </Tabs>
       </main>
