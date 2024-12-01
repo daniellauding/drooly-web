@@ -90,6 +90,12 @@ export function ImageRecognitionDialog({
       
       // Update local state with all scanned recipes
       const updatedRecipes = [...scannedRecipes, ...newRecipes];
+      console.log("Updated recipes array:", updatedRecipes.map(r => ({
+        id: r.id,
+        title: r.title?.slice(0, 30),
+        ingredients: r.ingredients?.length
+      })));
+      
       setScannedRecipes(updatedRecipes);
       
       // Pass all recipes to parent component

@@ -232,10 +232,22 @@ export default function CreateRecipe() {
 
   const handleRecipeScanned = async (recipes: Partial<Recipe>[]) => {
     console.log("Received scanned recipes:", recipes.length);
+    console.log("Scanned recipes details:", recipes.map(r => ({
+      id: r.id,
+      title: r.title?.slice(0, 30),
+      ingredients: r.ingredients?.length,
+      steps: r.steps?.length
+    })));
+    
     setScannedRecipes(recipes);
     
     if (recipes.length > 0) {
       const firstRecipe = recipes[0];
+      console.log("Setting first recipe as current:", {
+        id: firstRecipe.id,
+        title: firstRecipe.title?.slice(0, 30)
+      });
+      
       setRecipe(prev => ({
         ...prev,
         ...firstRecipe,
