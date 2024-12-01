@@ -37,6 +37,10 @@ interface CuisineMapDialogProps {
   recipes: Recipe[];
 }
 
+const normalizeCuisineName = (cuisine: string): string => {
+  return cuisine.toLowerCase().trim();
+};
+
 export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDialogProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -47,20 +51,12 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     console.log("=== Starting Recipe Analysis ===");
     console.log("Total recipes received:", recipes.length);
     
-    // Log all recipes and their cuisines
-    recipes.forEach(recipe => {
-      console.log("Recipe:", {
-        id: recipe.id,
-        title: recipe.title,
-        cuisine: recipe.cuisine,
-        normalizedCuisine: recipe.cuisine?.toLowerCase()
-      });
-    });
-
     // Group recipes by cuisine and normalize cuisine names
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
-        const cuisineKey = recipe.cuisine.toLowerCase().trim();
+        const cuisineKey = normalizeCuisineName(recipe.cuisine);
+        console.log(`Processing recipe "${recipe.title}" with cuisine "${recipe.cuisine}" -> normalized to "${cuisineKey}"`);
+        
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
@@ -75,12 +71,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       console.log(`${cuisine}: ${recipes.length} recipes`);
     });
 
-    // Log available coordinates
-    console.log("=== Available Coordinates ===");
-    Object.keys(CUISINE_COORDINATES).forEach(cuisine => {
-      console.log(`${cuisine}: ${CUISINE_COORDINATES[cuisine].join(', ')}`);
-    });
-
     // Initialize the map
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -93,8 +83,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
       
-      console.log(`Processing ${cuisineRecipes.length} recipes for cuisine "${cuisine}"`);
-      console.log(`Coordinates found: ${coordinates ? 'Yes' : 'No'}`);
+      console.log(`Looking up coordinates for cuisine "${cuisine}":`, coordinates ? 'Found' : 'Not found');
       
       if (!coordinates) {
         console.warn(`No coordinates found for cuisine: ${cuisine}`);
