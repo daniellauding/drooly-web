@@ -2,9 +2,16 @@ import { useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { WeeklyStories } from "@/components/WeeklyStories";
 import { StoryViewer } from "@/components/StoryViewer";
+import { Hero } from "@/components/home/Hero";
+import { SearchExamples } from "@/components/home/SearchExamples";
+import { BentoGrid } from "@/components/home/BentoGrid";
+import { useQuery } from "@tanstack/react-query";
+import { fetchFirebaseRecipes } from "@/services/firebaseRecipes";
+import { SearchDialog } from "@/components/navigation/SearchDialog";
 
 export default function Home() {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [stories] = useState([
     {
       id: "1",
@@ -25,24 +32,47 @@ export default function Home() {
     }
   ]);
 
+  const { data: recipes = [], isLoading } = useQuery({
+    queryKey: ['recipes'],
+    queryFn: fetchFirebaseRecipes
+  });
+
+  const handleSearch = (query: string) => {
+    console.log('Searching for:', query);
+    // Search functionality will be handled by SearchDialog
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
-      <main className="container mx-auto px-4 py-6">
-        <WeeklyStories
-          users={stories}
-          onUserClick={(index) => setSelectedStoryIndex(index)}
-        />
+      <main>
+        <Hero onSearchClick={() => setSearchDialogOpen(true)} />
+        <SearchExamples />
         
-        {selectedStoryIndex !== null && (
-          <StoryViewer
-            stories={stories}
-            initialUserIndex={selectedStoryIndex}
-            onClose={() => setSelectedStoryIndex(null)}
+        <div className="container mx-auto px-4 py-6 space-y-12">
+          <WeeklyStories
+            users={stories}
+            onUserClick={(index) => setSelectedStoryIndex(index)}
           />
-        )}
+          
+          <BentoGrid 
+            recipes={recipes} 
+            onAuthModalOpen={() => {}} 
+          />
+          
+          {selectedStoryIndex !== null && (
+            <StoryViewer
+              stories={stories}
+              initialUserIndex={selectedStoryIndex}
+              onClose={() => setSelectedStoryIndex(null)}
+            />
+          )}
+        </div>
 
-        {/* Additional content can go here */}
+        <SearchDialog 
+          open={searchDialogOpen}
+          onOpenChange={setSearchDialogOpen}
+        />
       </main>
     </div>
   );
