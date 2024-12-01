@@ -8,10 +8,11 @@ import { FlavorQuiz } from "./FlavorQuiz";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { Plus, Camera } from "lucide-react";
+import { Plus, Camera, Globe } from "lucide-react";
 import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
 import { AuthModal } from "../auth/AuthModal";
 import { CookingMethodsSlider } from "./CookingMethodsSlider";
+import { CuisineMapDialog } from "./CuisineMapDialog";
 
 interface BentoGridProps {
   recipes: Recipe[];
@@ -23,6 +24,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
   const [showImageRecognition, setShowImageRecognition] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCuisineMap, setShowCuisineMap] = useState(false);
   const [pendingRecipes, setPendingRecipes] = useState<Partial<Recipe>[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const PREVIEW_COUNT = 8;
@@ -81,8 +83,8 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     {
       title: "Explore Cuisines",
       description: "Discover recipes from around the world",
-      icon: Plus,
-      action: () => navigate('/create-recipe?mode=cuisine'),
+      icon: Globe,
+      action: () => setShowCuisineMap(true),
       color: "bg-blue-50 hover:bg-blue-100",
       textColor: "text-blue-700"
     },
@@ -198,6 +200,12 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
         open={showImageRecognition}
         onOpenChange={setShowImageRecognition}
         onRecipeScanned={handleScanRecipes}
+      />
+
+      <CuisineMapDialog 
+        open={showCuisineMap}
+        onOpenChange={setShowCuisineMap}
+        recipes={[...recipes, ...generatedRecipes]}
       />
 
       <AuthModal 
