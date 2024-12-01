@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -79,8 +79,6 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         email,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
         message,
-        createdAt: serverTimestamp(),
-        status: 'new',
         // Only include userId if user is authenticated
         ...(user?.uid && { userId: user.uid })
       };
