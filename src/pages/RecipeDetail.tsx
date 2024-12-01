@@ -18,6 +18,7 @@ import {
 import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
 import { WantToCookButton } from "@/components/recipe/WantToCookButton";
 import { AddToEventModal } from "@/components/recipe/AddToEventModal";
+import { IngredientsSection } from "@/components/recipe/sections/IngredientsSection";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -187,45 +188,8 @@ export default function RecipeDetail() {
           recipeTitle={recipe.title}
         />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <Card className="p-3 sm:p-4 rounded-xl">
-            <Clock className="w-5 h-5 text-primary mb-2" />
-            <p className="text-xs sm:text-sm text-muted-foreground">Cook Time</p>
-            <p className="font-medium text-sm sm:text-base">{recipe.totalTime} min</p>
-          </Card>
-          <Card className="p-3 sm:p-4 rounded-xl">
-            <ChefHat className="w-5 h-5 text-primary mb-2" />
-            <p className="text-xs sm:text-sm text-muted-foreground">Difficulty</p>
-            <p className="font-medium text-sm sm:text-base">{recipe.difficulty}</p>
-          </Card>
-          <Card className="p-3 sm:p-4 rounded-xl col-span-2 sm:col-span-1">
-            <div className="w-5 h-5 text-primary mb-2">👥</div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Servings</p>
-            <p className="font-medium text-sm sm:text-base">
-              {recipe.servings?.amount || 2} {recipe.servings?.unit || 'servings'}
-            </p>
-          </Card>
-        </div>
-
-        <Card className="p-4 sm:p-6 rounded-xl mb-6 sm:mb-8">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Description</h2>
-          <p className="text-muted-foreground text-sm sm:text-base">{recipe.description}</p>
-        </Card>
-
         <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
-          <Card className="p-4 sm:p-6 rounded-xl">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Ingredients</h2>
-            <ScrollArea className="h-[250px] sm:h-[300px] pr-4">
-              <ul className="space-y-3">
-                {ingredients.map((ingredient, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm sm:text-base">
-                    <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                    <span>{ingredient}</span>
-                  </li>
-                ))}
-              </ul>
-            </ScrollArea>
-          </Card>
+          <IngredientsSection ingredients={recipe.ingredients} />
 
           <Card className="p-4 sm:p-6 rounded-xl">
             <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Instructions</h2>
