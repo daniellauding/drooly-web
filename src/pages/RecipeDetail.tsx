@@ -153,6 +153,15 @@ export default function RecipeDetail() {
             <Calendar className="w-4 h-4" />
             Add to Event
           </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 flex-1 sm:flex-none"
+            onClick={() => setShowPlanModal(true)}
+          >
+            <Calendar className="w-4 h-4" />
+            Add to Weekly Plan
+          </Button>
           <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none hidden sm:flex">
             <Printer className="w-4 h-4" />
             Print
@@ -163,19 +172,19 @@ export default function RecipeDetail() {
           </Button>
         </div>
 
-        <AddToEventModal
-          open={showEventModal}
-          onOpenChange={setShowEventModal}
-          recipeId={recipe.id}
-          recipeTitle={recipe.title}
-        />
-
         <AddToWeeklyPlanModal
           open={showPlanModal}
           onOpenChange={setShowPlanModal}
           recipeId={recipe.id}
           recipeTitle={recipe.title}
           recipeImage={validImages[0] || "/placeholder.svg"}
+        />
+
+        <AddToEventModal
+          open={showEventModal}
+          onOpenChange={setShowEventModal}
+          recipeId={recipe.id}
+          recipeTitle={recipe.title}
         />
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
