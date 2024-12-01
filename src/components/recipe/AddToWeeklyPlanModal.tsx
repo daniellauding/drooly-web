@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input";
 import { SingleSelect } from "@/components/SingleSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Recipe } from "@/types/recipe";
+import { RecipeSearch } from "./RecipeSearch";
+
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 interface AddToWeeklyPlanModalProps {
   open: boolean;
@@ -20,9 +21,6 @@ interface AddToWeeklyPlanModalProps {
   recipeTitle?: string;
   recipeImage?: string;
 }
-
-const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export function AddToWeeklyPlanModal({
   open,
@@ -36,8 +34,6 @@ export function AddToWeeklyPlanModal({
   const [title, setTitle] = useState("");
   const [selectedDay, setSelectedDay] = useState(DAYS[0]);
   const [mealType, setMealType] = useState(MEAL_TYPES[0]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(
     initialRecipeId && initialRecipeTitle ? {
       id: initialRecipeId,
@@ -63,40 +59,9 @@ export function AddToWeeklyPlanModal({
       if (docSnap.exists()) {
         const data = docSnap.data();
         console.log("Loaded custom ingredients:", data);
-        // Handle the loaded custom ingredients if needed
       }
     } catch (error) {
       console.error("Error loading custom ingredients:", error);
-    }
-  };
-
-  const searchRecipes = async (query: string) => {
-    if (!query || !query.trim() || !user) return;
-
-    try {
-      console.log("Searching recipes with query:", query);
-      const recipesRef = collection(db, "recipes");
-      const q = query(
-        recipesRef,
-        where("title", ">=", query.toLowerCase()),
-        where("title", "<=", query.toLowerCase() + "\uf8ff")
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const results: Recipe[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data() as Recipe;
-        results.push({
-          id: doc.id,
-          ...data
-        });
-      });
-      
-      console.log("Found recipes:", results.length);
-      setRecipes(results);
-    } catch (error) {
-      console.error("Error searching recipes:", error);
     }
   };
 
@@ -155,41 +120,16 @@ export function AddToWeeklyPlanModal({
           <div className="space-y-4">
             <div>
               <Label>Search Recipe (optional)</Label>
-              <Command className="rounded-lg border shadow-md">
-                <CommandInput 
-                  placeholder="Search recipes..." 
-                  value={searchQuery}
-                  onValueChange={(value) => {
-                    setSearchQuery(value);
-                    searchRecipes(value);
+              {user && (
+                <RecipeSearch
+                  userId={user.uid}
+                  selectedRecipe={selectedRecipe}
+                  onRecipeSelect={(recipe) => {
+                    setSelectedRecipe(recipe);
+                    setTitle(recipe.title);
                   }}
                 />
-                {recipes.length > 0 && (
-                  <CommandGroup className="max-h-[200px] overflow-auto">
-                    {recipes.map((recipe) => (
-                      <CommandItem
-                        key={recipe.id}
-                        value={recipe.title}
-                        onSelect={() => {
-                          setSelectedRecipe(recipe);
-                          setSearchQuery("");
-                          setRecipes([]);
-                          setTitle(recipe.title);
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedRecipe?.id === recipe.id ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        {recipe.title}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-                <CommandEmpty>No recipes found.</CommandEmpty>
-              </Command>
+              )}
             </div>
 
             <div>
