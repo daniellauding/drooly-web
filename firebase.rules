@@ -55,6 +55,10 @@ service cloud.firestore {
       allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
 
+    match /users/{userId}/todos/{todoId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
     match /sharedLists/{listId} {
       allow read: if isAuthenticated() && (
         resource.data.owner == request.auth.uid || 
@@ -64,10 +68,6 @@ service cloud.firestore {
         resource.data.owner == request.auth.uid || 
         resource.data.sharedWith == request.auth.uid
       );
-    }
-
-    match /users/{userId}/todos/{todoId} {
-      allow read, write: if isAuthenticated() && request.auth.uid == userId;
     }
   }
 }

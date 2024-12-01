@@ -18,7 +18,7 @@ import About from "./pages/About";
 import Events from "./pages/Events";
 import CreateEvent from "./pages/CreateEvent";
 import { EventDetailView } from "./components/event/EventDetailView";
-import Ingredients from "./pages/Ingredients";
+import Todo from "./pages/Todo";
 import "./i18n/config";
 
 const queryClient = new QueryClient();
@@ -46,7 +46,7 @@ function App() {
             <Route path="/events/edit/:id" element={<CreateEvent />} />
             <Route path="/create-event" element={<CreateEvent />} />
             <Route path="/about" element={<About />} />
-            <Route path="/ingredients" element={<Ingredients />} />
+            <Route path="/todo" element={<Todo />} />
           </Routes>
           <MobileNav />
         </Router>

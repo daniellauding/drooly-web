@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MessageSquare, Bell, Calendar, Plus, ShoppingBasket } from "lucide-react";
+import { MessageSquare, Bell, Calendar, Plus, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfileDropdown } from "./ProfileDropdown";
@@ -54,15 +54,15 @@ export function DesktopNav({
           </Button>
         </Link>
 
-        <Link to="/events">
+        <Link to="/todo">
           <Button variant="ghost" size="icon">
-            <Calendar className="h-5 w-5" />
+            <CheckSquare className="h-5 w-5" />
           </Button>
         </Link>
 
-        <Link to="/ingredients">
+        <Link to="/events">
           <Button variant="ghost" size="icon">
-            <ShoppingBasket className="h-5 w-5" />
+            <Calendar className="h-5 w-5" />
           </Button>
         </Link>
 

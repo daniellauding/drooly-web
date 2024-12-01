@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, PlusCircle, User, Settings, CookingPot, Calendar, ShoppingBasket } from "lucide-react";
+import { Home, PlusCircle, User, Settings, CookingPot, Calendar, CheckSquare } from "lucide-react";
 
 export function MobileNav() {
   const location = useLocation();
@@ -16,19 +16,11 @@ export function MobileNav() {
       </Link>
       
       <Link 
-        to="/ingredients" 
-        className={`flex flex-col items-center ${isActive('/ingredients') ? 'text-primary' : 'text-muted-foreground'}`}
+        to="/todo" 
+        className={`flex flex-col items-center ${isActive('/todo') ? 'text-primary' : 'text-muted-foreground'}`}
       >
-        <CookingPot className="h-6 w-6" />
-        <span className="text-xs mt-1">To Cook</span>
-      </Link>
-
-      <Link 
-        to="/ingredients" 
-        className={`flex flex-col items-center ${isActive('/ingredients') ? 'text-primary' : 'text-muted-foreground'}`}
-      >
-        <ShoppingBasket className="h-6 w-6" />
-        <span className="text-xs mt-1">Shopping</span>
+        <CheckSquare className="h-6 w-6" />
+        <span className="text-xs mt-1">Todo</span>
       </Link>
 
       <Link 
