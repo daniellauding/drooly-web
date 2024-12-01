@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,9 +24,10 @@ interface EventFormProps {
     coverImage?: string;
   }) => void;
   onCancel: () => void;
+  initialData?: any;
 }
 
-export function EventForm({ onSubmit, onCancel }: EventFormProps) {
+export function EventForm({ onSubmit, onCancel, initialData }: EventFormProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
@@ -38,6 +39,23 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
   const [password, setPassword] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [featuredImageIndex] = useState(0);
+
+  // Load initial data if provided (edit mode)
+  useEffect(() => {
+    if (initialData) {
+      console.log("Loading initial event data:", initialData);
+      setTitle(initialData.title || "");
+      setDescription(initialData.description || "");
+      setDate(initialData.date || "");
+      setTime(initialData.time || "");
+      setLocation(initialData.location?.name || "");
+      setGuests(initialData.guests || []);
+      setIsPrivate(initialData.isPrivate || false);
+      setIsHidden(initialData.isHidden || false);
+      setPassword(initialData.password || "");
+      setImages(initialData.coverImage ? [initialData.coverImage] : []);
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,7 +209,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
       <GuestList guests={guests} onAddGuest={(guest) => setGuests([...guests, guest])} />
 
       <div className="flex gap-4">
-        <Button type="submit">Create Event</Button>
+        <Button type="submit">
+          {initialData ? "Update Event" : "Create Event"}
+        </Button>
         <Button 
           type="button" 
           variant="outline" 
