@@ -1,22 +1,15 @@
 import { useState } from "react";
-import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ChevronDown } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { IngredientSuggestions } from "./ingredients/IngredientSuggestions";
 import { AdvancedIngredientSection } from "./ingredients/AdvancedIngredientSection";
+import { IngredientGroupSection } from "./ingredients/IngredientGroupSection";
+import { IngredientSearchBar } from "./ingredients/IngredientSearchBar";
 import { Ingredient } from "@/services/recipeService";
 
 interface IngredientInputProps {
@@ -33,26 +26,11 @@ const INGREDIENT_GROUPS = [
   "Seasoning"
 ];
 
-const COMMON_UNITS = [
-  "g",
-  "kg",
-  "ml",
-  "l",
-  "cup",
-  "tbsp",
-  "tsp",
-  "piece",
-  "to taste"
-];
-
 const DEFAULT_UNIT = "piece";
 const DEFAULT_AMOUNT = "1";
 
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
-  const [customIngredientInput, setCustomIngredientInput] = useState("");
 
   const addIngredient = (name = "", group = "Main Ingredients") => {
     onChange([
@@ -64,8 +42,6 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         group 
       }
     ]);
-    setShowSuggestions(false);
-    setCustomIngredientInput("");
   };
 
   const updateIngredient = (index: number, updates: Partial<Ingredient>) => {
@@ -81,13 +57,6 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
 
   const removeGroup = (groupToRemove: string) => {
     onChange(ingredients.filter(ing => ing.group !== groupToRemove));
-  };
-
-  const handleCustomIngredientKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && customIngredientInput.trim()) {
-      e.preventDefault();
-      addIngredient(customIngredientInput.trim());
-    }
   };
 
   const groupedIngredients = ingredients.reduce((acc, ing) => {
@@ -112,99 +81,23 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         </Button>
       </div>
 
-      <div className="relative">
-        <Input
-          value={customIngredientInput}
-          onChange={(e) => setCustomIngredientInput(e.target.value)}
-          onKeyDown={handleCustomIngredientKeyDown}
-          onClick={() => !showSuggestions && setShowSuggestions(true)}
-          placeholder="Search or add ingredients..."
-          className="cursor-pointer"
-        />
-
-        {showSuggestions && (
-          <div className="absolute w-full z-50 mt-1">
-            <IngredientSuggestions 
-              onSelect={(ingredientName) => addIngredient(ingredientName)}
-              onClose={() => setShowSuggestions(false)}
-              initialValue={customIngredientInput}
-            />
-          </div>
-        )}
-      </div>
+      <IngredientSearchBar onIngredientAdd={addIngredient} />
 
       {Object.entries(groupedIngredients).map(([group, groupIngredients]) => (
-        <div key={group} className="space-y-2">
-          <h4 className="font-medium text-sm">{group}</h4>
-          {groupIngredients.map((ingredient, index) => {
-            const globalIndex = ingredients.findIndex(ing => ing === ingredient);
-            return (
-              <div key={index} className="flex gap-2">
-                <div className="flex-1 relative">
-                  <div
-                    className={`w-full border rounded-md p-2 flex items-center justify-between cursor-pointer ${editingIngredientIndex !== globalIndex ? 'hover:bg-accent hover:text-accent-foreground' : ''}`}
-                    onClick={() => setEditingIngredientIndex(globalIndex)}
-                  >
-                    <span className={ingredient.name ? 'text-foreground' : 'text-muted-foreground'}>
-                      {ingredient.name || 'Search or add ingredient...'}
-                    </span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${editingIngredientIndex === globalIndex ? 'rotate-180' : ''}`} />
-                  </div>
-
-                  {editingIngredientIndex === globalIndex && (
-                    <div className="absolute w-full z-50">
-                      <IngredientSuggestions 
-                        onSelect={(name) => {
-                          updateIngredient(globalIndex, { name });
-                          setEditingIngredientIndex(null);
-                        }}
-                        onClose={() => setEditingIngredientIndex(null)}
-                      />
-                    </div>
-                  )}
-                </div>
-                <Input
-                  placeholder="Amount"
-                  value={ingredient.amount}
-                  onChange={(e) => updateIngredient(globalIndex, { amount: e.target.value })}
-                  className="w-24"
-                />
-                <Select
-                  value={ingredient.unit}
-                  onValueChange={(value) => updateIngredient(globalIndex, { unit: value })}
-                >
-                  <SelectTrigger className="w-24">
-                    <SelectValue placeholder="Unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COMMON_UNITS.map(unit => (
-                      <SelectItem key={unit} value={unit}>
-                        {unit}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeIngredient(globalIndex)}
-                  className="text-destructive hover:text-destructive"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            );
-          })}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => addIngredient("", group)}
-            className="w-full"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Ingredient to {group}
-          </Button>
-        </div>
+        <IngredientGroupSection
+          key={group}
+          group={group}
+          ingredients={groupIngredients}
+          onUpdateIngredient={(index, updates) => {
+            const globalIndex = ingredients.findIndex(ing => ing === groupIngredients[index]);
+            updateIngredient(globalIndex, updates);
+          }}
+          onRemoveIngredient={(index) => {
+            const globalIndex = ingredients.findIndex(ing => ing === groupIngredients[index]);
+            removeIngredient(globalIndex);
+          }}
+          onAddIngredient={addIngredient}
+        />
       ))}
 
       <Collapsible open={showAdvanced}>
