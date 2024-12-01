@@ -6,6 +6,7 @@ import { CalendarDays, Clock, MapPin } from "lucide-react";
 import { GuestList } from "./GuestList";
 import { EventRecipeAssignment } from "./EventRecipeAssignment";
 import { EventGuest, EventDish } from "@/types/event";
+import { ImageUpload } from "@/components/ImageUpload";
 import {
   Accordion,
   AccordionContent,
@@ -27,6 +28,8 @@ export function EventForm({ onSubmit, onCancel, initialData }: EventFormProps) {
   const [location, setLocation] = useState(initialData?.location?.name || "");
   const [guests, setGuests] = useState<EventGuest[]>(initialData?.guests || []);
   const [dishes, setDishes] = useState<EventDish[]>(initialData?.dishes || []);
+  const [images, setImages] = useState<string[]>(initialData?.coverImage ? [initialData.coverImage] : []);
+  const [featuredImageIndex, setFeaturedImageIndex] = useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,13 +40,28 @@ export function EventForm({ onSubmit, onCancel, initialData }: EventFormProps) {
       time,
       location,
       guests,
-      dishes
+      dishes,
+      coverImage: images[featuredImageIndex]
     });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Accordion type="single" collapsible defaultValue="basic-info" className="space-y-4">
+        <AccordionItem value="cover-image" className="border rounded-lg">
+          <AccordionTrigger className="px-4">Cover Image</AccordionTrigger>
+          <AccordionContent className="p-4">
+            <ImageUpload
+              images={images}
+              featuredImageIndex={featuredImageIndex}
+              onChange={(newImages, newFeaturedIndex) => {
+                setImages(newImages);
+                setFeaturedImageIndex(newFeaturedIndex);
+              }}
+            />
+          </AccordionContent>
+        </AccordionItem>
+
         <AccordionItem value="basic-info" className="border rounded-lg">
           <AccordionTrigger className="px-4">Basic Information</AccordionTrigger>
           <AccordionContent className="p-4">
