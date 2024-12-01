@@ -14,11 +14,18 @@ service cloud.firestore {
     }
 
     match /feedback/{feedbackId} {
-      allow read: if isAuthenticated();
+      // Allow anyone to create feedback as long as they provide valid email
       allow create: if request.resource.data.email is string &&
-                   request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$');
+                   request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$') &&
+                   request.resource.data.subject is string &&
+                   request.resource.data.message is string &&
+                   request.resource.data.status == 'new';
+      // Only authenticated users can read feedback
+      allow read: if isAuthenticated();
+      // Only admins or feedback creators can update/delete
       allow update, delete: if isAuthenticated() && 
-                           resource.data.createdBy == request.auth.uid;
+                           (resource.data.createdBy == request.auth.uid ||
+                            get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
     match /recipes/{recipeId} {
