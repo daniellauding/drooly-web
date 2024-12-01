@@ -6,8 +6,11 @@ import { Input } from "@/components/ui/input";
 import { SingleSelect } from "@/components/SingleSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Check, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -15,24 +18,58 @@ const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
 interface AddToWeeklyPlanModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  recipeId: string;
-  recipeTitle: string;
-  recipeImage: string;
+  recipeId?: string;
+  recipeTitle?: string;
+  recipeImage?: string;
 }
 
 export function AddToWeeklyPlanModal({
   open,
   onOpenChange,
-  recipeId,
-  recipeTitle,
-  recipeImage
+  recipeId: initialRecipeId,
+  recipeTitle: initialRecipeTitle,
+  recipeImage: initialRecipeImage
 }: AddToWeeklyPlanModalProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [title, setTitle] = useState("");
   const [selectedDay, setSelectedDay] = useState(DAYS[0]);
   const [mealType, setMealType] = useState(MEAL_TYPES[0]);
-  const [customRecipeTitle, setCustomRecipeTitle] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [recipes, setRecipes] = useState<Array<{ id: string; title: string; image?: string }>>([]);
+  const [selectedRecipe, setSelectedRecipe] = useState<{
+    id: string;
+    title: string;
+    image?: string;
+  } | null>(initialRecipeId && initialRecipeTitle ? {
+    id: initialRecipeId,
+    title: initialRecipeTitle,
+    image: initialRecipeImage
+  } : null);
+
+  const searchRecipes = async (query: string) => {
+    if (!query.trim() || !user) return;
+
+    try {
+      const recipesRef = collection(db, "recipes");
+      const q = query(
+        recipesRef,
+        where("title", ">=", query),
+        where("title", "<=", query + "\uf8ff")
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const results = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        title: doc.data().title,
+        image: doc.data().images?.[0]
+      }));
+      
+      setRecipes(results);
+    } catch (error) {
+      console.error("Error searching recipes:", error);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!user) return;
@@ -43,13 +80,13 @@ export function AddToWeeklyPlanModal({
         owner: user.uid,
         userName: user.displayName || "Anonymous Chef",
         userAvatar: user.photoURL || "/placeholder.svg",
-        recipeId: recipeId || null,
-        recipeTitle: recipeId ? recipeTitle : customRecipeTitle,
-        recipeImage: recipeImage || null,
-        title,
+        recipeId: selectedRecipe?.id || null,
+        recipeTitle: selectedRecipe?.title || title,
+        recipeImage: selectedRecipe?.image || null,
+        title: title || selectedRecipe?.title,
         day: selectedDay,
         mealType,
-        createdAt: serverTimestamp(),
+        createdAt: new Date(),
         status: "planned",
         collaborators: {}
       });
@@ -77,49 +114,79 @@ export function AddToWeeklyPlanModal({
           <DialogTitle>Add to Weekly Cooking Plan</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div>
-            <Label>Title</Label>
-            <Input
-              placeholder="e.g., Family dinner"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
-          
-          {!recipeId && (
+          <div className="space-y-4">
             <div>
-              <Label>Recipe Name (Optional)</Label>
+              <Label>Search Recipe (optional)</Label>
+              <Command className="rounded-lg border shadow-md">
+                <CommandInput 
+                  placeholder="Search recipes..." 
+                  value={searchQuery}
+                  onValueChange={(value) => {
+                    setSearchQuery(value);
+                    searchRecipes(value);
+                  }}
+                />
+                {recipes.length > 0 && (
+                  <CommandGroup className="max-h-[200px] overflow-auto">
+                    {recipes.map((recipe) => (
+                      <CommandItem
+                        key={recipe.id}
+                        value={recipe.title}
+                        onSelect={() => {
+                          setSelectedRecipe(recipe);
+                          setSearchQuery("");
+                          setRecipes([]);
+                          setTitle(recipe.title);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedRecipe?.id === recipe.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {recipe.title}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+                <CommandEmpty>No recipes found.</CommandEmpty>
+              </Command>
+            </div>
+
+            <div>
+              <Label>Title</Label>
               <Input
-                placeholder="Enter recipe name"
-                value={customRecipeTitle}
-                onChange={(e) => setCustomRecipeTitle(e.target.value)}
+                placeholder="e.g., Family dinner"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
               />
             </div>
-          )}
 
-          <div>
-            <Label>Day</Label>
-            <SingleSelect
-              options={DAYS}
-              selected={selectedDay}
-              onChange={setSelectedDay}
-              placeholder="Select day"
-            />
+            <div>
+              <Label>Day</Label>
+              <SingleSelect
+                options={DAYS}
+                selected={selectedDay}
+                onChange={setSelectedDay}
+                placeholder="Select day"
+              />
+            </div>
+
+            <div>
+              <Label>Meal Type</Label>
+              <SingleSelect
+                options={MEAL_TYPES}
+                selected={mealType}
+                onChange={setMealType}
+                placeholder="Select meal type"
+              />
+            </div>
+
+            <Button onClick={handleSubmit} className="w-full">
+              Add to Plan
+            </Button>
           </div>
-
-          <div>
-            <Label>Meal Type</Label>
-            <SingleSelect
-              options={MEAL_TYPES}
-              selected={mealType}
-              onChange={setMealType}
-              placeholder="Select meal type"
-            />
-          </div>
-
-          <Button onClick={handleSubmit} className="w-full">
-            Add to Plan
-          </Button>
         </div>
       </DialogContent>
     </Dialog>
