@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EventGuest } from "@/types/event";
 import { GuestAutocomplete } from "./GuestAutocomplete";
+import { UserSearchAutocomplete } from "./UserSearchAutocomplete"; // Added this import
 import {
   Accordion,
   AccordionContent,

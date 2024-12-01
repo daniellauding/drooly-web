@@ -11,7 +11,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { EventDish } from "@/types/event";
-import { RecipeSearchAutocomplete } from "./RecipeSearchAutocomplete"; // New import
+import { Recipe } from "@/types/recipe"; // Added this import
+import { RecipeSearchAutocomplete } from "./RecipeSearchAutocomplete";
 
 interface EventRecipeAssignmentProps {
   dishes: EventDish[];
