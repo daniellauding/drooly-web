@@ -7,6 +7,7 @@ import { ShoppingListView } from "./ShoppingListView";
 import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { IngredientItem } from "./types";
 
 interface ShoppingListContentProps {
   userId: string | undefined;

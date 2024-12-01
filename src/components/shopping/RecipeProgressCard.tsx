@@ -8,6 +8,7 @@ import { IngredientItem } from "./types";
 
 interface RecipeProgressCardProps {
   recipe: Recipe;
+  ingredients: IngredientItem[];
   progress: {
     total: number;
     checked: number;
@@ -17,7 +18,7 @@ interface RecipeProgressCardProps {
   onCheck: (ingredient: IngredientItem) => void;
 }
 
-export function RecipeProgressCard({ recipe, progress, checkedItems, onCheck }: RecipeProgressCardProps) {
+export function RecipeProgressCard({ recipe, ingredients, progress, checkedItems, onCheck }: RecipeProgressCardProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center gap-2 mb-4">
@@ -31,23 +32,18 @@ export function RecipeProgressCard({ recipe, progress, checkedItems, onCheck }: 
         </p>
       </div>
       <div className="space-y-2">
-        {recipe.ingredients.map((ingredient, idx) => (
+        {ingredients.map((ingredient, idx) => (
           <div key={`${recipe.id}-${ingredient.name}-${idx}`}>
             <div className="flex items-center gap-4 py-2">
               <Checkbox
                 checked={checkedItems.has(`${recipe.id}-${ingredient.name}`)}
-                onCheckedChange={() => onCheck({
-                  ...ingredient,
-                  recipeId: recipe.id,
-                  recipeTitle: recipe.title,
-                  bought: false
-                })}
+                onCheckedChange={() => onCheck(ingredient)}
               />
               <span className={checkedItems.has(`${recipe.id}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
                 {ingredient.amount} {ingredient.unit} {ingredient.name}
               </span>
             </div>
-            {idx < recipe.ingredients.length - 1 && <Separator />}
+            {idx < ingredients.length - 1 && <Separator />}
           </div>
         ))}
       </div>

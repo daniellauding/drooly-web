@@ -19,6 +19,19 @@ export function ShoppingListView({
   checkedItems,
   onCheck
 }: ShoppingListViewProps) {
+  const calculateProgress = (recipeId: string) => {
+    const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipeId);
+    const total = recipeIngredients.length;
+    const checked = recipeIngredients.filter(ing => 
+      checkedItems.has(`${ing.recipeId}-${ing.name}`)
+    ).length;
+    return {
+      total,
+      checked,
+      percentage: total > 0 ? (checked / total) * 100 : 0
+    };
+  };
+
   return (
     <Tabs defaultValue="all" className="w-full">
       <TabsList>
@@ -55,6 +68,7 @@ export function ShoppingListView({
               key={recipe.id}
               recipe={recipe}
               ingredients={ingredients.filter(ing => ing.recipeId === recipe.id)}
+              progress={calculateProgress(recipe.id)}
               checkedItems={checkedItems}
               onCheck={onCheck}
             />
