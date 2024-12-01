@@ -12,24 +12,29 @@ export function useShoppingList(userId: string | undefined) {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (userId) {
-      console.log("Loading shopping list for user:", userId);
-      loadCheckedItems();
-      loadShoppingList();
+    if (!userId) {
+      console.log("No userId provided to useShoppingList");
+      return;
     }
+    
+    console.log("Initializing shopping list for user:", userId);
+    loadCheckedItems();
+    loadShoppingList();
   }, [userId]);
 
   const loadCheckedItems = async () => {
     if (!userId) return;
+    
     try {
-      console.log("Loading checked items...");
+      console.log("Loading checked items for user:", userId);
       const listRef = doc(db, "users", userId, "shoppingLists", "current");
       const listDoc = await getDoc(listRef);
+      
       if (listDoc.exists()) {
         console.log("Found existing checked items:", listDoc.data().checkedItems);
         setCheckedItems(new Set(listDoc.data().checkedItems || []));
       } else {
-        console.log("No existing checked items found");
+        console.log("No existing checked items found, creating new document");
         await setDoc(listRef, { 
           checkedItems: [], 
           updatedAt: Timestamp.now(),
@@ -40,7 +45,7 @@ export function useShoppingList(userId: string | undefined) {
       console.error("Error loading checked items:", error);
       toast({
         title: "Error",
-        description: "Failed to load your shopping list. Please try again.",
+        description: "Failed to load your checked items. Please try refreshing the page.",
         variant: "destructive"
       });
     }
@@ -48,6 +53,7 @@ export function useShoppingList(userId: string | undefined) {
 
   const loadShoppingList = async () => {
     if (!userId) return;
+    
     try {
       console.log("Loading recipes for shopping list...");
       const recipesRef = collection(db, "recipes");
@@ -62,7 +68,7 @@ export function useShoppingList(userId: string | undefined) {
         ...doc.data()
       })) as Recipe[];
 
-      console.log("Fetched recipes:", fetchedRecipes.length);
+      console.log("Fetched recipes count:", fetchedRecipes.length);
       setRecipes(fetchedRecipes);
 
       const allIngredients = fetchedRecipes.flatMap(recipe =>
@@ -85,14 +91,17 @@ export function useShoppingList(userId: string | undefined) {
       console.error("Error loading shopping list:", error);
       toast({
         title: "Error",
-        description: "Failed to load your shopping list. Please try again.",
+        description: "Failed to load your shopping list. Please check your internet connection and try again.",
         variant: "destructive"
       });
     }
   };
 
   const handleCheck = async (ingredient: IngredientItem) => {
-    if (!userId) return;
+    if (!userId) {
+      console.log("Cannot check item: No user ID");
+      return;
+    }
 
     const key = `${ingredient.recipeId}-${ingredient.name}`;
     const newChecked = new Set(checkedItems);
@@ -108,7 +117,10 @@ export function useShoppingList(userId: string | undefined) {
   };
 
   const handleCheckAll = async (ingredients: IngredientItem[]) => {
-    if (!userId) return;
+    if (!userId) {
+      console.log("Cannot check all: No user ID");
+      return;
+    }
 
     const newChecked = new Set(checkedItems);
     const allChecked = ingredients.every(ing => 
@@ -129,6 +141,11 @@ export function useShoppingList(userId: string | undefined) {
   };
 
   const handleRemoveIngredient = async (ingredient: IngredientItem) => {
+    if (!userId) {
+      console.log("Cannot remove ingredient: No user ID");
+      return;
+    }
+
     console.log("Removing ingredient:", ingredient);
     setIngredients(prev => prev.filter(ing => 
       !(ing.recipeId === ingredient.recipeId && ing.name === ingredient.name)
@@ -144,6 +161,7 @@ export function useShoppingList(userId: string | undefined) {
 
   const saveCheckedItems = async (items: Set<string>) => {
     if (!userId) return;
+    
     try {
       console.log("Saving checked items:", Array.from(items));
       const listRef = doc(db, "users", userId, "shoppingLists", "current");
@@ -184,6 +202,11 @@ export function useShoppingList(userId: string | undefined) {
   };
 
   const addCustomIngredient = async (name: string, amount: string, unit: string) => {
+    if (!userId) {
+      console.log("Cannot add custom ingredient: No user ID");
+      return;
+    }
+
     const customIngredient: IngredientItem = {
       name,
       amount,
@@ -197,7 +220,9 @@ export function useShoppingList(userId: string | undefined) {
 
   const setRecurring = async (ingredient: IngredientItem, recurrence: "none" | "weekly" | "monthly") => {
     if (!userId) return;
+    
     try {
+      console.log("Setting recurring status for ingredient:", ingredient.name, "to", recurrence);
       const listRef = doc(db, "users", userId, "shoppingLists", "current");
       const listDoc = await getDoc(listRef);
       let recurringItems = listDoc.exists() ? listDoc.data().recurringItems || [] : [];
