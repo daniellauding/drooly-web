@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MessageSquare, Bell, Calendar, Plus } from "lucide-react";
+import { MessageSquare, Bell, Calendar, Plus, ShoppingBasket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProfileDropdown } from "./ProfileDropdown";
@@ -14,7 +14,6 @@ interface DesktopNavProps {
   handleNotificationsClick: () => void;
   handleCreateClick: () => void;
   onAuthModalOpen: () => void;
-  onSearchClick?: () => void;  // Made optional with ?
 }
 
 export function DesktopNav({
@@ -58,6 +57,12 @@ export function DesktopNav({
         <Link to="/events">
           <Button variant="ghost" size="icon">
             <Calendar className="h-5 w-5" />
+          </Button>
+        </Link>
+
+        <Link to="/ingredients">
+          <Button variant="ghost" size="icon">
+            <ShoppingBasket className="h-5 w-5" />
           </Button>
         </Link>
 
