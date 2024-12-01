@@ -21,6 +21,14 @@ export default function Ingredients() {
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [recipeProgress, setRecipeProgress] = useState<Record<string, RecipeProgress>>({});
+  const [listId, setListId] = useState<string>("");
+
+  useEffect(() => {
+    if (user) {
+      // Generate a unique list ID for the user if not exists
+      setListId(`${user.uid}_shopping_list`);
+    }
+  }, [user]);
 
   useEffect(() => {
     const loadCheckedItems = async () => {
@@ -188,6 +196,8 @@ export default function Ingredients() {
           checkedItemsCount={checkedItems.size}
           onClearAll={clearChecked}
           onMarkAllBought={markAllAsBought}
+          userId={user?.uid || ""}
+          listId={listId}
         />
 
         <CustomIngredientAdd onAdd={handleAddCustomIngredient} />
