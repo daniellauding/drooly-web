@@ -26,6 +26,7 @@ export function UserSearchAutocomplete({ onSelect, value, onChange }: UserSearch
       }
 
       try {
+        console.log('Fetching user suggestions for:', value);
         const usersRef = collection(db, "users");
         const q = query(
           usersRef,
@@ -39,6 +40,7 @@ export function UserSearchAutocomplete({ onSelect, value, onChange }: UserSearch
           name: doc.data().name
         }));
         
+        console.log('Found users:', users.length);
         setSuggestions(users);
       } catch (error) {
         console.error("Error fetching user suggestions:", error);

@@ -4,8 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { EventGuest } from "@/types/event";
-import { GuestAutocomplete } from "./GuestAutocomplete";
-import { UserSearchAutocomplete } from "./UserSearchAutocomplete"; // Added this import
+import { UserSearchAutocomplete } from "./UserSearchAutocomplete";
 import {
   Accordion,
   AccordionContent,
@@ -25,6 +24,7 @@ export function GuestList({ guests, onAddGuest, onRemoveGuest }: GuestListProps)
   const handleAddGuest = (email: string, existingUser: boolean) => {
     if (!email.trim()) return;
 
+    console.log('Adding guest:', { email, existingUser });
     onAddGuest({
       id: crypto.randomUUID(),
       name: email,
@@ -40,13 +40,13 @@ export function GuestList({ guests, onAddGuest, onRemoveGuest }: GuestListProps)
         <AccordionTrigger>
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            <span className="font-medium">Who?</span>
+            <span className="font-medium">Who's Coming?</span>
           </div>
         </AccordionTrigger>
         <AccordionContent>
           <Card className="p-6 space-y-4">
             <p className="text-muted-foreground">
-              Please RSVP below and feel free to invite 1-2 friends
+              Search for users or invite them by email
             </p>
 
             <div className="flex gap-2">
