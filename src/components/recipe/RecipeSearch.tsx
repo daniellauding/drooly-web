@@ -17,7 +17,7 @@ export function RecipeSearch({ userId, onRecipeSelect, selectedRecipe }: RecipeS
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
   const searchRecipes = async (searchTerm: string) => {
-    if (!searchTerm || !searchTerm.trim() || !userId) {
+    if (!searchTerm?.trim() || !userId) {
       setRecipes([]);
       return;
     }
@@ -56,29 +56,27 @@ export function RecipeSearch({ userId, onRecipeSelect, selectedRecipe }: RecipeS
         }}
       />
       <CommandEmpty>No recipes found.</CommandEmpty>
-      {recipes && recipes.length > 0 && (
-        <CommandGroup className="max-h-[200px] overflow-auto">
-          {recipes.map((recipe) => (
-            <CommandItem
-              key={recipe.id}
-              value={recipe.title}
-              onSelect={() => {
-                onRecipeSelect(recipe);
-                setSearchQuery("");
-                setRecipes([]);
-              }}
-            >
-              <Check
-                className={cn(
-                  "mr-2 h-4 w-4",
-                  selectedRecipe?.id === recipe.id ? "opacity-100" : "opacity-0"
-                )}
-              />
-              {recipe.title}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-      )}
+      <CommandGroup className="max-h-[200px] overflow-auto">
+        {recipes?.map((recipe) => (
+          <CommandItem
+            key={recipe.id}
+            value={recipe.title}
+            onSelect={() => {
+              onRecipeSelect(recipe);
+              setSearchQuery("");
+              setRecipes([]);
+            }}
+          >
+            <Check
+              className={cn(
+                "mr-2 h-4 w-4",
+                selectedRecipe?.id === recipe.id ? "opacity-100" : "opacity-0"
+              )}
+            />
+            {recipe.title}
+          </CommandItem>
+        ))}
+      </CommandGroup>
     </Command>
   );
 }

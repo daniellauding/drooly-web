@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,14 @@ export function AddToWeeklyPlanModal({
   );
 
   const handleSubmit = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save a recipe",
+        variant: "destructive"
+      });
+      return;
+    }
 
     try {
       console.log("Submitting weekly plan:", {
@@ -53,7 +60,7 @@ export function AddToWeeklyPlanModal({
         selectedRecipe
       });
 
-      const weeklyPlanDoc = await addDoc(collection(db, "weeklyPlans"), {
+      await addDoc(collection(db, "weeklyPlans"), {
         userId: user.uid,
         owner: user.uid,
         userName: user.displayName || "Anonymous Chef",
@@ -68,8 +75,6 @@ export function AddToWeeklyPlanModal({
         status: "planned",
         collaborators: {}
       });
-
-      console.log("Weekly plan created:", weeklyPlanDoc.id);
 
       toast({
         title: "Success!",
@@ -92,6 +97,9 @@ export function AddToWeeklyPlanModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add to Weekly Cooking Plan</DialogTitle>
+          <DialogDescription>
+            Search for a recipe or create a custom meal plan entry.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-4">
