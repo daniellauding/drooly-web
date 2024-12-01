@@ -68,15 +68,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, any[]>);
 
-    console.log("Cuisine Groups:");
-    Object.entries(cuisineGroups).forEach(([cuisine, recipes]) => {
-      console.log(`${cuisine}:`, {
-        count: recipes.length,
-        hasCoordinates: !!CUISINE_COORDINATES[cuisine],
-        recipes: recipes
-      });
-    });
-    
+    console.log("Cuisine Groups:", cuisineGroups);
     console.log("Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES));
     console.groupEnd();
   };
@@ -168,13 +160,28 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         <DialogDescription className="text-sm text-muted-foreground mb-4">
           Discover recipes from different cuisines. Click on the markers to see available recipes from each region.
         </DialogDescription>
-        <Button 
-          variant="outline" 
-          onClick={showRecipeCuisines}
-          className="mb-4"
-        >
-          Debug Cuisine Data
-        </Button>
+        
+        <div className="mb-4 space-y-4">
+          <Button 
+            variant="outline" 
+            onClick={showRecipeCuisines}
+            className="w-full"
+          >
+            Debug Cuisine Data
+          </Button>
+
+          <ScrollArea className="h-[200px] border rounded-md p-4">
+            <div className="space-y-2">
+              <h3 className="font-medium">Raw Cuisine Values from Firebase:</h3>
+              {recipes.map((recipe, index) => (
+                <div key={recipe.id} className="text-sm">
+                  <span className="font-medium">{recipe.title}</span>: {recipe.cuisine || 'No cuisine set'}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+
         <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
       </DialogContent>
     </Dialog>
