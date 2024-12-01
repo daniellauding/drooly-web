@@ -4,6 +4,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Recipe } from "@/types/recipe";
 import { CUISINES } from "@/types/recipe";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
@@ -45,18 +47,54 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
+  const showRecipeCuisines = () => {
+    console.group("Recipe Cuisines Analysis");
+    console.log("Total recipes:", recipes.length);
+    
+    const recipesWithCuisine = recipes.filter(recipe => recipe.cuisine);
+    console.log("Recipes with cuisine:", recipesWithCuisine.length);
+    
+    const cuisineGroups = recipesWithCuisine.reduce((acc, recipe) => {
+      const cuisine = recipe.cuisine?.toLowerCase().trim() || 'unknown';
+      if (!acc[cuisine]) {
+        acc[cuisine] = [];
+      }
+      acc[cuisine].push({
+        title: recipe.title,
+        originalCuisine: recipe.cuisine,
+        normalizedCuisine: cuisine,
+        hasCoordinates: !!CUISINE_COORDINATES[cuisine]
+      });
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    console.log("Cuisine Groups:");
+    Object.entries(cuisineGroups).forEach(([cuisine, recipes]) => {
+      console.log(`${cuisine}:`, {
+        count: recipes.length,
+        hasCoordinates: !!CUISINE_COORDINATES[cuisine],
+        recipes: recipes
+      });
+    });
+    
+    console.log("Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES));
+    console.groupEnd();
+  };
+
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
-    console.log("=== Starting Recipe Analysis ===");
-    console.log("Total recipes received:", recipes.length);
-    
-    // Group recipes by cuisine and normalize cuisine names
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/light-v11',
+      center: [0, 20],
+      zoom: 1.5
+    });
+
+    // Group recipes by cuisine
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = normalizeCuisineName(recipe.cuisine);
-        console.log(`Processing recipe "${recipe.title}" with cuisine "${recipe.cuisine}" -> normalized to "${cuisineKey}"`);
-        
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
@@ -65,25 +103,9 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    // Log cuisine groups and their counts
-    console.log("=== Cuisine Groups ===");
-    Object.entries(recipeByCuisine).forEach(([cuisine, recipes]) => {
-      console.log(`${cuisine}: ${recipes.length} recipes`);
-    });
-
-    // Initialize the map
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [0, 20],
-      zoom: 1.5
-    });
-
     // Add markers for each cuisine that has recipes
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
-      
-      console.log(`Looking up coordinates for cuisine "${cuisine}":`, coordinates ? 'Found' : 'Not found');
       
       if (!coordinates) {
         console.warn(`No coordinates found for cuisine: ${cuisine}`);
@@ -146,6 +168,13 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         <DialogDescription className="text-sm text-muted-foreground mb-4">
           Discover recipes from different cuisines. Click on the markers to see available recipes from each region.
         </DialogDescription>
+        <Button 
+          variant="outline" 
+          onClick={showRecipeCuisines}
+          className="mb-4"
+        >
+          Debug Cuisine Data
+        </Button>
         <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
       </DialogContent>
     </Dialog>
