@@ -14,13 +14,12 @@ service cloud.firestore {
     }
 
     match /feedback/{feedbackId} {
-      // Allow anyone to create feedback, with simple validation
+      // Allow anyone to create feedback with basic validation
       allow create: if request.resource.data.email is string &&
                    request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$') &&
                    request.resource.data.subject is string &&
                    request.resource.data.message is string &&
-                   request.resource.data.keys().hasAll(['email', 'subject', 'message']) &&
-                   request.resource.data.keys().hasOnly(['email', 'subject', 'message', 'userId']);
+                   request.resource.data.keys().hasOnly(['email', 'subject', 'message']);
       // Only authenticated users can read feedback
       allow read: if isAuthenticated();
       // Only admins can update/delete
