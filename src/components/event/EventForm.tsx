@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { CalendarDays, Clock, MapPin, Lock } from "lucide-react";
+import { CalendarDays, Clock, MapPin, Lock, Eye, ImageIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { GuestList } from "./GuestList";
+import { ImageUpload } from "../ImageUpload";
 import { EventGuest } from "@/types/event";
 
 interface EventFormProps {
@@ -18,7 +19,9 @@ interface EventFormProps {
     location: string;
     guests: EventGuest[];
     isPrivate: boolean;
+    isHidden: boolean;
     password?: string;
+    coverImage?: string;
   }) => void;
   onCancel: () => void;
 }
@@ -31,7 +34,10 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
   const [location, setLocation] = useState("");
   const [guests, setGuests] = useState<EventGuest[]>([]);
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isHidden, setIsHidden] = useState(false);
   const [password, setPassword] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [featuredImageIndex] = useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,18 +49,28 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
       location,
       guests,
       isPrivate,
-      ...(isPrivate && password ? { password } : {})
+      isHidden,
+      ...(isPrivate && password ? { password } : {}),
+      ...(images.length > 0 ? { coverImage: images[0] } : {})
     });
-  };
-
-  const handleAddGuest = (guest: EventGuest) => {
-    setGuests([...guests, guest]);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card className="p-6">
         <div className="space-y-4">
+          <div>
+            <label htmlFor="coverImage" className="block text-sm font-medium mb-1">
+              <ImageIcon className="w-4 h-4 inline-block mr-1" />
+              Cover Image
+            </label>
+            <ImageUpload
+              images={images}
+              featuredImageIndex={featuredImageIndex}
+              onChange={(newImages) => setImages(newImages)}
+            />
+          </div>
+
           <div>
             <label htmlFor="title" className="block text-sm font-medium mb-1">
               Event Title
@@ -130,7 +146,7 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
               <div className="space-y-0.5">
                 <Label>Private Event</Label>
                 <p className="text-sm text-muted-foreground">
-                  Only invited guests can see this event
+                  Require a password to access this event
                 </p>
               </div>
               <Switch
@@ -150,18 +166,32 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Optional: Set a password for uninvited guests"
+                  placeholder="Set a password for uninvited guests"
+                  required={isPrivate}
                 />
               </div>
             )}
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Hidden Event</Label>
+                <p className="text-sm text-muted-foreground">
+                  Hide this event from public listings
+                </p>
+              </div>
+              <Switch
+                checked={isHidden}
+                onCheckedChange={setIsHidden}
+              />
+            </div>
           </div>
         </div>
       </Card>
 
-      <GuestList guests={guests} onAddGuest={handleAddGuest} />
+      <GuestList guests={guests} onAddGuest={(guest) => setGuests([...guests, guest])} />
 
       <div className="flex gap-4">
-        <Button type="submit" className="bg-primary">Create Event</Button>
+        <Button type="submit">Create Event</Button>
         <Button 
           type="button" 
           variant="outline" 

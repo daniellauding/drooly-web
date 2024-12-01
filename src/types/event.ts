@@ -17,6 +17,7 @@ export interface EventDish {
   recipeId?: string;
   ingredients: string[];
   notes?: string;
+  courseType?: 'appetizer' | 'main' | 'dessert' | 'drinks';
   votes: {
     likes: string[];
     dislikes: string[];
@@ -29,9 +30,14 @@ export interface Event {
   description: string;
   date: string;
   time: string;
+  coverImage?: string;
   location: {
     name: string;
     address: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
   };
   createdBy: string;
   createdAt: Date;
@@ -40,5 +46,6 @@ export interface Event {
   dishes: EventDish[];
   notes?: string;
   isPrivate: boolean;
+  isHidden?: boolean;
   password?: string;
 }
