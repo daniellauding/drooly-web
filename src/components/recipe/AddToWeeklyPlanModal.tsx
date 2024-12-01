@@ -9,7 +9,7 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Check, Search } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Recipe } from "@/types/recipe";
 
@@ -47,7 +47,7 @@ export function AddToWeeklyPlanModal({
   );
 
   const searchRecipes = async (query: string) => {
-    if (!query.trim() || !user) return;
+    if (!query || !query.trim() || !user) return;
 
     try {
       const recipesRef = collection(db, "recipes");
@@ -58,10 +58,15 @@ export function AddToWeeklyPlanModal({
       );
       
       const querySnapshot = await getDocs(q);
-      const results = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Recipe[];
+      const results: Recipe[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data() as Omit<Recipe, 'id'>;
+        results.push({
+          id: doc.id,
+          ...data
+        } as Recipe);
+      });
       
       setRecipes(results);
     } catch (error) {
