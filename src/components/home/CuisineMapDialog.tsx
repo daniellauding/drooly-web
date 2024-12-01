@@ -25,10 +25,12 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     console.log("Total recipes:", recipes.length);
     
     recipes.forEach((recipe, index) => {
+      const normalizedCuisine = normalizeCuisineName(recipe.cuisine || '');
       console.log(`Recipe ${index + 1} - ${recipe.title}:`, {
         rawCuisine: recipe.cuisine,
-        normalizedCuisine: recipe.cuisine?.toLowerCase().trim(),
-        hasCoordinates: !!CUISINE_COORDINATES[recipe.cuisine?.toLowerCase().trim() || ''],
+        normalizedCuisine,
+        hasCoordinates: !!CUISINE_COORDINATES[normalizedCuisine],
+        coordinates: CUISINE_COORDINATES[normalizedCuisine],
         type: typeof recipe.cuisine,
         hasValue: Boolean(recipe.cuisine),
         fullRecipe: recipe
@@ -70,6 +72,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
+    console.log('Grouped recipes by cuisine:', recipeByCuisine);
+
     // Add markers for each cuisine that has recipes
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
@@ -79,6 +83,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         return;
       }
 
+      console.log(`Creating marker for ${cuisine} at coordinates:`, coordinates);
       createCuisineMapMarker({
         cuisine,
         coordinates,

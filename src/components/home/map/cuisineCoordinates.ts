@@ -24,5 +24,9 @@ export const CUISINE_COORDINATES: Record<string, [number, number]> = {
 };
 
 export const normalizeCuisineName = (cuisine: string): string => {
-  return cuisine.toLowerCase().trim();
+  if (!cuisine) return '';
+  console.log('Normalizing cuisine:', cuisine);
+  const normalized = cuisine.toLowerCase().trim();
+  console.log('Normalized cuisine:', normalized);
+  return normalized;
 };
