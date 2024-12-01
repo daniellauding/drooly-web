@@ -1,25 +1,27 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, getDoc, updateDoc, arrayUnion, increment, Timestamp } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types/recipe";
 import { IngredientItem } from "@/components/shopping/types";
 import { useToast } from "@/hooks/use-toast";
+import { Trash2, Check } from "lucide-react";
 
 export function ShoppingListContent() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
 
   useEffect(() => {
     if (user) {
-      console.log("Loading shopping list for user:", user.uid);
-      loadShoppingList();
       loadCheckedItems();
+      loadShoppingList();
     }
   }, [user]);
 
@@ -64,14 +66,14 @@ export function ShoppingListContent() {
       );
 
       const querySnapshot = await getDocs(q);
-      const recipes = querySnapshot.docs.map(doc => ({
+      const fetchedRecipes = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as Recipe[];
 
-      console.log("Found recipes:", recipes.length);
+      setRecipes(fetchedRecipes);
 
-      const allIngredients = recipes.flatMap(recipe =>
+      const allIngredients = fetchedRecipes.flatMap(recipe =>
         recipe.ingredients.map(ing => ({
           ...ing,
           recipeId: recipe.id,
@@ -80,7 +82,6 @@ export function ShoppingListContent() {
         }))
       );
 
-      console.log("Processed ingredients:", allIngredients.length);
       setIngredients(allIngredients);
     } catch (error) {
       console.error("Error loading shopping list:", error);
@@ -136,27 +137,105 @@ export function ShoppingListContent() {
     }
   };
 
+  const removeIngredient = (ingredient: IngredientItem) => {
+    setIngredients(prev => prev.filter(ing => 
+      !(ing.name === ingredient.name && ing.recipeId === ingredient.recipeId)
+    ));
+  };
+
+  const markRecipeAsCooked = async (recipeId: string) => {
+    if (!user) return;
+    try {
+      const recipeRef = doc(db, "recipes", recipeId);
+      
+      // Update recipe stats
+      await updateDoc(recipeRef, {
+        "stats.cookedBy": arrayUnion(user.uid),
+        "stats.cookedCount": increment(1)
+      });
+
+      // Remove from want to cook list
+      const updatedRecipes = recipes.filter(r => r.id !== recipeId);
+      setRecipes(updatedRecipes);
+
+      // Remove ingredients from this recipe
+      setIngredients(prev => prev.filter(ing => ing.recipeId !== recipeId));
+
+      // Add to user's cooked recipes collection
+      const cookedRef = doc(db, "users", user.uid, "cookedRecipes", recipeId);
+      await setDoc(cookedRef, {
+        cookedAt: Timestamp.now(),
+        recipeId
+      });
+
+      toast({
+        title: "Recipe marked as cooked",
+        description: "Recipe has been moved to your cooked list"
+      });
+    } catch (error) {
+      console.error("Error marking recipe as cooked:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark recipe as cooked",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const groupedIngredients = ingredients.reduce((acc, ing) => {
+    if (!acc[ing.recipeId]) {
+      acc[ing.recipeId] = [];
+    }
+    acc[ing.recipeId].push(ing);
+    return acc;
+  }, {} as Record<string, IngredientItem[]>);
+
   return (
-    <Card className="p-6">
-      <div className="space-y-4">
-        {ingredients.map((ingredient, idx) => (
-          <div key={`${ingredient.recipeId}-${ingredient.name}-${idx}`}>
-            <div className="flex items-center gap-4 py-2">
-              <Checkbox
-                checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
-                onCheckedChange={() => handleCheck(ingredient)}
-              />
-              <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
-                {ingredient.amount} {ingredient.unit} {ingredient.name}
-              </span>
-              <span className="text-sm text-muted-foreground ml-auto">
-                {ingredient.recipeTitle}
-              </span>
+    <div className="space-y-6">
+      {recipes.map(recipe => (
+        <Card key={recipe.id} className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">{recipe.title}</h3>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => markRecipeAsCooked(recipe.id)}
+                className="flex items-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Mark as Cooked
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                {recipe.stats?.cookedCount || 0} people have cooked this
+              </div>
             </div>
-            {idx < ingredients.length - 1 && <Separator />}
           </div>
-        ))}
-      </div>
-    </Card>
+          
+          {groupedIngredients[recipe.id]?.map((ingredient, idx) => (
+            <div key={`${ingredient.recipeId}-${ingredient.name}-${idx}`}>
+              <div className="flex items-center gap-4 py-2">
+                <Checkbox
+                  checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
+                  onCheckedChange={() => handleCheck(ingredient)}
+                />
+                <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
+                  {ingredient.amount} {ingredient.unit} {ingredient.name}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeIngredient(ingredient)}
+                  className="ml-auto"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+              {idx < groupedIngredients[recipe.id].length - 1 && <Separator />}
+            </div>
+          ))}
+        </Card>
+      ))}
+    </div>
   );
 }

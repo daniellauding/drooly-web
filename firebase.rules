@@ -22,7 +22,8 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
                    request.resource.data.creatorId == request.auth.uid;
       allow update: if isAuthenticated() && 
-                   resource.data.creatorId == request.auth.uid;
+                   (resource.data.creatorId == request.auth.uid ||
+                    request.resource.data.diff().affectedKeys().hasOnly(['stats']));
       allow delete: if isAuthenticated() && 
                    resource.data.creatorId == request.auth.uid;
     }
@@ -54,6 +55,10 @@ service cloud.firestore {
       }
       
       match /todos/{todoId} {
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
+
+      match /cookedRecipes/{recipeId} {
         allow read, write: if isAuthenticated() && request.auth.uid == userId;
       }
     }

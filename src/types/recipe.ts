@@ -55,7 +55,9 @@ export interface Recipe {
     likes?: string[];
     saves?: string[];
     comments?: number;
-    wantToCook?: string[]; // Array of user IDs who want to cook this
+    wantToCook?: string[];
+    cookedBy?: string[]; // Array of user IDs who have cooked this
+    cookedCount?: number; // Total number of times cooked
   };
   ingredientSections?: {
     title: string;
@@ -211,4 +213,3 @@ export interface ValidationResult {
     message: string;
   }[];
 }
-
