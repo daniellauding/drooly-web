@@ -3,33 +3,32 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Recipe } from "@/types/recipe";
+import { CUISINES } from "@/types/recipe";
 
-// Initialize Mapbox token
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
-// Define cuisine coordinates with proper typing
 const CUISINE_COORDINATES: Record<string, [number, number]> = {
-  'italian': [12.4964, 41.9028], // Rome
-  'french': [2.3522, 48.8566], // Paris
-  'japanese': [139.6503, 35.6762], // Tokyo
-  'chinese': [116.4074, 39.9042], // Beijing
-  'thai': [100.5018, 13.7563], // Bangkok
-  'indian': [77.1025, 28.7041], // New Delhi
-  'mexican': [-99.1332, 19.4326], // Mexico City
-  'greek': [23.7275, 37.9838], // Athens
-  'spanish': [-3.7038, 40.4168], // Madrid
-  'vietnamese': [105.8542, 21.0285], // Hanoi
-  'korean': [126.9780, 37.5665], // Seoul
-  'turkish': [32.8597, 39.9334], // Ankara
-  'lebanese': [35.5018, 33.8938], // Beirut
-  'moroccan': [-6.8498, 34.0209], // Rabat
-  'brazilian': [-47.8645, -15.7942], // Brasília
-  'american': [-98.5795, 39.8283], // USA center
-  'mediterranean': [14.4378, 35.9375], // Mediterranean Sea
-  'middle eastern': [39.1947, 30.5852], // Middle East region
-  'caribbean': [-75.0148, 18.7357], // Caribbean Sea
-  'ethiopian': [38.7578, 9.0320], // Addis Ababa
-  'german': [13.4050, 52.5200], // Berlin
+  'italian': [12.4964, 41.9028],
+  'french': [2.3522, 48.8566],
+  'japanese': [139.6503, 35.6762],
+  'chinese': [116.4074, 39.9042],
+  'thai': [100.5018, 13.7563],
+  'indian': [77.1025, 28.7041],
+  'mexican': [-99.1332, 19.4326],
+  'greek': [23.7275, 37.9838],
+  'spanish': [-3.7038, 40.4168],
+  'vietnamese': [105.8542, 21.0285],
+  'korean': [126.9780, 37.5665],
+  'turkish': [32.8597, 39.9334],
+  'lebanese': [35.5018, 33.8938],
+  'moroccan': [-6.8498, 34.0209],
+  'brazilian': [-47.8645, -15.7942],
+  'american': [-98.5795, 39.8283],
+  'mediterranean': [14.4378, 35.9375],
+  'middle eastern': [39.1947, 30.5852],
+  'caribbean': [-75.0148, 18.7357],
+  'ethiopian': [38.7578, 9.0320],
+  'german': [13.4050, 52.5200],
 };
 
 interface CuisineMapDialogProps {
@@ -45,13 +44,42 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
-    console.log("CuisineMapDialog - All recipes received:", recipes);
-    console.log("CuisineMapDialog - Recipes with cuisines:", recipes.filter(r => r.cuisine));
+    // Log all available cuisines from the constants
+    console.log("Available cuisines from CUISINES constant:", CUISINES);
     
-    // Log each recipe's cuisine
-    recipes.forEach(recipe => {
-      console.log(`Recipe "${recipe.title}" - Cuisine: ${recipe.cuisine || 'No cuisine specified'}`);
-    });
+    // Group recipes by cuisine and log counts
+    const recipeByCuisine = recipes.reduce((acc, recipe) => {
+      if (recipe.cuisine) {
+        const cuisineKey = recipe.cuisine.toLowerCase().trim();
+        if (!acc[cuisineKey]) {
+          acc[cuisineKey] = [];
+        }
+        acc[cuisineKey].push(recipe);
+      }
+      return acc;
+    }, {} as Record<string, Recipe[]>);
+
+    // Log recipes grouped by cuisine
+    console.log("Recipes grouped by cuisine:", 
+      Object.entries(recipeByCuisine).map(([cuisine, recipes]) => 
+        `${cuisine}: ${recipes.length} recipes`
+      )
+    );
+
+    // Log which cuisines have coordinates
+    console.log("Cuisines with coordinates:", 
+      Object.keys(CUISINE_COORDINATES).map(cuisine => 
+        `${cuisine}${recipeByCuisine[cuisine] ? ` (${recipeByCuisine[cuisine].length} recipes)` : ' (no recipes)'}`
+      )
+    );
+
+    // Log cuisines that have recipes but no coordinates
+    const cuisinesWithoutCoordinates = Object.keys(recipeByCuisine).filter(
+      cuisine => !CUISINE_COORDINATES[cuisine]
+    );
+    if (cuisinesWithoutCoordinates.length > 0) {
+      console.warn("Cuisines with recipes but no coordinates:", cuisinesWithoutCoordinates);
+    }
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -60,28 +88,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       zoom: 1.5
     });
 
-    // Group recipes by cuisine (case-insensitive)
-    const groupedRecipes = recipes.reduce((acc, recipe) => {
-      if (recipe.cuisine) {
-        const cuisineKey = recipe.cuisine.toLowerCase().trim();
-        console.log(`Adding recipe "${recipe.title}" to cuisine group: ${cuisineKey}`);
-        if (!acc[cuisineKey]) {
-          acc[cuisineKey] = [];
-        }
-        acc[cuisineKey].push(recipe);
-      } else {
-        console.log(`Recipe "${recipe.title}" has no cuisine specified`);
-      }
-      return acc;
-    }, {} as Record<string, Recipe[]>);
-
-    console.log("CuisineMapDialog - Grouped recipes by cuisine:", groupedRecipes);
-    console.log("CuisineMapDialog - Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES).map(cuisine => 
-      `${cuisine} (${groupedRecipes[cuisine]?.length || 0} recipes)`
-    ));
-
     // Add markers for each cuisine group
-    Object.entries(groupedRecipes).forEach(([cuisine, cuisineRecipes]) => {
+    Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
       if (!coordinates) {
         console.log(`No coordinates found for cuisine: ${cuisine}`);
@@ -90,7 +98,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
       console.log(`Adding marker for ${cuisine} with ${cuisineRecipes.length} recipes at coordinates:`, coordinates);
 
-      // Create popup content
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div class="p-2">
           <h3 class="font-bold text-base capitalize">${cuisine} Cuisine</h3>
@@ -112,7 +119,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         </div>
       `);
 
-      // Create and add marker with hover effect
       const marker = new mapboxgl.Marker({
         color: "#FF5A5F",
         scale: 0.8
@@ -121,7 +127,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         .setPopup(popup)
         .addTo(map.current!);
 
-      // Add hover effect to marker element
       const markerElement = marker.getElement();
       markerElement.style.transition = 'transform 0.2s ease';
       markerElement.addEventListener('mouseenter', () => {
@@ -132,7 +137,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       });
     });
 
-    // Cleanup function
     return () => {
       if (map.current) {
         map.current.remove();
