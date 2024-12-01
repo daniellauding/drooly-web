@@ -6,9 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Plus, Star } from "lucide-react";
+import { Plus, Star, ChevronDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { IngredientItem } from "./types";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 interface HistoryItem {
   id: string;
@@ -75,65 +81,82 @@ export function ShoppingHistory({ userId, onAddToList, onSetRecurring }: Shoppin
   };
 
   if (history.length === 0) {
-    return null;
+    return (
+      <Card className="p-6">
+        <p className="text-center text-muted-foreground">No shopping history yet</p>
+      </Card>
+    );
   }
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Shopping History</h2>
       <ScrollArea className="h-[600px] rounded-md border p-4">
-        {history.map((item) => (
-          <Card key={item.id} className="p-4 mb-4">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="font-semibold">
-                  {format(item.checkedAt, "MMMM d, yyyy")}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {format(item.checkedAt, "h:mm a")}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {item.recurrence !== "none" && (
-                  <Badge variant="secondary">
-                    {item.recurrence}
-                  </Badge>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => addToCurrentList(item.items)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add to List
-                </Button>
-              </div>
-            </div>
-            <ul className="space-y-2">
-              {item.items.map((ingredient, idx) => (
-                <li key={`${item.id}-${idx}`} className="flex items-center justify-between">
-                  <span className="text-sm">
-                    {ingredient.amount} {ingredient.unit} {ingredient.name}
-                    <span className="text-muted-foreground ml-2">
-                      ({ingredient.recipeTitle})
-                    </span>
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setRecurrence(
-                      ingredient,
-                      ingredient.recurrence === "none" ? "monthly" : 
-                      ingredient.recurrence === "monthly" ? "weekly" : "none"
+        <Accordion type="single" collapsible className="space-y-4">
+          {history.map((item) => (
+            <AccordionItem key={item.id} value={item.id}>
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center justify-between w-full pr-4">
+                  <div>
+                    <h3 className="font-semibold text-left">
+                      {format(item.checkedAt, "MMMM d, yyyy")}
+                    </h3>
+                    <p className="text-sm text-muted-foreground text-left">
+                      {format(item.checkedAt, "h:mm a")} - {item.items.length} items
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {item.recurrence !== "none" && (
+                      <Badge variant="secondary">
+                        {item.recurrence}
+                      </Badge>
                     )}
-                  >
-                    <Star className={`h-4 w-4 ${ingredient.recurrence !== "none" ? "text-yellow-500" : ""}`} />
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ))}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCurrentList(item.items);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add to List
+                    </Button>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <Card className="p-4">
+                  <ul className="space-y-2 divide-y">
+                    {item.items.map((ingredient, idx) => (
+                      <li key={`${item.id}-${idx}`} className="flex items-center justify-between py-2">
+                        <div className="space-y-1">
+                          <p className="font-medium">
+                            {ingredient.amount} {ingredient.unit} {ingredient.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            From: {ingredient.recipeTitle}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setRecurrence(
+                            ingredient,
+                            ingredient.recurrence === "none" ? "monthly" : 
+                            ingredient.recurrence === "monthly" ? "weekly" : "none"
+                          )}
+                        >
+                          <Star className={`h-4 w-4 ${ingredient.recurrence !== "none" ? "text-yellow-500" : ""}`} />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
       </ScrollArea>
     </div>
   );
