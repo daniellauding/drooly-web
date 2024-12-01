@@ -117,6 +117,12 @@ export function ShoppingListContent() {
     await saveCheckedItems(newChecked);
   };
 
+  const handleRemoveIngredient = (ingredient: IngredientItem) => {
+    setIngredients(prev => prev.filter(ing => 
+      !(ing.recipeId === ingredient.recipeId && ing.name === ingredient.name)
+    ));
+  };
+
   const saveCheckedItems = async (items: Set<string>) => {
     if (!user) return;
     try {
@@ -176,6 +182,7 @@ export function ShoppingListContent() {
             checkedItems={checkedItems}
             onCheck={handleCheck}
             onCheckAll={handleCheckAll}
+            onRemove={handleRemoveIngredient}
           />
         ))}
 
