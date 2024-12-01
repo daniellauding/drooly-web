@@ -13,15 +13,19 @@ export function ScannedRecipesNav({
   activeRecipeIndex,
   onRecipeSelect
 }: ScannedRecipesNavProps) {
-  console.log("ScannedRecipesNav - Current recipes:", {
-    recipesCount: scannedRecipes.length,
-    recipes: scannedRecipes.map(r => ({
-      id: r.id,
-      title: r.title,
-      ingredients: r.ingredients?.length
-    })),
-    activeIndex: activeRecipeIndex
-  });
+  console.log("ScannedRecipesNav - Detailed recipe information:", 
+    scannedRecipes.map((recipe, index) => ({
+      index,
+      id: recipe.id,
+      title: recipe.title?.slice(0, 30),
+      ingredientsCount: recipe.ingredients?.length,
+      ingredients: recipe.ingredients?.map(ing => 
+        typeof ing === 'string' ? ing : `${ing.amount} ${ing.unit} ${ing.name}`
+      ),
+      images: recipe.images,
+      sourceFile: recipe.sourceFile
+    }))
+  );
 
   if (scannedRecipes.length <= 1) return null;
 
@@ -31,8 +35,20 @@ export function ScannedRecipesNav({
       <Tabs 
         value={activeRecipeIndex.toString()} 
         onValueChange={(value) => {
-          console.log("Tab selection changed to:", value);
-          onRecipeSelect(parseInt(value));
+          const newIndex = parseInt(value);
+          console.log("Tab selection changed to:", {
+            index: newIndex,
+            recipe: scannedRecipes[newIndex] ? {
+              id: scannedRecipes[newIndex].id,
+              title: scannedRecipes[newIndex].title?.slice(0, 30),
+              ingredientsCount: scannedRecipes[newIndex].ingredients?.length,
+              ingredients: scannedRecipes[newIndex].ingredients?.map(ing => 
+                typeof ing === 'string' ? ing : `${ing.amount} ${ing.unit} ${ing.name}`
+              ),
+              images: scannedRecipes[newIndex].images
+            } : 'Recipe not found'
+          });
+          onRecipeSelect(newIndex);
         }}
         className="w-full"
       >
@@ -41,7 +57,9 @@ export function ScannedRecipesNav({
             console.log("Rendering tab for recipe:", {
               index,
               id: recipe.id,
-              title: recipe.title?.slice(0, 30)
+              title: recipe.title?.slice(0, 30),
+              ingredientsCount: recipe.ingredients?.length,
+              firstImage: recipe.images?.[0] || 'No image'
             });
             
             return (
