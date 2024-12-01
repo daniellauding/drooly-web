@@ -1,23 +1,15 @@
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
+import { Accordion } from "@/components/ui/accordion";
 import { db } from "@/lib/firebase";
 import { collection, query, where, getDocs, doc, setDoc, getDoc, addDoc, Timestamp } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types/recipe";
 import { IngredientItem } from "@/components/shopping/types";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Check, ChevronDown } from "lucide-react";
 import { CustomIngredientAdd } from "@/components/shopping/CustomIngredientAdd";
 import { ShoppingHistory } from "@/components/shopping/ShoppingHistory";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { RecipeAccordionItem } from "./RecipeAccordionItem";
+import { CustomIngredientsAccordion } from "./CustomIngredientsAccordion";
 
 export function ShoppingListContent() {
   const { user } = useAuth();
@@ -104,23 +96,25 @@ export function ShoppingListContent() {
     await saveCheckedItems(newChecked);
   };
 
-  const markAllInRecipeAsBought = async (recipeId: string) => {
+  const handleCheckAll = async (ingredients: IngredientItem[]) => {
     if (!user) return;
 
-    const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipeId);
     const newChecked = new Set(checkedItems);
+    const allChecked = ingredients.every(ing => 
+      checkedItems.has(`${ing.recipeId}-${ing.name}`)
+    );
     
-    recipeIngredients.forEach(ing => {
-      newChecked.add(`${ing.recipeId}-${ing.name}`);
+    ingredients.forEach(ing => {
+      const key = `${ing.recipeId}-${ing.name}`;
+      if (allChecked) {
+        newChecked.delete(key);
+      } else {
+        newChecked.add(key);
+      }
     });
 
     setCheckedItems(newChecked);
     await saveCheckedItems(newChecked);
-
-    toast({
-      title: "Success",
-      description: "All ingredients marked as bought"
-    });
   };
 
   const saveCheckedItems = async (items: Set<string>) => {
@@ -174,69 +168,24 @@ export function ShoppingListContent() {
 
       <Accordion type="single" collapsible className="w-full space-y-4">
         {recipes.map(recipe => (
-          <AccordionItem key={recipe.id} value={recipe.id} className="border rounded-lg">
-            <AccordionTrigger className="px-4 py-2 hover:no-underline">
-              <div className="flex items-center justify-between w-full">
-                <span>{recipe.title}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    markAllInRecipeAsBought(recipe.id);
-                  }}
-                  className="ml-4"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  Mark All Bought
-                </Button>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {ingredients
-                .filter(ing => ing.recipeId === recipe.id)
-                .map((ingredient, idx) => (
-                  <div key={`${ingredient.recipeId}-${ingredient.name}-${idx}`}>
-                    <div className="flex items-center gap-4 py-2">
-                      <Checkbox
-                        checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
-                        onCheckedChange={() => handleCheck(ingredient)}
-                      />
-                      <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
-                        {ingredient.amount} {ingredient.unit} {ingredient.name}
-                      </span>
-                    </div>
-                    {idx < ingredients.filter(ing => ing.recipeId === recipe.id).length - 1 && <Separator />}
-                  </div>
-                ))}
-            </AccordionContent>
-          </AccordionItem>
+          <RecipeAccordionItem
+            key={recipe.id}
+            recipeId={recipe.id}
+            recipeTitle={recipe.title}
+            ingredients={ingredients.filter(ing => ing.recipeId === recipe.id)}
+            checkedItems={checkedItems}
+            onCheck={handleCheck}
+            onCheckAll={handleCheckAll}
+          />
         ))}
 
         {ingredients.some(ing => ing.recipeId === 'custom') && (
-          <AccordionItem value="custom" className="border rounded-lg">
-            <AccordionTrigger className="px-4 py-2 hover:no-underline">
-              Custom Items
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
-              {ingredients
-                .filter(ing => ing.recipeId === 'custom')
-                .map((ingredient, idx) => (
-                  <div key={`custom-${ingredient.name}-${idx}`}>
-                    <div className="flex items-center gap-4 py-2">
-                      <Checkbox
-                        checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
-                        onCheckedChange={() => handleCheck(ingredient)}
-                      />
-                      <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
-                        {ingredient.amount} {ingredient.unit} {ingredient.name}
-                      </span>
-                    </div>
-                    {idx < ingredients.filter(ing => ing.recipeId === 'custom').length - 1 && <Separator />}
-                  </div>
-                ))}
-            </AccordionContent>
-          </AccordionItem>
+          <CustomIngredientsAccordion
+            ingredients={ingredients.filter(ing => ing.recipeId === 'custom')}
+            checkedItems={checkedItems}
+            onCheck={handleCheck}
+            onCheckAll={handleCheckAll}
+          />
         )}
       </Accordion>
 
