@@ -165,8 +165,21 @@ export default function CreateRecipe() {
       return;
     }
 
-    // Save all scanned recipes that have been modified
-    const recipesToSave = scannedRecipes.length > 0 ? scannedRecipes : [currentRecipe];
+    // Ensure all recipes have required fields before saving
+    const recipesToSave = (scannedRecipes.length > 0 ? scannedRecipes : [currentRecipe])
+      .map(recipe => ({
+        ...recipe,
+        id: recipe.id || `recipe-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: recipe.createdAt || Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        stats: recipe.stats || {
+          views: 0,
+          likes: [],
+          saves: [],
+          comments: 0
+        }
+      })) as Recipe[];
+
     console.log("Saving recipes:", recipesToSave.map(r => ({ id: r.id, title: r.title })));
     
     await handleSaveRecipe(recipesToSave, user.uid, user.displayName || "", false);

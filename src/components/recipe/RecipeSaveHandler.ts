@@ -8,16 +8,22 @@ export function useRecipeSaveHandler(isEditing: boolean, id?: string) {
   const navigate = useNavigate();
 
   const handleSaveRecipe = async (
-    recipes: Recipe[],
+    recipesToSave: Recipe | Recipe[],
     userId: string,
     userName: string,
     isDraft: boolean = false
   ) => {
     try {
+      const recipes = Array.isArray(recipesToSave) ? recipesToSave : [recipesToSave];
       console.log(`Saving ${recipes.length} recipes as ${isDraft ? 'draft' : 'published'}`);
       
       // Save each recipe sequentially
       for (const recipe of recipes) {
+        if (!recipe.id) {
+          console.warn("Recipe missing ID, generating one");
+          recipe.id = `recipe-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+        
         console.log("Saving recipe:", recipe.id, recipe.title);
         await saveRecipe(
           { ...recipe, status: isDraft ? 'draft' : 'published' },
