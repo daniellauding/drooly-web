@@ -31,6 +31,7 @@ const CUISINE_COORDINATES: Record<string, [number, number]> = {
   'caribbean': [-75.0148, 18.7357],
   'ethiopian': [38.7578, 9.0320],
   'german': [13.4050, 52.5200],
+  'swedish': [18.0686, 59.3293],  // Added Swedish coordinates
 };
 
 interface CuisineMapDialogProps {
@@ -54,6 +55,17 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     const recipesWithCuisine = recipes.filter(recipe => recipe.cuisine);
     console.log("Recipes with cuisine:", recipesWithCuisine.length);
     
+    // Log each recipe's cuisine data
+    recipes.forEach((recipe, index) => {
+      console.log(`Recipe ${index + 1}:`, {
+        title: recipe.title,
+        originalCuisine: recipe.cuisine,
+        normalizedCuisine: recipe.cuisine?.toLowerCase().trim(),
+        hasCoordinates: recipe.cuisine ? !!CUISINE_COORDINATES[recipe.cuisine.toLowerCase().trim()] : false
+      });
+    });
+
+    // Group by cuisine
     const cuisineGroups = recipesWithCuisine.reduce((acc, recipe) => {
       const cuisine = recipe.cuisine?.toLowerCase().trim() || 'unknown';
       if (!acc[cuisine]) {
@@ -87,6 +99,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = normalizeCuisineName(recipe.cuisine);
+        console.log(`Processing recipe "${recipe.title}" with cuisine "${recipe.cuisine}" (normalized: "${cuisineKey}")`);
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
@@ -103,6 +116,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         console.warn(`No coordinates found for cuisine: ${cuisine}`);
         return;
       }
+
+      console.log(`Adding marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
 
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div class="p-2">
