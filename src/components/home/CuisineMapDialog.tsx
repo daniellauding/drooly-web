@@ -33,6 +33,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
+    console.log("Initializing map with recipes:", recipes.length);
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
@@ -59,6 +61,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
+    console.log("Recipes grouped by cuisine:", Object.keys(recipeByCuisine).length);
+
     // Add markers for each cuisine that has recipes
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
@@ -68,6 +72,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         return;
       }
 
+      console.log(`Creating marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
       createCuisineMapMarker({
         cuisine,
         coordinates,
