@@ -29,6 +29,7 @@ export function WeeklyStories({ users, onUserClick }: WeeklyStoriesProps) {
 
   useEffect(() => {
     const fetchWeeklyPlans = async () => {
+      console.log("Fetching weekly plans...");
       const q = query(
         collection(db, "weeklyPlans"),
         where("status", "==", "planned"),
@@ -36,12 +37,13 @@ export function WeeklyStories({ users, onUserClick }: WeeklyStoriesProps) {
       );
 
       const snapshot = await getDocs(q);
-      setWeeklyPlans(
-        snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as WeeklyPlan))
-      );
+      const plans = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as WeeklyPlan));
+      
+      console.log("Fetched weekly plans:", plans);
+      setWeeklyPlans(plans);
     };
 
     fetchWeeklyPlans();
@@ -66,21 +68,6 @@ export function WeeklyStories({ users, onUserClick }: WeeklyStoriesProps) {
               </div>
             </div>
             <span className="text-sm text-muted-foreground line-clamp-1">{plan.title}</span>
-          </div>
-        ))}
-        {users.map((user, index) => (
-          <div 
-            key={user.id} 
-            className="text-center cursor-pointer"
-            onClick={() => onUserClick(index)}
-          >
-            <div className="relative mb-2">
-              <Avatar className="w-16 h-16 ring-2 ring-primary p-0.5 hover:ring-offset-2 transition-all">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback>{user.name[0]}</AvatarFallback>
-              </Avatar>
-            </div>
-            <span className="text-sm text-muted-foreground">{user.name}</span>
           </div>
         ))}
       </div>
