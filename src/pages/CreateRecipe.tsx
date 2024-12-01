@@ -5,7 +5,7 @@ import { validateRecipe } from "@/types/recipe";
 import { TopBar } from "@/components/TopBar";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Timestamp } from "firebase/firestore";
 import { RecipeAccordions } from "@/components/recipe/RecipeAccordions";
@@ -355,8 +355,6 @@ export default function CreateRecipe() {
           <RecipeHeaderSection 
             isEditing={isEditing} 
             onSaveAsDraft={handleSaveAsDraft}
-            isStepBased={isStepBased}
-            onStepBasedChange={handleStepBasedChange}
           />
         </div>
 
@@ -379,7 +377,7 @@ export default function CreateRecipe() {
           onOpenSectionsChange={setOpenSections}
           onRecipeChange={handleRecipeChange}
           onAddStep={handleAddStep}
-          onStepBasedChange={setIsStepBased}
+          onStepBasedChange={handleStepBasedChange}
         />
 
         <div className="flex justify-end gap-4">
