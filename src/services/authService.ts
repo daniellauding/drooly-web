@@ -15,25 +15,44 @@ const EMAIL_COOLDOWN = 60000; // 1 minute cooldown
 let lastEmailSent = 0;
 
 export const loginUser = async (email: string, password: string) => {
-  logger.info("Attempting login for:", email);
+  console.log("[AuthService] Attempting login for:", email);
   const { user } = await signInWithEmailAndPassword(auth, email, password);
   return user;
 };
 
 export const getUserData = async (user: User) => {
-  logger.info("Fetching user data for:", user.uid);
+  console.log("[AuthService] Fetching user data for:", user.uid);
   try {
     const userDoc = await getDoc(doc(db, "users", user.uid));
     if (!userDoc.exists()) {
-      logger.warn("No user document found for:", user.uid);
+      console.warn("[AuthService] No user document found for:", user.uid);
       return null;
     }
     const userData = userDoc.data();
-    logger.debug("Retrieved user data:", userData);
+    console.log("[AuthService] Retrieved user data:", userData);
     return userData;
   } catch (error) {
-    logger.error("Error fetching user data:", error);
-    return null;
+    console.error("[AuthService] Error fetching user data:", error);
+    throw error; // Propagate the error to handle it in the auth context
+  }
+};
+
+export const createUserDocument = async (user: User) => {
+  console.log("[AuthService] Creating user document for:", user.uid);
+  try {
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      name: user.displayName || "",
+      role: "user",
+      createdAt: new Date(),
+      emailVerified: user.emailVerified,
+      manuallyVerified: false,
+      avatarUrl: user.photoURL || ""
+    });
+    console.log("[AuthService] User document created successfully");
+  } catch (error) {
+    console.error("[AuthService] Error creating user document:", error);
+    throw error;
   }
 };
 

@@ -15,17 +15,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    console.log("Setting up auth state listener");
+    console.log("[AuthProvider] Setting up auth state listener");
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          console.log("Auth state changed - User:", firebaseUser.email);
+          console.log("[AuthProvider] Auth state changed - User:", firebaseUser.email);
           
           // Verify the token is still valid
           try {
+            console.log("[AuthProvider] Refreshing token");
             await firebaseUser.getIdToken(true);
+            console.log("[AuthProvider] Token refreshed successfully");
           } catch (tokenError) {
-            console.error("Token refresh failed:", tokenError);
+            console.error("[AuthProvider] Token refresh failed:", tokenError);
             // Force logout if token is invalid
             await auth.signOut();
             setUser(null);
@@ -34,20 +36,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           
           try {
+            console.log("[AuthProvider] Fetching user data from Firestore");
             const userData = await authService.getUserData(firebaseUser);
-            console.log("User data from Firestore:", userData);
+            console.log("[AuthProvider] User data from Firestore:", userData);
+            
+            if (!userData) {
+              console.warn("[AuthProvider] No user data found in Firestore");
+              // Create user document if it doesn't exist
+              await authService.createUserDocument(firebaseUser);
+              console.log("[AuthProvider] Created new user document");
+            }
             
             // Check both Firebase Auth and Firestore verification status
             const isVerified = firebaseUser.emailVerified || userData?.manuallyVerified;
             
             setUser({ 
               ...firebaseUser, 
-              role: userData?.role,
-              manuallyVerified: userData?.manuallyVerified,
+              role: userData?.role || 'user',
+              manuallyVerified: userData?.manuallyVerified || false,
               photoURL: userData?.avatarUrl || firebaseUser.photoURL
             });
 
             if (!isVerified) {
+              console.log("[AuthProvider] User not verified, showing toast");
               toast({
                 title: "Email verification required",
                 description: "Please check your inbox and verify your email to access all features.",
@@ -55,16 +66,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               });
             }
           } catch (error) {
-            console.error("Error fetching user data:", error);
-            // Don't clear user here, just log the error
-            setUser(firebaseUser); // Keep basic Firebase user data
+            console.error("[AuthProvider] Error fetching user data:", error);
+            // Don't clear user here, just log the error and keep basic Firebase user data
+            setUser(firebaseUser);
           }
         } else {
-          console.log("No user signed in");
+          console.log("[AuthProvider] No user signed in");
           setUser(null);
         }
       } catch (error) {
-        console.error("Auth state change error:", error);
+        console.error("[AuthProvider] Auth state change error:", error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -72,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      console.log("Cleaning up auth state listener");
+      console.log("[AuthProvider] Cleaning up auth state listener");
       unsubscribe();
     };
   }, [toast]);
