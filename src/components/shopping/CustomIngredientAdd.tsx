@@ -17,12 +17,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, collection, addDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, getDoc, updateDoc } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface CustomIngredientAddProps {
@@ -72,14 +71,40 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
     }
 
     try {
-      // Save to Firebase
-      await addDoc(collection(db, "users", user.uid, "customIngredients"), {
+      console.log("Adding custom ingredient:", { name, amount, unit, recurrence });
+      
+      // First, get the current shopping list
+      const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
+      const listDoc = await getDoc(listRef);
+      
+      // Prepare the new ingredient
+      const newIngredient = {
         name: name.trim(),
         amount: amount.trim(),
         unit,
-        recurrence,
-        createdAt: new Date()
-      });
+        recipeId: 'custom',
+        recipeTitle: 'Custom Items',
+        bought: false,
+        recurrence
+      };
+
+      if (listDoc.exists()) {
+        // Update existing list
+        const currentData = listDoc.data();
+        const ingredients = currentData.ingredients || [];
+        
+        await updateDoc(listRef, {
+          ingredients: [...ingredients, newIngredient],
+          updatedAt: new Date()
+        });
+      } else {
+        // Create new list
+        await setDoc(listRef, {
+          ingredients: [newIngredient],
+          checkedItems: [],
+          updatedAt: new Date()
+        });
+      }
 
       // Call the onAdd callback
       onAdd(name.trim(), amount.trim(), unit, recurrence);
