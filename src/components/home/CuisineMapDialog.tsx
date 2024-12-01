@@ -3,7 +3,6 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Recipe } from "@/types/recipe";
-import { CuisineDebugPanel } from "./map/CuisineDebugPanel";
 import { CUISINE_COORDINATES, normalizeCuisineName } from "./map/cuisineCoordinates";
 import { createCuisineMapMarker } from "./map/CuisineMapMarker";
 import { Button } from "@/components/ui/button";
@@ -20,36 +19,6 @@ interface CuisineMapDialogProps {
 export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDialogProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-
-  const showRecipeCuisines = () => {
-    console.group("Recipe Cuisines Analysis");
-    console.log("Raw recipes array:", recipes);
-    console.log("Total recipes:", recipes.length);
-    
-    recipes.forEach((recipe, index) => {
-      const normalizedCuisine = normalizeCuisineName(recipe.cuisine || '');
-      console.log(`Recipe ${index + 1} - ${recipe.title}:`, {
-        rawCuisine: recipe.cuisine,
-        normalizedCuisine,
-        hasCoordinates: !!CUISINE_COORDINATES[normalizedCuisine],
-        coordinates: CUISINE_COORDINATES[normalizedCuisine],
-        type: typeof recipe.cuisine,
-        hasValue: Boolean(recipe.cuisine),
-        fullRecipe: recipe
-      });
-    });
-    
-    const recipesWithCuisine = recipes.filter(recipe => {
-      const hasCuisine = Boolean(recipe.cuisine);
-      console.log(`Recipe "${recipe.title}" has cuisine:`, hasCuisine, "Value:", recipe.cuisine);
-      return hasCuisine;
-    });
-    
-    console.log("Recipes with cuisine:", recipesWithCuisine.length);
-    console.log("Recipes with cuisine details:", recipesWithCuisine);
-    console.log("Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES));
-    console.groupEnd();
-  };
 
   const resetMapView = () => {
     if (map.current) {
