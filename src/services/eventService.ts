@@ -3,10 +3,17 @@ import { db } from '@/lib/firebase';
 import { Event } from '@/types/event';
 
 export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>) => {
-  console.log('Creating new event:', eventData);
+  console.log('Creating new event with data:', eventData);
   
   try {
     const eventsRef = collection(db, 'events');
+    
+    // Validate required fields
+    if (!eventData.title || !eventData.createdBy) {
+      console.error('Missing required fields:', { title: eventData.title, createdBy: eventData.createdBy });
+      throw new Error('Missing required fields for event creation');
+    }
+
     const newEvent = {
       ...eventData,
       guests: eventData.guests || [],
@@ -16,6 +23,7 @@ export const createEvent = async (eventData: Omit<Event, 'id' | 'createdAt' | 'u
       updatedAt: Timestamp.now()
     };
     
+    console.log('Attempting to save event to Firestore:', newEvent);
     const docRef = await addDoc(eventsRef, newEvent);
     console.log('Event created successfully with ID:', docRef.id);
     return docRef.id;
