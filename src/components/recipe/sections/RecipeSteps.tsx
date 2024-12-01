@@ -11,11 +11,14 @@ interface RecipeStepsProps {
   steps: RecipeStep[];
   onChange: (steps: RecipeStep[]) => void;
   onAddStep: () => void;
+  isEnabled: boolean;
 }
 
-export function RecipeSteps({ steps, onChange, onAddStep }: RecipeStepsProps) {
-  const [openSteps, setOpenSteps] = useState<number[]>([0]); // First step open by default
+export function RecipeSteps({ steps, onChange, onAddStep, isEnabled }: RecipeStepsProps) {
+  const [openSteps, setOpenSteps] = useState<number[]>([0]);
   const [isStepsOpen, setIsStepsOpen] = useState(true);
+
+  if (!isEnabled) return null;
 
   const toggleStep = (index: number) => {
     setOpenSteps(prev => 
