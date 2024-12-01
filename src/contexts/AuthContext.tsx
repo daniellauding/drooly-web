@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.log("[AuthProvider] New user document created:", newUserData);
               
               if (!newUserData) {
+                console.error("[AuthProvider] Failed to create user document");
                 throw new Error("Failed to create user document");
               }
               
@@ -55,21 +56,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 photoURL: newUserData.avatarUrl || firebaseUser.photoURL
               });
             } else {
+              console.log("[AuthProvider] Setting user data with existing document");
               setUser({ 
                 ...firebaseUser, 
                 role: userData.role || 'user',
                 manuallyVerified: userData.manuallyVerified || false,
                 photoURL: userData.avatarUrl || firebaseUser.photoURL
-              });
-            }
-            
-            const isVerified = firebaseUser.emailVerified || userData?.manuallyVerified;
-            if (!isVerified) {
-              console.log("[AuthProvider] User not verified, showing toast");
-              toast({
-                title: "Email verification required",
-                description: "Please check your inbox and verify your email to access all features.",
-                duration: 10000,
               });
             }
           } catch (error) {
@@ -79,7 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               title: "Error loading user data",
               description: "Please try refreshing the page. If the problem persists, contact support.",
             });
-            setUser(null);
           }
         } else {
           console.log("[AuthProvider] No user signed in");
@@ -104,36 +95,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [toast]);
 
-  const login = async (email: string, password: string) => {
-    await authService.loginUser(email, password);
-  };
-
-  const register = async (email: string, password: string, name: string) => {
-    await authService.registerUser(email, password, name);
-  };
-
-  const logout = async () => {
-    await authService.logoutUser();
-  };
-
-  const verifyEmail = async (code: string) => {
-    await authService.verifyUserEmail(code);
-  };
-
-  const sendVerificationEmail = async () => {
-    if (user) {
-      await authService.sendVerificationEmailToUser(user);
-    }
-  };
-
   const value = {
     user,
     loading,
-    login,
-    register,
-    logout,
-    verifyEmail,
-    sendVerificationEmail,
+    login: authService.loginUser,
+    register: authService.registerUser,
+    logout: authService.logoutUser,
+    verifyEmail: authService.verifyUserEmail,
+    sendVerificationEmail: () => {
+      if (user) {
+        return authService.sendVerificationEmailToUser(user);
+      }
+      return Promise.reject(new Error("No user logged in"));
+    },
   };
 
   return (

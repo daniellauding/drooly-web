@@ -29,11 +29,14 @@ export const loginUser = async (email: string, password: string) => {
 export const getUserData = async (user: User) => {
   console.log("[AuthService] Fetching user data for:", user.uid);
   try {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userDocRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userDocRef);
+    
     if (!userDoc.exists()) {
       console.warn("[AuthService] No user document found for:", user.uid);
       return null;
     }
+    
     const userData = userDoc.data();
     console.log("[AuthService] Retrieved user data:", userData);
     return userData;
@@ -56,7 +59,8 @@ export const createUserDocument = async (user: User) => {
       avatarUrl: user.photoURL || ""
     };
     
-    await setDoc(doc(db, "users", user.uid), userData);
+    const userDocRef = doc(db, "users", user.uid);
+    await setDoc(userDocRef, userData);
     console.log("[AuthService] User document created successfully");
     return userData;
   } catch (error) {
