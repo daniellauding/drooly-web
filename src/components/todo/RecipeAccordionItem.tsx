@@ -1,6 +1,8 @@
 import { AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { IngredientItem } from "@/components/shopping/types";
 
 interface RecipeAccordionItemProps {
@@ -10,6 +12,7 @@ interface RecipeAccordionItemProps {
   checkedItems: Set<string>;
   onCheck: (ingredient: IngredientItem) => void;
   onCheckAll: (ingredients: IngredientItem[]) => void;
+  onRemove: (ingredient: IngredientItem) => void;
 }
 
 export function RecipeAccordionItem({
@@ -18,7 +21,8 @@ export function RecipeAccordionItem({
   ingredients,
   checkedItems,
   onCheck,
-  onCheckAll
+  onCheckAll,
+  onRemove
 }: RecipeAccordionItemProps) {
   const allChecked = ingredients.every(ing => 
     checkedItems.has(`${ing.recipeId}-${ing.name}`)
@@ -53,6 +57,17 @@ export function RecipeAccordionItem({
               <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
                 {ingredient.amount} {ingredient.unit} {ingredient.name}
               </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(ingredient);
+                }}
+                className="text-destructive hover:text-destructive ml-auto"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
             {idx < ingredients.length - 1 && <Separator />}
           </div>

@@ -38,7 +38,10 @@ export function ShoppingListItem({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onRemove}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
           className="text-destructive hover:text-destructive"
         >
           <Trash2 className="h-4 w-4" />
