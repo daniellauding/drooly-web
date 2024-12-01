@@ -45,8 +45,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Starting feedback submission process");
     
     if (!email || !subject || !message) {
+      console.log("Validation failed:", { email, subject, message });
       toast({
         variant: "destructive",
         title: "Missing fields",
@@ -55,25 +57,38 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^@]+@[^@]+\.[^@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log("Invalid email format:", email);
+      toast({
+        variant: "destructive",
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+      });
+      return;
+    }
+
     setSending(true);
+    console.log("Preparing feedback data for submission");
 
     try {
-      const feedbackRef = collection(db, "feedback");
+      const feedbackRef = collection(db, 'feedback');
       
       const feedbackData = {
         email,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
         message,
         createdAt: serverTimestamp(),
-        userId: user?.uid || null,
-        status: 'new'
+        status: 'new',
+        // Only include userId if user is authenticated
+        ...(user?.uid && { userId: user.uid })
       };
 
-      console.log("Submitting feedback:", feedbackData);
+      console.log("Submitting feedback data:", feedbackData);
       
-      await addDoc(feedbackRef, feedbackData);
-      
-      console.log("Feedback submitted successfully");
+      const docRef = await addDoc(feedbackRef, feedbackData);
+      console.log("Feedback submitted successfully with ID:", docRef.id);
 
       toast({
         title: "Thank you for your feedback!",
