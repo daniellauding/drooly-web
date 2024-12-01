@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Check, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Recipe } from "@/types/recipe";
 
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -36,16 +37,14 @@ export function AddToWeeklyPlanModal({
   const [selectedDay, setSelectedDay] = useState(DAYS[0]);
   const [mealType, setMealType] = useState(MEAL_TYPES[0]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [recipes, setRecipes] = useState<Array<{ id: string; title: string; image?: string }>>([]);
-  const [selectedRecipe, setSelectedRecipe] = useState<{
-    id: string;
-    title: string;
-    image?: string;
-  } | null>(initialRecipeId && initialRecipeTitle ? {
-    id: initialRecipeId,
-    title: initialRecipeTitle,
-    image: initialRecipeImage
-  } : null);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(
+    initialRecipeId && initialRecipeTitle ? {
+      id: initialRecipeId,
+      title: initialRecipeTitle,
+      images: initialRecipeImage ? [initialRecipeImage] : [],
+    } as Recipe : null
+  );
 
   const searchRecipes = async (query: string) => {
     if (!query.trim() || !user) return;
@@ -61,9 +60,8 @@ export function AddToWeeklyPlanModal({
       const querySnapshot = await getDocs(q);
       const results = querySnapshot.docs.map(doc => ({
         id: doc.id,
-        title: doc.data().title,
-        image: doc.data().images?.[0]
-      }));
+        ...doc.data()
+      })) as Recipe[];
       
       setRecipes(results);
     } catch (error) {
@@ -82,7 +80,7 @@ export function AddToWeeklyPlanModal({
         userAvatar: user.photoURL || "/placeholder.svg",
         recipeId: selectedRecipe?.id || null,
         recipeTitle: selectedRecipe?.title || title,
-        recipeImage: selectedRecipe?.image || null,
+        recipeImage: selectedRecipe?.images?.[0] || null,
         title: title || selectedRecipe?.title,
         day: selectedDay,
         mealType,
