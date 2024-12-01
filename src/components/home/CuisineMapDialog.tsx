@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Recipe } from "@/types/recipe";
 
 // Initialize Mapbox token
@@ -53,10 +53,10 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       zoom: 1.5
     });
 
-    // Group recipes by cuisine
+    // Group recipes by cuisine (case-insensitive)
     const groupedRecipes = recipes.reduce((acc, recipe) => {
-      if (recipe.cuisine?.toLowerCase() && CUISINE_COORDINATES[recipe.cuisine.toLowerCase()]) {
-        const cuisineKey = recipe.cuisine.toLowerCase();
+      if (recipe.cuisine) {
+        const cuisineKey = recipe.cuisine.toLowerCase().trim();
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
@@ -65,6 +65,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
+    console.log("Grouped recipes by cuisine:", groupedRecipes);
+
     // Add markers for each cuisine group
     Object.entries(groupedRecipes).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
@@ -72,6 +74,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         console.log(`No coordinates found for cuisine: ${cuisine}`);
         return;
       }
+
+      console.log(`Adding marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
 
       // Create popup content
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
@@ -95,13 +99,24 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         </div>
       `);
 
-      // Create and add marker
-      new mapboxgl.Marker({
+      // Create and add marker with hover effect
+      const marker = new mapboxgl.Marker({
         color: "#FF5A5F",
+        scale: 0.8
       })
         .setLngLat(coordinates)
         .setPopup(popup)
         .addTo(map.current!);
+
+      // Add hover effect to marker element
+      const markerElement = marker.getElement();
+      markerElement.style.transition = 'transform 0.2s ease';
+      markerElement.addEventListener('mouseenter', () => {
+        markerElement.style.transform = 'scale(1.2)';
+      });
+      markerElement.addEventListener('mouseleave', () => {
+        markerElement.style.transform = 'scale(1)';
+      });
     });
 
     // Cleanup function
@@ -116,6 +131,12 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[900px]">
+        <DialogTitle className="text-xl font-semibold mb-4">
+          Explore Cuisines Around the World
+        </DialogTitle>
+        <DialogDescription className="text-sm text-muted-foreground mb-4">
+          Discover recipes from different cuisines. Click on the markers to see available recipes from each region.
+        </DialogDescription>
         <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
       </DialogContent>
     </Dialog>
