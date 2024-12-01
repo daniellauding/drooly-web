@@ -50,6 +50,18 @@ export function EventDetailView() {
     });
   };
 
+  // Map the event guest status to participant status
+  const mapGuestStatusToParticipantStatus = (status: 'coming' | 'not-coming' | 'pending'): 'accepted' | 'declined' | 'pending' => {
+    switch (status) {
+      case 'coming':
+        return 'accepted';
+      case 'not-coming':
+        return 'declined';
+      case 'pending':
+        return 'pending';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
@@ -92,7 +104,7 @@ export function EventDetailView() {
           <EventParticipants 
             participants={event.guests.map(guest => ({
               name: guest.name,
-              status: guest.status,
+              status: mapGuestStatusToParticipantStatus(guest.status),
               avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + guest.id
             }))} 
           />
