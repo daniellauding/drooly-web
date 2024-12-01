@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/TopBar";
 import { useAuth } from "@/contexts/AuthContext";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Recipe } from "@/types/recipe";
 import { Card } from "@/components/ui/card";
@@ -35,6 +35,26 @@ export default function Ingredients() {
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [recipeProgress, setRecipeProgress] = useState<Record<string, RecipeProgress>>({});
+
+  // Load checked items from Firebase
+  useEffect(() => {
+    const loadCheckedItems = async () => {
+      if (!user) return;
+
+      try {
+        const checkedItemsDoc = await getDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"));
+        if (checkedItemsDoc.exists()) {
+          const data = checkedItemsDoc.data();
+          setCheckedItems(new Set(data.items));
+          console.log("Loaded checked items:", data.items);
+        }
+      } catch (error) {
+        console.error("Error loading checked items:", error);
+      }
+    };
+
+    loadCheckedItems();
+  }, [user]);
 
   useEffect(() => {
     const fetchWantToCookRecipes = async () => {
@@ -76,6 +96,9 @@ export default function Ingredients() {
           };
         });
         setRecipeProgress(initialProgress);
+
+        // Update progress based on loaded checked items
+        updateProgressForAllRecipes(checkedItems);
       } catch (error) {
         console.error("Error fetching recipes:", error);
         toast({
@@ -87,9 +110,30 @@ export default function Ingredients() {
     };
 
     fetchWantToCookRecipes();
-  }, [user]);
+  }, [user, checkedItems]);
 
-  const handleCheck = (ingredient: IngredientItem) => {
+  const updateProgressForAllRecipes = (checkedSet: Set<string>) => {
+    const newProgress: Record<string, RecipeProgress> = {};
+    
+    recipes.forEach(recipe => {
+      const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipe.id);
+      const checkedCount = recipeIngredients.reduce((count, ing) => {
+        return count + (checkedSet.has(`${ing.recipeId}-${ing.name}`) ? 1 : 0);
+      }, 0);
+
+      newProgress[recipe.id] = {
+        total: recipe.ingredients.length,
+        checked: checkedCount,
+        percentage: (checkedCount / recipe.ingredients.length) * 100
+      };
+    });
+
+    setRecipeProgress(newProgress);
+  };
+
+  const handleCheck = async (ingredient: IngredientItem) => {
+    if (!user) return;
+
     const key = `${ingredient.recipeId}-${ingredient.name}`;
     const newChecked = new Set(checkedItems);
     const isNowChecked = !checkedItems.has(key);
@@ -101,6 +145,21 @@ export default function Ingredients() {
     }
     
     setCheckedItems(newChecked);
+
+    // Save to Firebase
+    try {
+      await setDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"), {
+        items: Array.from(newChecked)
+      });
+      console.log("Saved checked items to Firebase:", Array.from(newChecked));
+    } catch (error) {
+      console.error("Error saving checked items:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save your changes",
+        variant: "destructive"
+      });
+    }
 
     // Update progress for the recipe
     setRecipeProgress(prev => {
@@ -124,8 +183,21 @@ export default function Ingredients() {
     });
   };
 
-  const clearChecked = () => {
+  const clearChecked = async () => {
+    if (!user) return;
+
     setCheckedItems(new Set());
+    
+    // Clear in Firebase
+    try {
+      await setDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"), {
+        items: []
+      });
+      console.log("Cleared checked items in Firebase");
+    } catch (error) {
+      console.error("Error clearing checked items:", error);
+    }
+
     // Reset progress for all recipes
     setRecipeProgress(prev => {
       const resetProgress: Record<string, RecipeProgress> = {};
