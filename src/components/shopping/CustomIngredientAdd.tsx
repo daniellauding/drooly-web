@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, collection, addDoc } from "firebase/firestore";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CustomIngredientAddProps {
   onAdd: (name: string, amount: string, unit: string, recurrence?: "none" | "weekly" | "monthly") => void;
@@ -34,6 +37,7 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
   const [showRecurrenceDialog, setShowRecurrenceDialog] = useState(false);
   const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">("none");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleAdd = () => {
     if (!name.trim()) {
@@ -57,18 +61,48 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
     setShowRecurrenceDialog(true);
   };
 
-  const handleConfirmAdd = () => {
-    onAdd(name.trim(), amount.trim(), unit, recurrence);
-    setName("");
-    setAmount("");
-    setUnit("piece");
-    setRecurrence("none");
-    setShowRecurrenceDialog(false);
+  const handleConfirmAdd = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to add ingredients",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    toast({
-      title: "Success",
-      description: `Custom ingredient added to your list${recurrence !== "none" ? ` (${recurrence} recurring)` : ""}`
-    });
+    try {
+      // Save to Firebase
+      await addDoc(collection(db, "users", user.uid, "customIngredients"), {
+        name: name.trim(),
+        amount: amount.trim(),
+        unit,
+        recurrence,
+        createdAt: new Date()
+      });
+
+      // Call the onAdd callback
+      onAdd(name.trim(), amount.trim(), unit, recurrence);
+
+      // Reset form
+      setName("");
+      setAmount("");
+      setUnit("piece");
+      setRecurrence("none");
+      setShowRecurrenceDialog(false);
+
+      toast({
+        title: "Success",
+        description: `Custom ingredient added to your list${recurrence !== "none" ? ` (${recurrence} recurring)` : ""}`
+      });
+    } catch (error) {
+      console.error("Error saving custom ingredient:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save custom ingredient",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

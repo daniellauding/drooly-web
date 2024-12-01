@@ -1,12 +1,17 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { Event } from "@/types/event";
+import { useQuery } from "@tanstack/react-query";
+import { getUserEvents } from "@/services/eventService";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddToEventModalProps {
   open: boolean;
@@ -15,47 +20,56 @@ interface AddToEventModalProps {
   recipeTitle: string;
 }
 
-export function AddToEventModal({ open, onOpenChange, recipeId, recipeTitle }: AddToEventModalProps) {
-  const [events, setEvents] = useState<Event[]>([]);
+export function AddToEventModal({
+  open,
+  onOpenChange,
+  recipeId,
+  recipeTitle,
+}: AddToEventModalProps) {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const loadEvents = async () => {
-      if (!user) return;
-      
-      try {
-        const eventsRef = collection(db, "events");
-        const q = query(
-          eventsRef,
-          where("createdBy", "==", user.uid)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const eventsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Event[];
-        
-        setEvents(eventsData);
-      } catch (error) {
-        console.error("Error loading events:", error);
-      }
-    };
+  const { data: events = [] } = useQuery({
+    queryKey: ['events', user?.uid],
+    queryFn: () => getUserEvents(user?.uid || ''),
+    enabled: !!user?.uid
+  });
 
-    if (open) {
-      loadEvents();
+  const handleAddToEvent = async (eventId: string) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      // Add recipe to event
+      await updateDoc(doc(db, "events", eventId), {
+        recipes: arrayUnion({
+          id: recipeId,
+          title: recipeTitle,
+          addedAt: new Date()
+        })
+      });
+
+      // Add event to recipe
+      await updateDoc(doc(db, "recipes", recipeId), {
+        events: arrayUnion(eventId)
+      });
+
+      toast({
+        title: "Success",
+        description: "Recipe added to event"
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error adding recipe to event:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add recipe to event",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [open, user]);
-
-  const handleAddToEvent = (eventId: string) => {
-    navigate(`/events/edit/${eventId}?addRecipe=${recipeId}`);
-    onOpenChange(false);
-  };
-
-  const handleCreateNewEvent = () => {
-    navigate(`/create-event?addRecipe=${recipeId}`);
-    onOpenChange(false);
   };
 
   return (
@@ -65,28 +79,20 @@ export function AddToEventModal({ open, onOpenChange, recipeId, recipeTitle }: A
           <DialogTitle>Add to Event</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <Button
-            onClick={handleCreateNewEvent}
-            className="w-full flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Create New Event
-          </Button>
-          
-          {events.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">Or add to existing event:</h3>
-              {events.map((event) => (
-                <Button
-                  key={event.id}
-                  variant="outline"
-                  className="w-full text-left"
-                  onClick={() => handleAddToEvent(event.id)}
-                >
-                  {event.title}
-                </Button>
-              ))}
-            </div>
+          {events.length === 0 ? (
+            <p className="text-muted-foreground">No events found. Create an event first.</p>
+          ) : (
+            events.map((event) => (
+              <Button
+                key={event.id}
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleAddToEvent(event.id)}
+                disabled={isLoading}
+              >
+                {event.title}
+              </Button>
+            ))
           )}
         </div>
       </DialogContent>
