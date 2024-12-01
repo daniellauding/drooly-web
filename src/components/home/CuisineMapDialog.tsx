@@ -50,20 +50,27 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
   const showRecipeCuisines = () => {
     console.group("Recipe Cuisines Analysis");
+    console.log("Raw recipes array:", recipes);
     console.log("Total recipes:", recipes.length);
     
-    const recipesWithCuisine = recipes.filter(recipe => recipe.cuisine);
-    console.log("Recipes with cuisine:", recipesWithCuisine.length);
-    
-    // Log each recipe's cuisine data
+    // Log each recipe's raw data
     recipes.forEach((recipe, index) => {
-      console.log(`Recipe ${index + 1}:`, {
-        title: recipe.title,
-        originalCuisine: recipe.cuisine,
-        normalizedCuisine: recipe.cuisine?.toLowerCase().trim(),
-        hasCoordinates: recipe.cuisine ? !!CUISINE_COORDINATES[recipe.cuisine.toLowerCase().trim()] : false
+      console.log(`Recipe ${index + 1} - ${recipe.title}:`, {
+        rawCuisine: recipe.cuisine,
+        type: typeof recipe.cuisine,
+        hasValue: Boolean(recipe.cuisine),
+        fullRecipe: recipe
       });
     });
+    
+    const recipesWithCuisine = recipes.filter(recipe => {
+      const hasCuisine = Boolean(recipe.cuisine);
+      console.log(`Recipe "${recipe.title}" has cuisine:`, hasCuisine, "Value:", recipe.cuisine);
+      return hasCuisine;
+    });
+    
+    console.log("Recipes with cuisine:", recipesWithCuisine.length);
+    console.log("Recipes with cuisine details:", recipesWithCuisine);
 
     // Group by cuisine
     const cuisineGroups = recipesWithCuisine.reduce((acc, recipe) => {
