@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (firebaseUser) {
           console.log("[AuthProvider] Auth state changed - User:", firebaseUser.uid);
           
-          // Verify the token is still valid
           try {
             console.log("[AuthProvider] Refreshing token");
             await firebaseUser.getIdToken(true);
@@ -64,7 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               });
             }
             
-            // Check verification status
             const isVerified = firebaseUser.emailVerified || userData?.manuallyVerified;
             if (!isVerified) {
               console.log("[AuthProvider] User not verified, showing toast");
@@ -106,14 +104,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [toast]);
 
+  const login = async (email: string, password: string) => {
+    await authService.loginUser(email, password);
+  };
+
+  const register = async (email: string, password: string, name: string) => {
+    await authService.registerUser(email, password, name);
+  };
+
+  const logout = async () => {
+    await authService.logoutUser();
+  };
+
+  const verifyEmail = async (code: string) => {
+    await authService.verifyUserEmail(code);
+  };
+
+  const sendVerificationEmail = async () => {
+    if (user) {
+      await authService.sendVerificationEmailToUser(user);
+    }
+  };
+
   const value = {
     user,
     loading,
-    login: authService.loginUser,
-    register: authService.registerUser,
-    logout: authService.logoutUser,
-    verifyEmail: authService.verifyUserEmail,
-    sendVerificationEmail: authService.sendVerificationEmailToUser,
+    login,
+    register,
+    logout,
+    verifyEmail,
+    sendVerificationEmail,
   };
 
   return (
