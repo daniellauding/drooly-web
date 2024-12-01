@@ -4,6 +4,7 @@ export interface EventGuest {
   status: 'coming' | 'not-coming' | 'pending';
   plusOne: boolean;
   dietaryRestrictions: string;
+  role?: 'admin' | 'guest';
   cooking?: {
     recipeId?: string;
     recipeName: string;
