@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Plus } from "lucide-react";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, setDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types/recipe";
 import { IngredientItem } from "@/components/shopping/types";
@@ -19,14 +17,37 @@ export function ShoppingListContent() {
 
   useEffect(() => {
     if (user) {
+      console.log("Loading shopping list for user:", user.uid);
       loadShoppingList();
+      loadCheckedItems();
     }
   }, [user]);
+
+  const loadCheckedItems = async () => {
+    if (!user) return;
+    try {
+      console.log("Loading checked items from Firestore");
+      const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
+      const listDoc = await getDoc(listRef);
+      if (listDoc.exists()) {
+        const checkedArray = listDoc.data().checkedItems || [];
+        console.log("Loaded checked items:", checkedArray);
+        setCheckedItems(new Set(checkedArray));
+      }
+    } catch (error) {
+      console.error("Error loading checked items:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your shopping list",
+        variant: "destructive"
+      });
+    }
+  };
 
   const loadShoppingList = async () => {
     if (!user) return;
     try {
-      const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
+      console.log("Fetching recipes marked as want to cook");
       const recipesRef = collection(db, "recipes");
       const q = query(
         recipesRef,
@@ -39,6 +60,8 @@ export function ShoppingListContent() {
         ...doc.data()
       })) as Recipe[];
 
+      console.log("Found recipes:", recipes.length);
+
       const allIngredients = recipes.flatMap(recipe =>
         recipe.ingredients.map(ing => ({
           ...ing,
@@ -48,6 +71,7 @@ export function ShoppingListContent() {
         }))
       );
 
+      console.log("Processed ingredients:", allIngredients.length);
       setIngredients(allIngredients);
     } catch (error) {
       console.error("Error loading shopping list:", error);
@@ -61,6 +85,8 @@ export function ShoppingListContent() {
 
   const handleCheck = async (ingredient: IngredientItem) => {
     if (!user) return;
+    console.log("Handling check for ingredient:", ingredient.name);
+    
     const key = `${ingredient.recipeId}-${ingredient.name}`;
     const newChecked = new Set(checkedItems);
     
@@ -70,6 +96,7 @@ export function ShoppingListContent() {
       newChecked.delete(key);
     }
     
+    console.log("Updated checked items:", Array.from(newChecked));
     setCheckedItems(newChecked);
     await saveCheckedItems(newChecked);
   };
@@ -77,10 +104,13 @@ export function ShoppingListContent() {
   const saveCheckedItems = async (items: Set<string>) => {
     if (!user) return;
     try {
-      await setDoc(doc(db, "users", user.uid, "shoppingLists", "current"), {
+      console.log("Saving checked items to Firestore");
+      const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
+      await setDoc(listRef, {
         checkedItems: Array.from(items),
         updatedAt: Timestamp.now()
-      });
+      }, { merge: true });
+      console.log("Successfully saved checked items");
     } catch (error) {
       console.error("Error saving checked items:", error);
       toast({
