@@ -20,6 +20,7 @@ export function ImageRecognitionDialog({
 }: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
   const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set());
+  const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -46,7 +47,8 @@ export function ImageRecognitionDialog({
         ...analyzedRecipe,
         images: [imageUrl],
         featuredImageIndex: 0,
-        sourceFile: file.name // Add this to help track which file created which recipe
+        sourceFile: file.name,
+        id: `scanned-${Date.now()}-${file.name}` // Ensure unique ID for each recipe
       };
     } catch (error) {
       console.error("Error processing image:", file.name, error);
@@ -57,7 +59,7 @@ export function ImageRecognitionDialog({
   const handleImageCapture = async (files: FileList) => {
     console.log("Starting to process", files.length, "images");
     setLoading(true);
-    const recipes: Partial<Recipe>[] = [];
+    const newRecipes: Partial<Recipe>[] = [];
     const newProcessedFiles = new Set(processedFiles);
 
     try {
@@ -74,29 +76,28 @@ export function ImageRecognitionDialog({
         const processedRecipe = await processImage(file);
         if (processedRecipe) {
           console.log("Successfully processed recipe from:", file.name);
-          recipes.push(processedRecipe);
+          newRecipes.push(processedRecipe);
           newProcessedFiles.add(fileId);
         }
       }
 
-      if (recipes.length === 0) {
+      if (newRecipes.length === 0) {
         throw new Error("No recipes could be extracted from the images");
       }
 
-      console.log("Successfully processed all images. Total recipes:", recipes.length);
+      console.log("Successfully processed all images. Total recipes:", newRecipes.length);
       setProcessedFiles(newProcessedFiles);
       
-      // Ensure each recipe has a unique ID
-      const recipesWithIds = recipes.map((recipe, index) => ({
-        ...recipe,
-        id: `scanned-${Date.now()}-${index}`
-      }));
+      // Update local state with all scanned recipes
+      const updatedRecipes = [...scannedRecipes, ...newRecipes];
+      setScannedRecipes(updatedRecipes);
       
-      onRecipeScanned(recipesWithIds);
+      // Pass all recipes to parent component
+      onRecipeScanned(updatedRecipes);
       onOpenChange(false);
       
       toast({
-        title: `Recipe${recipes.length > 1 ? 's' : ''} created from photo${recipes.length > 1 ? 's' : ''}`,
+        title: `Recipe${newRecipes.length > 1 ? 's' : ''} created from photo${newRecipes.length > 1 ? 's' : ''}`,
         description: "You can now edit and customize the recipe details."
       });
     } catch (error) {
