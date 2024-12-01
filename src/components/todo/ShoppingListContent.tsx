@@ -4,19 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, setDoc, getDoc, updateDoc, arrayUnion, increment, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, setDoc, getDoc, addDoc, Timestamp } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 import { Recipe } from "@/types/recipe";
 import { IngredientItem } from "@/components/shopping/types";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Check } from "lucide-react";
+import { Trash2, Check, ChevronDown } from "lucide-react";
+import { CustomIngredientAdd } from "@/components/shopping/CustomIngredientAdd";
+import { ShoppingHistory } from "@/components/shopping/ShoppingHistory";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export function ShoppingListContent() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -26,21 +34,12 @@ export function ShoppingListContent() {
   }, [user]);
 
   const loadCheckedItems = async () => {
-    if (!user) {
-      console.log("No user found, skipping loadCheckedItems");
-      return;
-    }
+    if (!user) return;
     try {
-      console.log("Loading checked items from Firestore");
       const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
       const listDoc = await getDoc(listRef);
       if (listDoc.exists()) {
-        const checkedArray = listDoc.data().checkedItems || [];
-        console.log("Loaded checked items:", checkedArray);
-        setCheckedItems(new Set(checkedArray));
-      } else {
-        console.log("No shopping list document found, creating empty one");
-        await setDoc(listRef, { checkedItems: [], updatedAt: Timestamp.now() });
+        setCheckedItems(new Set(listDoc.data().checkedItems || []));
       }
     } catch (error) {
       console.error("Error loading checked items:", error);
@@ -53,12 +52,8 @@ export function ShoppingListContent() {
   };
 
   const loadShoppingList = async () => {
-    if (!user) {
-      console.log("No user found, skipping loadShoppingList");
-      return;
-    }
+    if (!user) return;
     try {
-      console.log("Fetching recipes marked as want to cook");
       const recipesRef = collection(db, "recipes");
       const q = query(
         recipesRef,
@@ -94,12 +89,8 @@ export function ShoppingListContent() {
   };
 
   const handleCheck = async (ingredient: IngredientItem) => {
-    if (!user) {
-      console.log("No user found, skipping handleCheck");
-      return;
-    }
-    console.log("Handling check for ingredient:", ingredient.name);
-    
+    if (!user) return;
+
     const key = `${ingredient.recipeId}-${ingredient.name}`;
     const newChecked = new Set(checkedItems);
     
@@ -109,24 +100,48 @@ export function ShoppingListContent() {
       newChecked.delete(key);
     }
     
-    console.log("Updated checked items:", Array.from(newChecked));
     setCheckedItems(newChecked);
     await saveCheckedItems(newChecked);
   };
 
+  const markAllInRecipeAsBought = async (recipeId: string) => {
+    if (!user) return;
+
+    const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipeId);
+    const newChecked = new Set(checkedItems);
+    
+    recipeIngredients.forEach(ing => {
+      newChecked.add(`${ing.recipeId}-${ing.name}`);
+    });
+
+    setCheckedItems(newChecked);
+    await saveCheckedItems(newChecked);
+
+    toast({
+      title: "Success",
+      description: "All ingredients marked as bought"
+    });
+  };
+
   const saveCheckedItems = async (items: Set<string>) => {
-    if (!user) {
-      console.log("No user found, skipping saveCheckedItems");
-      return;
-    }
+    if (!user) return;
     try {
-      console.log("Saving checked items to Firestore");
-      const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
-      await setDoc(listRef, {
+      await setDoc(doc(db, "users", user.uid, "shoppingLists", "current"), {
         checkedItems: Array.from(items),
         updatedAt: Timestamp.now()
-      }, { merge: true });
-      console.log("Successfully saved checked items");
+      });
+
+      if (items.size > 0) {
+        const checkedIngredients = ingredients.filter(ing => 
+          items.has(`${ing.recipeId}-${ing.name}`)
+        );
+        
+        await addDoc(collection(db, "users", user.uid, "shoppingHistory"), {
+          items: checkedIngredients,
+          checkedAt: Timestamp.now(),
+          recurrence: "none"
+        });
+      }
     } catch (error) {
       console.error("Error saving checked items:", error);
       toast({
@@ -137,105 +152,100 @@ export function ShoppingListContent() {
     }
   };
 
-  const removeIngredient = (ingredient: IngredientItem) => {
-    setIngredients(prev => prev.filter(ing => 
-      !(ing.name === ingredient.name && ing.recipeId === ingredient.recipeId)
-    ));
+  const handleAddCustomIngredient = (name: string, amount: string, unit: string) => {
+    const customIngredient: IngredientItem = {
+      name,
+      amount,
+      unit,
+      recipeId: 'custom',
+      recipeTitle: 'Custom Items',
+      bought: false
+    };
+    setIngredients(prev => [...prev, customIngredient]);
   };
 
-  const markRecipeAsCooked = async (recipeId: string) => {
-    if (!user) return;
-    try {
-      const recipeRef = doc(db, "recipes", recipeId);
-      
-      // Update recipe stats
-      await updateDoc(recipeRef, {
-        "stats.cookedBy": arrayUnion(user.uid),
-        "stats.cookedCount": increment(1)
-      });
-
-      // Remove from want to cook list
-      const updatedRecipes = recipes.filter(r => r.id !== recipeId);
-      setRecipes(updatedRecipes);
-
-      // Remove ingredients from this recipe
-      setIngredients(prev => prev.filter(ing => ing.recipeId !== recipeId));
-
-      // Add to user's cooked recipes collection
-      const cookedRef = doc(db, "users", user.uid, "cookedRecipes", recipeId);
-      await setDoc(cookedRef, {
-        cookedAt: Timestamp.now(),
-        recipeId
-      });
-
-      toast({
-        title: "Recipe marked as cooked",
-        description: "Recipe has been moved to your cooked list"
-      });
-    } catch (error) {
-      console.error("Error marking recipe as cooked:", error);
-      toast({
-        title: "Error",
-        description: "Failed to mark recipe as cooked",
-        variant: "destructive"
-      });
-    }
+  const addHistoryItemsToList = (items: IngredientItem[]) => {
+    setIngredients(prev => [...prev, ...items]);
   };
-
-  const groupedIngredients = ingredients.reduce((acc, ing) => {
-    if (!acc[ing.recipeId]) {
-      acc[ing.recipeId] = [];
-    }
-    acc[ing.recipeId].push(ing);
-    return acc;
-  }, {} as Record<string, IngredientItem[]>);
 
   return (
     <div className="space-y-6">
-      {recipes.map(recipe => (
-        <Card key={recipe.id} className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">{recipe.title}</h3>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => markRecipeAsCooked(recipe.id)}
-                className="flex items-center gap-2"
-              >
-                <Check className="w-4 h-4" />
-                Mark as Cooked
-              </Button>
-              <div className="text-sm text-muted-foreground">
-                {recipe.stats?.cookedCount || 0} people have cooked this
-              </div>
-            </div>
-          </div>
-          
-          {groupedIngredients[recipe.id]?.map((ingredient, idx) => (
-            <div key={`${ingredient.recipeId}-${ingredient.name}-${idx}`}>
-              <div className="flex items-center gap-4 py-2">
-                <Checkbox
-                  checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
-                  onCheckedChange={() => handleCheck(ingredient)}
-                />
-                <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
-                  {ingredient.amount} {ingredient.unit} {ingredient.name}
-                </span>
+      <CustomIngredientAdd onAdd={handleAddCustomIngredient} />
+
+      <Accordion type="single" collapsible className="w-full space-y-4">
+        {recipes.map(recipe => (
+          <AccordionItem key={recipe.id} value={recipe.id} className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-2 hover:no-underline">
+              <div className="flex items-center justify-between w-full">
+                <span>{recipe.title}</span>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeIngredient(ingredient)}
-                  className="ml-auto"
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    markAllInRecipeAsBought(recipe.id);
+                  }}
+                  className="ml-4"
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" />
+                  <Check className="w-4 h-4 mr-2" />
+                  Mark All Bought
                 </Button>
               </div>
-              {idx < groupedIngredients[recipe.id].length - 1 && <Separator />}
-            </div>
-          ))}
-        </Card>
-      ))}
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              {ingredients
+                .filter(ing => ing.recipeId === recipe.id)
+                .map((ingredient, idx) => (
+                  <div key={`${ingredient.recipeId}-${ingredient.name}-${idx}`}>
+                    <div className="flex items-center gap-4 py-2">
+                      <Checkbox
+                        checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
+                        onCheckedChange={() => handleCheck(ingredient)}
+                      />
+                      <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
+                        {ingredient.amount} {ingredient.unit} {ingredient.name}
+                      </span>
+                    </div>
+                    {idx < ingredients.filter(ing => ing.recipeId === recipe.id).length - 1 && <Separator />}
+                  </div>
+                ))}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+
+        {ingredients.some(ing => ing.recipeId === 'custom') && (
+          <AccordionItem value="custom" className="border rounded-lg">
+            <AccordionTrigger className="px-4 py-2 hover:no-underline">
+              Custom Items
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              {ingredients
+                .filter(ing => ing.recipeId === 'custom')
+                .map((ingredient, idx) => (
+                  <div key={`custom-${ingredient.name}-${idx}`}>
+                    <div className="flex items-center gap-4 py-2">
+                      <Checkbox
+                        checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
+                        onCheckedChange={() => handleCheck(ingredient)}
+                      />
+                      <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
+                        {ingredient.amount} {ingredient.unit} {ingredient.name}
+                      </span>
+                    </div>
+                    {idx < ingredients.filter(ing => ing.recipeId === 'custom').length - 1 && <Separator />}
+                  </div>
+                ))}
+            </AccordionContent>
+          </AccordionItem>
+        )}
+      </Accordion>
+
+      <div className="mt-8">
+        <ShoppingHistory 
+          userId={user?.uid || ""} 
+          onAddToList={addHistoryItemsToList}
+        />
+      </div>
     </div>
   );
 }
