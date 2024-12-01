@@ -40,7 +40,13 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       setShowAuthModal(true);
       return;
     }
-    navigate('/create-recipe', { state: { scannedRecipes } });
+    // Pass scanned recipes through state when navigating
+    navigate('/create-recipe', { 
+      state: { 
+        scannedRecipes,
+        mode: 'photo'
+      } 
+    });
   };
 
   const handleAuthSuccess = () => {

@@ -1,4 +1,4 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipeById, Recipe } from "@/services/recipeService";
 import { validateRecipe } from "@/types/recipe";
@@ -24,8 +24,7 @@ import { Label } from "@/components/ui/label";
 
 export default function CreateRecipe() {
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const mode = searchParams.get('mode');
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
@@ -35,12 +34,16 @@ export default function CreateRecipe() {
   const [isStepBased, setIsStepBased] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showExitPrompt, setShowExitPrompt] = useState(false);
-  const [showImageRecognition, setShowImageRecognition] = useState(mode === 'photo');
+  const [showImageRecognition, setShowImageRecognition] = useState(location.state?.mode === 'photo');
+  
+  const scannedRecipesFromState = location.state?.scannedRecipes || [];
+  
   const { handleSaveRecipe } = useRecipeSaveHandler(isEditing, id);
   
-  const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>([]);
+  const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>(scannedRecipesFromState);
   const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
-  const [currentRecipe, setCurrentRecipe] = useState<Recipe>({
+
+  const defaultRecipe: Recipe = {
     id: '',
     title: "",
     description: "",
@@ -80,7 +83,38 @@ export default function CreateRecipe() {
       saves: [],
       comments: 0
     }
+  };
+
+  const [currentRecipe, setCurrentRecipe] = useState<Recipe>(() => {
+    if (scannedRecipesFromState.length > 0) {
+      return {
+        ...defaultRecipe,
+        ...scannedRecipesFromState[0]
+      };
+    }
+    return defaultRecipe;
   });
+
+  useEffect(() => {
+    if (scannedRecipesFromState.length > 0) {
+      console.log("Setting scanned recipes from navigation state:", scannedRecipesFromState);
+      setScannedRecipes(scannedRecipesFromState);
+      setCurrentRecipe(prev => ({
+        ...prev,
+        ...scannedRecipesFromState[0]
+      }));
+      
+      const sectionsToOpen = ["basic-info"];
+      if (scannedRecipesFromState[0].ingredients?.length) {
+        sectionsToOpen.push("ingredients");
+      }
+      if (scannedRecipesFromState[0].steps?.length) {
+        sectionsToOpen.push("steps");
+        setIsStepBased(true);
+      }
+      setOpenSections(sectionsToOpen);
+    }
+  }, [scannedRecipesFromState]);
 
   const { data: existingRecipe, isLoading } = useQuery({
     queryKey: ['recipe', id],
@@ -96,7 +130,6 @@ export default function CreateRecipe() {
     }
   }, [existingRecipe]);
 
-  // Add navigation prompt
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
@@ -117,7 +150,6 @@ export default function CreateRecipe() {
     
     setCurrentRecipe(prev => {
       const updated = { ...prev, ...updates };
-      // Update the scanned recipes array with the changes
       setScannedRecipes(prevRecipes => {
         const newRecipes = [...prevRecipes];
         newRecipes[activeRecipeIndex] = updated;
@@ -146,7 +178,6 @@ export default function CreateRecipe() {
       return;
     }
 
-    // Validate all sections
     const newValidationErrors: Record<string, string[]> = {
       "basic-info": validateSection("basic-info"),
       "ingredients": validateSection("ingredients"),
@@ -155,7 +186,6 @@ export default function CreateRecipe() {
 
     setValidationErrors(newValidationErrors);
 
-    // Open sections with errors
     const sectionsWithErrors = Object.entries(newValidationErrors)
       .filter(([_, errors]) => errors.length > 0)
       .map(([section]) => section);
@@ -165,7 +195,6 @@ export default function CreateRecipe() {
       return;
     }
 
-    // Ensure all recipes have required fields before saving
     const recipesToSave = (scannedRecipes.length > 0 ? scannedRecipes : [currentRecipe])
       .map(recipe => ({
         ...recipe,
@@ -184,7 +213,6 @@ export default function CreateRecipe() {
     
     await handleSaveRecipe(recipesToSave, user.uid, user.displayName || "", false);
     
-    // Check for achievements
     const firstRecipeAchieved = await updateAchievementProgress(user.uid, 'firstRecipe', 1);
     if (firstRecipeAchieved) {
       toast({
@@ -192,7 +220,7 @@ export default function CreateRecipe() {
         description: <AchievementToast achievement={achievements.firstRecipe} />,
       });
     }
-    
+
     const streakAchieved = await updateAchievementProgress(user.uid, 'recipeStreak', 1);
     if (streakAchieved) {
       toast({
@@ -200,7 +228,7 @@ export default function CreateRecipe() {
         description: <AchievementToast achievement={achievements.recipeStreak} />,
       });
     }
-    
+
     setHasUnsavedChanges(false);
   };
 
