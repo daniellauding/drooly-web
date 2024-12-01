@@ -60,7 +60,6 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    // Only close if clicking the backdrop (not the story card)
     if (e.target === e.currentTarget) {
       onClose();
     }

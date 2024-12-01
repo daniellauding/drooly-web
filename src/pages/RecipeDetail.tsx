@@ -17,12 +17,14 @@ import {
 } from "@/components/ui/carousel";
 import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
 import { WantToCookButton } from "@/components/recipe/WantToCookButton";
+import { AddToEventModal } from "@/components/recipe/AddToEventModal";
 
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showPlanModal, setShowPlanModal] = React.useState(false);
+  const [showEventModal, setShowEventModal] = React.useState(false);
 
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: ['recipe', id],
@@ -146,10 +148,10 @@ export default function RecipeDetail() {
             variant="outline" 
             size="sm" 
             className="gap-2 flex-1 sm:flex-none"
-            onClick={() => setShowPlanModal(true)}
+            onClick={() => setShowEventModal(true)}
           >
             <Calendar className="w-4 h-4" />
-            Add to Plan
+            Add to Event
           </Button>
           <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none hidden sm:flex">
             <Printer className="w-4 h-4" />
@@ -160,6 +162,13 @@ export default function RecipeDetail() {
             Start Cooking
           </Button>
         </div>
+
+        <AddToEventModal
+          open={showEventModal}
+          onOpenChange={setShowEventModal}
+          recipeId={recipe.id}
+          recipeTitle={recipe.title}
+        />
 
         <AddToWeeklyPlanModal
           open={showPlanModal}
