@@ -16,6 +16,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
+import { WantToCookButton } from "@/components/recipe/WantToCookButton";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -134,10 +135,11 @@ export default function RecipeDetail() {
             <Heart className="w-4 h-4" />
             Save
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-none">
-            <Share2 className="w-4 h-4" />
-            Share
-          </Button>
+          <WantToCookButton 
+            recipeId={recipe.id} 
+            wantToCook={recipe.stats?.wantToCook} 
+            showCount={true}
+          />
           <Button 
             variant="outline" 
             size="sm" 

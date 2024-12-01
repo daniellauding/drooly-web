@@ -55,6 +55,7 @@ export interface Recipe {
     likes?: string[];
     saves?: string[];
     comments?: number;
+    wantToCook?: string[]; // Array of user IDs who want to cook this
   };
   ingredientSections?: {
     title: string;
