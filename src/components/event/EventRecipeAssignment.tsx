@@ -11,6 +11,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { EventDish } from "@/types/event";
+import { RecipeSearchAutocomplete } from "./RecipeSearchAutocomplete"; // New import
 
 interface EventRecipeAssignmentProps {
   dishes: EventDish[];
@@ -21,20 +22,36 @@ export function EventRecipeAssignment({ dishes, onAddDish }: EventRecipeAssignme
   const [newDishName, setNewDishName] = useState("");
   const [selectedCourse, setSelectedCourse] = useState<string>("");
 
-  const handleAddDish = () => {
-    if (!newDishName.trim() || !selectedCourse) return;
+  const handleAddDish = (recipeOrName: Recipe | string) => {
+    if (!selectedCourse) return;
 
-    onAddDish({
-      id: crypto.randomUUID(),
-      name: newDishName,
-      assignedTo: "",
-      ingredients: [],
-      courseType: selectedCourse as "appetizer" | "main" | "dessert" | "drinks",
-      votes: {
-        likes: [],
-        dislikes: []
-      }
-    });
+    if (typeof recipeOrName === 'string') {
+      onAddDish({
+        id: crypto.randomUUID(),
+        name: recipeOrName,
+        assignedTo: "",
+        ingredients: [],
+        courseType: selectedCourse as "appetizer" | "main" | "dessert" | "drinks",
+        votes: {
+          likes: [],
+          dislikes: []
+        }
+      });
+    } else {
+      const recipe = recipeOrName as Recipe;
+      onAddDish({
+        id: crypto.randomUUID(),
+        name: recipe.title,
+        recipeId: recipe.id,
+        assignedTo: "",
+        ingredients: recipe.ingredients.map(i => i.name),
+        courseType: selectedCourse as "appetizer" | "main" | "dessert" | "drinks",
+        votes: {
+          likes: [],
+          dislikes: []
+        }
+      });
+    }
 
     setNewDishName("");
     setSelectedCourse("");
@@ -52,10 +69,10 @@ export function EventRecipeAssignment({ dishes, onAddDish }: EventRecipeAssignme
         <AccordionContent>
           <Card className="p-6 space-y-4">
             <div className="flex gap-2">
-              <Input
-                placeholder="Enter dish name"
+              <RecipeSearchAutocomplete
                 value={newDishName}
-                onChange={(e) => setNewDishName(e.target.value)}
+                onChange={setNewDishName}
+                onSelect={handleAddDish}
               />
               <Select value={selectedCourse} onValueChange={setSelectedCourse}>
                 <SelectTrigger className="w-[180px]">
@@ -68,7 +85,7 @@ export function EventRecipeAssignment({ dishes, onAddDish }: EventRecipeAssignme
                   <SelectItem value="drinks">Drinks</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={handleAddDish}>
+              <Button onClick={() => handleAddDish(newDishName)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add
               </Button>

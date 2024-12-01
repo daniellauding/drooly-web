@@ -21,7 +21,7 @@ interface GuestListProps {
 export function GuestList({ guests, onAddGuest, onRemoveGuest }: GuestListProps) {
   const [newGuestEmail, setNewGuestEmail] = useState("");
 
-  const handleAddGuest = (email: string) => {
+  const handleAddGuest = (email: string, existingUser: boolean) => {
     if (!email.trim()) return;
 
     onAddGuest({
@@ -49,15 +49,11 @@ export function GuestList({ guests, onAddGuest, onRemoveGuest }: GuestListProps)
             </p>
 
             <div className="flex gap-2">
-              <GuestAutocomplete
+              <UserSearchAutocomplete
                 value={newGuestEmail}
                 onChange={setNewGuestEmail}
                 onSelect={handleAddGuest}
               />
-              <Button onClick={() => handleAddGuest(newGuestEmail)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add
-              </Button>
             </div>
 
             {guests.length > 0 && (
