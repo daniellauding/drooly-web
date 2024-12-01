@@ -64,6 +64,7 @@ service cloud.firestore {
         resource.data.sharedWith == request.auth.uid
       );
       allow write: if isAuthenticated() && (
+        !resource.data.exists() || // Allow creation
         resource.data.owner == request.auth.uid || 
         resource.data.sharedWith == request.auth.uid
       );

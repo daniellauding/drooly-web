@@ -24,7 +24,10 @@ export function ShoppingListContent() {
   }, [user]);
 
   const loadCheckedItems = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found, skipping loadCheckedItems");
+      return;
+    }
     try {
       console.log("Loading checked items from Firestore");
       const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
@@ -33,6 +36,9 @@ export function ShoppingListContent() {
         const checkedArray = listDoc.data().checkedItems || [];
         console.log("Loaded checked items:", checkedArray);
         setCheckedItems(new Set(checkedArray));
+      } else {
+        console.log("No shopping list document found, creating empty one");
+        await setDoc(listRef, { checkedItems: [], updatedAt: Timestamp.now() });
       }
     } catch (error) {
       console.error("Error loading checked items:", error);
@@ -45,7 +51,10 @@ export function ShoppingListContent() {
   };
 
   const loadShoppingList = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found, skipping loadShoppingList");
+      return;
+    }
     try {
       console.log("Fetching recipes marked as want to cook");
       const recipesRef = collection(db, "recipes");
@@ -84,7 +93,10 @@ export function ShoppingListContent() {
   };
 
   const handleCheck = async (ingredient: IngredientItem) => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found, skipping handleCheck");
+      return;
+    }
     console.log("Handling check for ingredient:", ingredient.name);
     
     const key = `${ingredient.recipeId}-${ingredient.name}`;
@@ -102,7 +114,10 @@ export function ShoppingListContent() {
   };
 
   const saveCheckedItems = async (items: Set<string>) => {
-    if (!user) return;
+    if (!user) {
+      console.log("No user found, skipping saveCheckedItems");
+      return;
+    }
     try {
       console.log("Saving checked items to Firestore");
       const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
