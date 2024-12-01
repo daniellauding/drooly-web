@@ -13,19 +13,17 @@ export function ScannedRecipesNav({
   activeRecipeIndex,
   onRecipeSelect
 }: ScannedRecipesNavProps) {
-  console.log("ScannedRecipesNav - Detailed recipe information:", 
-    scannedRecipes.map((recipe, index) => ({
-      index,
-      id: recipe.id,
-      title: recipe.title?.slice(0, 30),
-      ingredientsCount: recipe.ingredients?.length,
-      ingredients: recipe.ingredients?.map(ing => 
+  console.log("ScannedRecipesNav - Current state:", {
+    activeRecipeIndex,
+    currentRecipe: scannedRecipes[activeRecipeIndex] ? {
+      id: scannedRecipes[activeRecipeIndex].id,
+      title: scannedRecipes[activeRecipeIndex].title,
+      ingredients: scannedRecipes[activeRecipeIndex].ingredients?.map(ing => 
         typeof ing === 'string' ? ing : `${ing.amount} ${ing.unit} ${ing.name}`
       ),
-      images: recipe.images,
-      sourceFile: recipe.sourceFile
-    }))
-  );
+      images: scannedRecipes[activeRecipeIndex].images
+    } : 'No recipe'
+  });
 
   if (scannedRecipes.length <= 1) return null;
 
@@ -36,12 +34,17 @@ export function ScannedRecipesNav({
         value={activeRecipeIndex.toString()} 
         onValueChange={(value) => {
           const newIndex = parseInt(value);
-          console.log("Tab selection changed to:", {
-            index: newIndex,
-            recipe: scannedRecipes[newIndex] ? {
+          console.log("Tab selection changing:", {
+            fromIndex: activeRecipeIndex,
+            toIndex: newIndex,
+            fromRecipe: scannedRecipes[activeRecipeIndex] ? {
+              id: scannedRecipes[activeRecipeIndex].id,
+              title: scannedRecipes[activeRecipeIndex].title,
+              ingredients: scannedRecipes[activeRecipeIndex].ingredients?.length
+            } : 'No recipe',
+            toRecipe: scannedRecipes[newIndex] ? {
               id: scannedRecipes[newIndex].id,
-              title: scannedRecipes[newIndex].title?.slice(0, 30),
-              ingredientsCount: scannedRecipes[newIndex].ingredients?.length,
+              title: scannedRecipes[newIndex].title,
               ingredients: scannedRecipes[newIndex].ingredients?.map(ing => 
                 typeof ing === 'string' ? ing : `${ing.amount} ${ing.unit} ${ing.name}`
               ),
@@ -54,12 +57,17 @@ export function ScannedRecipesNav({
       >
         <TabsList className="w-full">
           {scannedRecipes.map((recipe, index) => {
-            console.log("Rendering tab for recipe:", {
+            console.log("Rendering tab:", {
               index,
-              id: recipe.id,
-              title: recipe.title?.slice(0, 30),
-              ingredientsCount: recipe.ingredients?.length,
-              firstImage: recipe.images?.[0] || 'No image'
+              isActive: index === activeRecipeIndex,
+              recipe: {
+                id: recipe.id,
+                title: recipe.title?.slice(0, 30),
+                ingredients: recipe.ingredients?.map(ing => 
+                  typeof ing === 'string' ? ing : `${ing.amount} ${ing.unit} ${ing.name}`
+                ),
+                image: recipe.images?.[0] || 'No image'
+              }
             });
             
             return (

@@ -278,6 +278,34 @@ export default function CreateRecipe() {
     });
   };
 
+  const handleRecipeSelect = (index: number) => {
+    console.log("Recipe selection in CreateRecipe:", {
+      selectedIndex: index,
+      selectedRecipe: scannedRecipes[index] ? {
+        id: scannedRecipes[index].id,
+        title: scannedRecipes[index].title,
+        ingredients: scannedRecipes[index].ingredients?.map(ing => 
+          typeof ing === 'string' ? ing : `${ing.amount} ${ing.unit} ${ing.name}`
+        ),
+        images: scannedRecipes[index].images
+      } : 'No recipe'
+    });
+    
+    setActiveRecipeIndex(index);
+    if (scannedRecipes[index]) {
+      setRecipe(prev => ({
+        ...prev,
+        ...scannedRecipes[index],
+        title: scannedRecipes[index].title || prev.title,
+        description: scannedRecipes[index].description || prev.description,
+        ingredients: scannedRecipes[index].ingredients || prev.ingredients,
+        instructions: scannedRecipes[index].instructions || prev.instructions,
+        steps: scannedRecipes[index].steps || prev.steps,
+        images: scannedRecipes[index].images || prev.images
+      }));
+    }
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <BetaStrip />
@@ -290,7 +318,7 @@ export default function CreateRecipe() {
         <ScannedRecipesNav
           scannedRecipes={scannedRecipes}
           activeRecipeIndex={activeRecipeIndex}
-          onRecipeSelect={setActiveRecipeIndex}
+          onRecipeSelect={handleRecipeSelect}
         />
 
         <RecipeCreationOptions 
