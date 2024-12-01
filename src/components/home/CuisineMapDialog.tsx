@@ -76,7 +76,9 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     }, {} as Record<string, Recipe[]>);
 
     console.log("CuisineMapDialog - Grouped recipes by cuisine:", groupedRecipes);
-    console.log("CuisineMapDialog - Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES));
+    console.log("CuisineMapDialog - Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES).map(cuisine => 
+      `${cuisine} (${groupedRecipes[cuisine]?.length || 0} recipes)`
+    ));
 
     // Add markers for each cuisine group
     Object.entries(groupedRecipes).forEach(([cuisine, cuisineRecipes]) => {
