@@ -44,19 +44,23 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
-    console.log("Starting map initialization with recipes:", recipes.length);
+    console.log("=== Starting Recipe Analysis ===");
+    console.log("Total recipes received:", recipes.length);
     
+    // Log all recipes and their cuisines
+    recipes.forEach(recipe => {
+      console.log("Recipe:", {
+        id: recipe.id,
+        title: recipe.title,
+        cuisine: recipe.cuisine,
+        normalizedCuisine: recipe.cuisine?.toLowerCase()
+      });
+    });
+
     // Group recipes by cuisine and normalize cuisine names
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = recipe.cuisine.toLowerCase().trim();
-        console.log("Processing recipe:", {
-          id: recipe.id,
-          title: recipe.title,
-          cuisine: recipe.cuisine,
-          normalizedCuisine: cuisineKey
-        });
-        
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
@@ -65,8 +69,17 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    // Debug log for recipe grouping
-    console.log("Recipes grouped by cuisine:", recipeByCuisine);
+    // Log cuisine groups and their counts
+    console.log("=== Cuisine Groups ===");
+    Object.entries(recipeByCuisine).forEach(([cuisine, recipes]) => {
+      console.log(`${cuisine}: ${recipes.length} recipes`);
+    });
+
+    // Log available coordinates
+    console.log("=== Available Coordinates ===");
+    Object.keys(CUISINE_COORDINATES).forEach(cuisine => {
+      console.log(`${cuisine}: ${CUISINE_COORDINATES[cuisine].join(', ')}`);
+    });
 
     // Initialize the map
     map.current = new mapboxgl.Map({
@@ -80,7 +93,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
       
-      console.log(`Processing cuisine ${cuisine} with ${cuisineRecipes.length} recipes. Has coordinates:`, !!coordinates);
+      console.log(`Processing ${cuisineRecipes.length} recipes for cuisine "${cuisine}"`);
+      console.log(`Coordinates found: ${coordinates ? 'Yes' : 'No'}`);
       
       if (!coordinates) {
         console.warn(`No coordinates found for cuisine: ${cuisine}`);
