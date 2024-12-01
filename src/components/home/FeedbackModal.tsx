@@ -75,12 +75,12 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     try {
       const feedbackRef = collection(db, 'feedback');
       
+      // Create feedback data with only the allowed fields
       const feedbackData = {
         email,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
         message,
-        // Only include userId if user is authenticated
-        ...(user?.uid && { userId: user.uid })
+        ...(user?.uid ? { userId: user.uid } : {})
       };
 
       console.log("Submitting feedback data:", feedbackData);
