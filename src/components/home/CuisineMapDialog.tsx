@@ -7,7 +7,7 @@ import { CUISINES } from "@/types/recipe";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
-// Normalize all keys to lowercase
+// Normalize all keys to lowercase for consistent lookup
 const CUISINE_COORDINATES: Record<string, [number, number]> = {
   'italian': [12.4964, 41.9028],
   'french': [2.3522, 48.8566],
@@ -48,13 +48,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     // Debug log 1: Available cuisines from constants
     console.log("Available cuisines from CUISINES constant:", CUISINES);
     
-    // Debug log 2: Available cuisine coordinates
-    console.log("Available cuisine coordinates:", 
-      Object.keys(CUISINE_COORDINATES).map(cuisine => 
-        `${cuisine} [${CUISINE_COORDINATES[cuisine].join(', ')}]`
-      )
-    );
-    
     // Group recipes by cuisine and normalize cuisine names
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
@@ -74,34 +67,21 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    // Debug log 3: Recipes grouped by cuisine
+    // Debug log 2: Recipes grouped by cuisine
     console.log("Recipes grouped by cuisine:", 
       Object.entries(recipeByCuisine).map(([cuisine, recipes]) => 
         `${cuisine}: ${recipes.length} recipes`
       )
     );
 
-    // Debug log 4: Cuisines with coordinates
+    // Debug log 3: Available coordinates for each cuisine
     console.log("Cuisines with coordinates and recipe counts:", 
       Object.keys(CUISINE_COORDINATES).map(cuisine => ({
-        cuisine,
+        cuisine: cuisine.toLowerCase(),
         hasCoordinates: true,
         recipeCount: recipeByCuisine[cuisine.toLowerCase()]?.length || 0
       }))
     );
-
-    // Debug log 5: Cuisines with recipes but no coordinates
-    const cuisinesWithoutCoordinates = Object.keys(recipeByCuisine).filter(
-      cuisine => !CUISINE_COORDINATES[cuisine]
-    );
-    if (cuisinesWithoutCoordinates.length > 0) {
-      console.warn("⚠️ Cuisines with recipes but no coordinates:", 
-        cuisinesWithoutCoordinates.map(cuisine => ({
-          cuisine,
-          recipeCount: recipeByCuisine[cuisine].length
-        }))
-      );
-    }
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -112,8 +92,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
     // Add markers for each cuisine group
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
-      // Look up coordinates using lowercase key
-      const coordinates = CUISINE_COORDINATES[cuisine];
+      const coordinates = CUISINE_COORDINATES[cuisine.toLowerCase()];
       if (!coordinates) {
         console.log(`No coordinates found for cuisine: ${cuisine}`);
         return;
