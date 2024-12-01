@@ -17,9 +17,7 @@ import {
 } from "@/components/ui/collapsible";
 import { IngredientSuggestions } from "./ingredients/IngredientSuggestions";
 import { AdvancedIngredientSection } from "./ingredients/AdvancedIngredientSection";
-import { Ingredient } from "@/services/recipeService"; // Updated import
-
-// Remove the local Ingredient interface since we're now importing it
+import { Ingredient } from "@/services/recipeService";
 
 interface IngredientInputProps {
   ingredients: Ingredient[];
@@ -79,6 +77,10 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
 
   const removeIngredient = (index: number) => {
     onChange(ingredients.filter((_, i) => i !== index));
+  };
+
+  const removeGroup = (groupToRemove: string) => {
+    onChange(ingredients.filter(ing => ing.group !== groupToRemove));
   };
 
   const handleCustomIngredientKeyDown = (e: React.KeyboardEvent) => {
@@ -209,6 +211,7 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         <CollapsibleContent>
           <AdvancedIngredientSection 
             onAddIngredient={addIngredient}
+            onRemoveGroup={removeGroup}
             groups={INGREDIENT_GROUPS}
           />
         </CollapsibleContent>
