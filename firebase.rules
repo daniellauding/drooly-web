@@ -9,7 +9,7 @@ service cloud.firestore {
       allow read: if !resource.data.isHidden || 
                  (isAuthenticated() && (
                    resource.data.createdBy == request.auth.uid ||
-                   resource.data.guests[].id.hasAny([request.auth.uid])
+                   resource.data.guests.hasAny([request.auth.uid])
                  ));
       allow create: if isAuthenticated() && 
                    request.resource.data.createdBy == request.auth.uid;

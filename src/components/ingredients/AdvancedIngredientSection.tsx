@@ -8,13 +8,19 @@ import {
 } from "@/components/ui/select";
 import { IngredientSuggestions } from "./IngredientSuggestions";
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 
 interface AdvancedIngredientSectionProps {
   onAddIngredient: (name: string, group: string) => void;
+  onRemoveGroup: (group: string) => void;
   groups: string[];
 }
 
-export function AdvancedIngredientSection({ onAddIngredient, groups }: AdvancedIngredientSectionProps) {
+export function AdvancedIngredientSection({ 
+  onAddIngredient, 
+  onRemoveGroup,
+  groups 
+}: AdvancedIngredientSectionProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   return (
@@ -36,7 +42,6 @@ export function AdvancedIngredientSection({ onAddIngredient, groups }: AdvancedI
             <IngredientSuggestions 
               onSelect={(ingredientName) => {
                 setShowSuggestions(false);
-                // Show group selection after ingredient is selected
                 const defaultGroup = groups[0] || "Main Ingredients";
                 onAddIngredient(ingredientName, defaultGroup);
               }}
@@ -46,21 +51,35 @@ export function AdvancedIngredientSection({ onAddIngredient, groups }: AdvancedI
         )}
       </div>
 
-      <Select
-        value=""
-        onValueChange={(group) => onAddIngredient("", group)}
-      >
-        <SelectTrigger className="h-10">
-          <SelectValue placeholder="Select ingredient group" />
-        </SelectTrigger>
-        <SelectContent>
-          {groups.map(group => (
-            <SelectItem key={group} value={group}>
-              {group}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="space-y-2">
+        {groups.map(group => (
+          <div key={group} className="flex items-center justify-between">
+            <Select
+              value=""
+              onValueChange={(group) => onAddIngredient("", group)}
+            >
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder={group} />
+              </SelectTrigger>
+              <SelectContent>
+                {groups.map(g => (
+                  <SelectItem key={g} value={g}>
+                    {g}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onRemoveGroup(group)}
+              className="ml-2"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
