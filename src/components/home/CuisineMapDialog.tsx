@@ -7,22 +7,29 @@ import { Recipe } from "@/types/recipe";
 // Initialize Mapbox token
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
+// Define cuisine coordinates with proper typing
 const CUISINE_COORDINATES: Record<string, [number, number]> = {
-  'Italian': [12.4964, 41.9028],
-  'French': [2.3522, 48.8566],
-  'Japanese': [139.6503, 35.6762],
-  'Chinese': [116.4074, 39.9042],
-  'Thai': [100.5018, 13.7563],
-  'Indian': [77.1025, 28.7041],
-  'Mexican': [-99.1332, 19.4326],
-  'Greek': [23.7275, 37.9838],
-  'Spanish': [-3.7038, 40.4168],
-  'Vietnamese': [105.8542, 21.0285],
-  'Korean': [126.9780, 37.5665],
-  'Turkish': [32.8597, 39.9334],
-  'Lebanese': [35.5018, 33.8938],
-  'Moroccan': [-6.8498, 34.0209],
-  'Brazilian': [-47.8645, -15.7942],
+  'italian': [12.4964, 41.9028], // Rome
+  'french': [2.3522, 48.8566], // Paris
+  'japanese': [139.6503, 35.6762], // Tokyo
+  'chinese': [116.4074, 39.9042], // Beijing
+  'thai': [100.5018, 13.7563], // Bangkok
+  'indian': [77.1025, 28.7041], // New Delhi
+  'mexican': [-99.1332, 19.4326], // Mexico City
+  'greek': [23.7275, 37.9838], // Athens
+  'spanish': [-3.7038, 40.4168], // Madrid
+  'vietnamese': [105.8542, 21.0285], // Hanoi
+  'korean': [126.9780, 37.5665], // Seoul
+  'turkish': [32.8597, 39.9334], // Ankara
+  'lebanese': [35.5018, 33.8938], // Beirut
+  'moroccan': [-6.8498, 34.0209], // Rabat
+  'brazilian': [-47.8645, -15.7942], // Brasília
+  'american': [-98.5795, 39.8283], // USA center
+  'mediterranean': [14.4378, 35.9375], // Mediterranean Sea
+  'middle eastern': [39.1947, 30.5852], // Middle East region
+  'caribbean': [-75.0148, 18.7357], // Caribbean Sea
+  'ethiopian': [38.7578, 9.0320], // Addis Ababa
+  'german': [13.4050, 52.5200], // Berlin
 };
 
 interface CuisineMapDialogProps {
@@ -38,7 +45,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
-    console.log("Initializing map");
+    console.log("Initializing map with recipes:", recipes.length);
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
@@ -46,24 +53,31 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       zoom: 1.5
     });
 
+    // Group recipes by cuisine
     const groupedRecipes = recipes.reduce((acc, recipe) => {
-      if (recipe.cuisine && CUISINE_COORDINATES[recipe.cuisine]) {
-        if (!acc[recipe.cuisine]) {
-          acc[recipe.cuisine] = [];
+      if (recipe.cuisine?.toLowerCase() && CUISINE_COORDINATES[recipe.cuisine.toLowerCase()]) {
+        const cuisineKey = recipe.cuisine.toLowerCase();
+        if (!acc[cuisineKey]) {
+          acc[cuisineKey] = [];
         }
-        acc[recipe.cuisine].push(recipe);
+        acc[cuisineKey].push(recipe);
       }
       return acc;
     }, {} as Record<string, Recipe[]>);
 
+    // Add markers for each cuisine group
     Object.entries(groupedRecipes).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
-      if (!coordinates) return;
+      if (!coordinates) {
+        console.log(`No coordinates found for cuisine: ${cuisine}`);
+        return;
+      }
 
+      // Create popup content
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
         <div class="p-2">
-          <h3 class="font-bold">${cuisine} Cuisine</h3>
-          <p class="text-sm">${cuisineRecipes.length} recipes</p>
+          <h3 class="font-bold text-base capitalize">${cuisine} Cuisine</h3>
+          <p class="text-sm text-gray-600">${cuisineRecipes.length} recipes</p>
           <ul class="mt-2 space-y-1">
             ${cuisineRecipes.slice(0, 3).map(recipe => `
               <li class="text-sm">
@@ -72,16 +86,25 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
                 </a>
               </li>
             `).join('')}
+            ${cuisineRecipes.length > 3 ? `
+              <li class="text-sm text-gray-500">
+                +${cuisineRecipes.length - 3} more recipes
+              </li>
+            ` : ''}
           </ul>
         </div>
       `);
 
-      new mapboxgl.Marker()
+      // Create and add marker
+      new mapboxgl.Marker({
+        color: "#FF5A5F",
+      })
         .setLngLat(coordinates)
         .setPopup(popup)
         .addTo(map.current!);
     });
 
+    // Cleanup function
     return () => {
       if (map.current) {
         map.current.remove();
