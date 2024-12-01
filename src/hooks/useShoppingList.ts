@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, doc, setDoc, getDoc, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 import { Recipe } from '@/types/recipe';
 import { IngredientItem } from '@/components/shopping/types';
 import { useToast } from '@/hooks/use-toast';
+import { useShoppingItems } from './shopping/useShoppingItems';
+import { useRecurringItems } from './shopping/useRecurringItems';
 
 export function useShoppingList(userId: string | undefined) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
-  const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  const { checkedItems, setCheckedItems, saveCheckedItems } = useShoppingItems(userId);
+  const { setRecurring } = useRecurringItems(userId);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -18,38 +21,8 @@ export function useShoppingList(userId: string | undefined) {
     }
     
     console.log("Initializing shopping list for user:", userId);
-    loadCheckedItems();
     loadShoppingList();
   }, [userId]);
-
-  const loadCheckedItems = async () => {
-    if (!userId) return;
-    
-    try {
-      console.log("Loading checked items for user:", userId);
-      const listRef = doc(db, "users", userId, "shoppingLists", "current");
-      const listDoc = await getDoc(listRef);
-      
-      if (listDoc.exists()) {
-        console.log("Found existing checked items:", listDoc.data().checkedItems);
-        setCheckedItems(new Set(listDoc.data().checkedItems || []));
-      } else {
-        console.log("No existing checked items found, creating new document");
-        await setDoc(listRef, { 
-          checkedItems: [], 
-          updatedAt: Timestamp.now(),
-          recurringItems: []
-        });
-      }
-    } catch (error) {
-      console.error("Error loading checked items:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load your checked items. Please try refreshing the page.",
-        variant: "destructive"
-      });
-    }
-  };
 
   const loadShoppingList = async () => {
     if (!userId) return;
@@ -80,13 +53,8 @@ export function useShoppingList(userId: string | undefined) {
         }))
       );
 
-      // Load recurring items
-      const listRef = doc(db, "users", userId, "shoppingLists", "current");
-      const listDoc = await getDoc(listRef);
-      const recurringItems = listDoc.exists() ? listDoc.data().recurringItems || [] : [];
-
-      console.log("Total ingredients:", allIngredients.length + recurringItems.length);
-      setIngredients([...allIngredients, ...recurringItems]);
+      console.log("Total ingredients:", allIngredients.length);
+      setIngredients(allIngredients);
     } catch (error) {
       console.error("Error loading shopping list:", error);
       toast({
@@ -113,7 +81,20 @@ export function useShoppingList(userId: string | undefined) {
     }
     
     setCheckedItems(newChecked);
-    await saveCheckedItems(newChecked);
+    await saveCheckedItems(newChecked, ingredients);
+
+    // Add to history if item was checked
+    if (newChecked.has(key)) {
+      try {
+        await addDoc(collection(db, "users", userId, "shoppingHistory"), {
+          items: [ingredient],
+          checkedAt: Timestamp.now(),
+          recurrence: "none"
+        });
+      } catch (error) {
+        console.error("Error adding to history:", error);
+      }
+    }
   };
 
   const handleCheckAll = async (ingredients: IngredientItem[]) => {
@@ -137,7 +118,7 @@ export function useShoppingList(userId: string | undefined) {
     });
 
     setCheckedItems(newChecked);
-    await saveCheckedItems(newChecked);
+    await saveCheckedItems(newChecked, ingredients);
   };
 
   const handleRemoveIngredient = async (ingredient: IngredientItem) => {
@@ -155,49 +136,7 @@ export function useShoppingList(userId: string | undefined) {
     if (checkedItems.has(key)) {
       const newChecked = new Set(checkedItems);
       newChecked.delete(key);
-      await saveCheckedItems(newChecked);
-    }
-  };
-
-  const saveCheckedItems = async (items: Set<string>) => {
-    if (!userId) return;
-    
-    try {
-      console.log("Saving checked items:", Array.from(items));
-      const listRef = doc(db, "users", userId, "shoppingLists", "current");
-      const listDoc = await getDoc(listRef);
-      const recurringItems = listDoc.exists() ? listDoc.data().recurringItems || [] : [];
-
-      await setDoc(listRef, {
-        checkedItems: Array.from(items),
-        updatedAt: Timestamp.now(),
-        recurringItems
-      });
-
-      if (items.size > 0) {
-        const checkedIngredients = ingredients.filter(ing => 
-          items.has(`${ing.recipeId}-${ing.name}`)
-        );
-        
-        console.log("Adding to history:", checkedIngredients.length, "items");
-        await addDoc(collection(db, "users", userId, "shoppingHistory"), {
-          items: checkedIngredients,
-          checkedAt: Timestamp.now(),
-          recurrence: "none"
-        });
-      }
-
-      toast({
-        title: "Saved",
-        description: "Your shopping list has been updated",
-      });
-    } catch (error) {
-      console.error("Error saving checked items:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save your changes. Please try again.",
-        variant: "destructive"
-      });
+      await saveCheckedItems(newChecked, ingredients);
     }
   };
 
@@ -216,53 +155,6 @@ export function useShoppingList(userId: string | undefined) {
       bought: false
     };
     setIngredients(prev => [...prev, customIngredient]);
-  };
-
-  const setRecurring = async (ingredient: IngredientItem, recurrence: "none" | "weekly" | "monthly") => {
-    if (!userId) return;
-    
-    try {
-      console.log("Setting recurring status for ingredient:", ingredient.name, "to", recurrence);
-      const listRef = doc(db, "users", userId, "shoppingLists", "current");
-      const listDoc = await getDoc(listRef);
-      let recurringItems = listDoc.exists() ? listDoc.data().recurringItems || [] : [];
-
-      if (recurrence === "none") {
-        recurringItems = recurringItems.filter(item => 
-          !(item.name === ingredient.name && item.amount === ingredient.amount)
-        );
-      } else {
-        const existingIndex = recurringItems.findIndex(item => 
-          item.name === ingredient.name && item.amount === ingredient.amount
-        );
-        
-        if (existingIndex >= 0) {
-          recurringItems[existingIndex] = { ...ingredient, recurrence };
-        } else {
-          recurringItems.push({ ...ingredient, recurrence });
-        }
-      }
-
-      await setDoc(listRef, {
-        checkedItems: Array.from(checkedItems),
-        updatedAt: Timestamp.now(),
-        recurringItems
-      }, { merge: true });
-
-      toast({
-        title: "Updated",
-        description: `Item set to ${recurrence} recurring`,
-      });
-
-      loadShoppingList(); // Reload to get updated recurring items
-    } catch (error) {
-      console.error("Error updating recurring items:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update recurring items",
-        variant: "destructive"
-      });
-    }
   };
 
   return {
