@@ -20,9 +20,10 @@ interface HistoryItem {
 interface ShoppingHistoryProps {
   userId: string;
   onAddToList?: (items: IngredientItem[]) => void;
+  onSetRecurring?: (ingredient: IngredientItem, recurrence: "none" | "weekly" | "monthly") => void;
 }
 
-export function ShoppingHistory({ userId, onAddToList }: ShoppingHistoryProps) {
+export function ShoppingHistory({ userId, onAddToList, onSetRecurring }: ShoppingHistoryProps) {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const { toast } = useToast();
 
@@ -57,26 +58,9 @@ export function ShoppingHistory({ userId, onAddToList }: ShoppingHistoryProps) {
     loadHistory();
   }, [userId, toast]);
 
-  const setRecurrence = async (historyId: string, recurrence: "none" | "weekly" | "monthly") => {
-    try {
-      const historyRef = doc(db, "users", userId, "shoppingHistory", historyId);
-      await updateDoc(historyRef, { recurrence });
-      
-      setHistory(prev => prev.map(item => 
-        item.id === historyId ? { ...item, recurrence } : item
-      ));
-
-      toast({
-        title: "Updated",
-        description: `Items set to repeat ${recurrence}ly`
-      });
-    } catch (error) {
-      console.error("Error updating recurrence:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update recurrence",
-        variant: "destructive"
-      });
+  const setRecurrence = async (ingredient: IngredientItem, recurrence: "none" | "weekly" | "monthly") => {
+    if (onSetRecurring) {
+      onSetRecurring(ingredient, recurrence);
     }
   };
 
@@ -89,6 +73,10 @@ export function ShoppingHistory({ userId, onAddToList }: ShoppingHistoryProps) {
       });
     }
   };
+
+  if (history.length === 0) {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -119,25 +107,28 @@ export function ShoppingHistory({ userId, onAddToList }: ShoppingHistoryProps) {
                   <Plus className="h-4 w-4 mr-2" />
                   Add to List
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setRecurrence(item.id, 
-                    item.recurrence === "none" ? "monthly" : 
-                    item.recurrence === "monthly" ? "weekly" : "none"
-                  )}
-                >
-                  <Star className={`h-4 w-4 ${item.recurrence !== "none" ? "text-yellow-500" : ""}`} />
-                </Button>
               </div>
             </div>
             <ul className="space-y-2">
               {item.items.map((ingredient, idx) => (
-                <li key={`${item.id}-${idx}`} className="text-sm">
-                  {ingredient.amount} {ingredient.unit} {ingredient.name}
-                  <span className="text-muted-foreground ml-2">
-                    ({ingredient.recipeTitle})
+                <li key={`${item.id}-${idx}`} className="flex items-center justify-between">
+                  <span className="text-sm">
+                    {ingredient.amount} {ingredient.unit} {ingredient.name}
+                    <span className="text-muted-foreground ml-2">
+                      ({ingredient.recipeTitle})
+                    </span>
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setRecurrence(
+                      ingredient,
+                      ingredient.recurrence === "none" ? "monthly" : 
+                      ingredient.recurrence === "monthly" ? "weekly" : "none"
+                    )}
+                  >
+                    <Star className={`h-4 w-4 ${ingredient.recurrence !== "none" ? "text-yellow-500" : ""}`} />
+                  </Button>
                 </li>
               ))}
             </ul>

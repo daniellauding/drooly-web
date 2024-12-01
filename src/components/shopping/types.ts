@@ -5,6 +5,7 @@ export interface IngredientItem {
   recipeId: string;
   recipeTitle: string;
   bought: boolean;
+  recurrence?: "none" | "weekly" | "monthly";
 }
 
 export interface RecipeProgress {
