@@ -5,7 +5,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Recipe } from "@/types/recipe";
 
 // Initialize Mapbox token
-mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZSIsImEiOiJjbHRxOWF4OWgwMXJqMmtvNXB5ZGRqNmF0In0.a9qmZcbT7jB_g8hPvU7Jbw';
+mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
 const CUISINE_COORDINATES: Record<string, [number, number]> = {
   'Italian': [12.4964, 41.9028],

@@ -16,16 +16,16 @@ export function RecipeSearch({ userId, onRecipeSelect, selectedRecipe }: RecipeS
   const [searchQuery, setSearchQuery] = useState("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
-  const searchRecipes = async (query: string) => {
-    if (!query || !query.trim() || !userId) return;
+  const searchRecipes = async (searchTerm: string) => {
+    if (!searchTerm || !searchTerm.trim() || !userId) return;
     
     try {
-      console.log("Searching recipes with query:", query);
+      console.log("Searching recipes with query:", searchTerm);
       const recipesRef = collection(db, "recipes");
       const q = query(
         recipesRef,
-        where("title", ">=", query.toLowerCase()),
-        where("title", "<=", query.toLowerCase() + "\uf8ff")
+        where("title", ">=", searchTerm.toLowerCase()),
+        where("title", "<=", searchTerm.toLowerCase() + "\uf8ff")
       );
       
       const querySnapshot = await getDocs(q);
