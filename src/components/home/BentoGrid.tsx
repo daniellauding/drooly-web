@@ -8,7 +8,9 @@ import { FlavorQuiz } from "./FlavorQuiz";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Camera } from "lucide-react";
+import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
+import { AuthModal } from "../auth/AuthModal";
 
 interface BentoGridProps {
   recipes: Recipe[];
@@ -18,6 +20,9 @@ interface BentoGridProps {
 export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const { user } = useAuth();
   const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
+  const [showImageRecognition, setShowImageRecognition] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingRecipes, setPendingRecipes] = useState<Partial<Recipe>[]>([]);
   const PREVIEW_COUNT = 8;
   const navigate = useNavigate();
   
@@ -28,14 +33,32 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
     setGeneratedRecipes(newRecipes);
   };
 
+  const handleScanRecipes = (scannedRecipes: Partial<Recipe>[]) => {
+    console.log("Recipes scanned:", scannedRecipes.length);
+    if (!user) {
+      setPendingRecipes(scannedRecipes);
+      setShowAuthModal(true);
+      return;
+    }
+    navigate('/create-recipe', { state: { scannedRecipes } });
+  };
+
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    if (pendingRecipes.length > 0) {
+      navigate('/create-recipe', { state: { scannedRecipes: pendingRecipes } });
+      setPendingRecipes([]);
+    }
+  };
+
   const interactiveCards = [
     {
-      title: "What's in your kitchen?",
-      description: "Find recipes using ingredients you have",
-      icon: Plus,
-      action: () => {},
-      color: "bg-orange-50 hover:bg-orange-100",
-      textColor: "text-orange-700"
+      title: "Take Photo & Scan",
+      description: "Create recipes from photos of your cookbooks",
+      icon: Camera,
+      action: () => setShowImageRecognition(true),
+      color: "bg-purple-50 hover:bg-purple-100",
+      textColor: "text-purple-700"
     },
     {
       title: "Explore Cuisines",
@@ -147,6 +170,18 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
           </Button>
         </div>
       )}
+
+      <ImageRecognitionDialog
+        open={showImageRecognition}
+        onOpenChange={setShowImageRecognition}
+        onRecipeScanned={handleScanRecipes}
+      />
+
+      <AuthModal 
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="login"
+      />
     </div>
   );
 }
