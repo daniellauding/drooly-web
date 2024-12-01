@@ -12,3 +12,9 @@ export interface RecipeProgress {
   checked: number;
   percentage: number;
 }
+
+export interface SharedList {
+  owner: string;
+  sharedWith: string;
+  createdAt: Date;
+}
