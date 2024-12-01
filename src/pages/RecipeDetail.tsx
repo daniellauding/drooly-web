@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Clock, ChefHat, Heart, Share2, Printer, BookOpen, ArrowLeft, Edit, Calendar } from "lucide-react";
+import { Heart, Share2, Printer, BookOpen, ArrowLeft, Edit, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +19,7 @@ import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
 import { WantToCookButton } from "@/components/recipe/WantToCookButton";
 import { AddToEventModal } from "@/components/recipe/AddToEventModal";
 import { IngredientsSection } from "@/components/recipe/sections/IngredientsSection";
+import { RecipeMetadata } from "@/components/recipe/sections/RecipeMetadata";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -34,10 +35,6 @@ export default function RecipeDetail() {
   });
 
   console.log("Rendering recipe detail for ID:", id, "Recipe:", recipe);
-
-  const handleEdit = () => {
-    navigate(`/recipe/edit/${id}`);
-  };
 
   if (error) {
     return (
@@ -86,7 +83,7 @@ export default function RecipeDetail() {
             variant="ghost"
             size="icon"
             className="bg-white/80 backdrop-blur-sm hover:bg-white/90"
-            onClick={handleEdit}
+            onClick={() => navigate(`/recipe/edit/${id}`)}
           >
             <Edit className="h-5 w-5" />
           </Button>
@@ -126,11 +123,12 @@ export default function RecipeDetail() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">
           <h1 className="text-2xl sm:text-4xl font-bold mb-2">{recipe.title}</h1>
-          <div className="flex items-center gap-2 text-sm">
-            <span>{recipe.creatorName || 'Anonymous'}</span>
-            <span>•</span>
-            <span>{new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}</span>
-          </div>
+          <RecipeMetadata 
+            chef={recipe.creatorName || 'Anonymous'}
+            date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
+            cookTime={recipe.cookTime || '30 min'}
+            cuisine={recipe.cuisine}
+          />
         </div>
       </div>
 
