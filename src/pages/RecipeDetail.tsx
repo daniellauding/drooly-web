@@ -90,17 +90,19 @@ export default function RecipeDetail() {
         )}
       </div>
 
-      <div className="relative h-[40vh] sm:h-[50vh] w-full">
+      <div className="relative h-[50vh] w-full overflow-hidden">
         {validImages.length > 0 ? (
           <Carousel className="w-full h-full">
             <CarouselContent>
               {validImages.map((image, index) => (
-                <CarouselItem key={index}>
-                  <img
-                    src={image}
-                    alt={`${recipe.title} - Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                <CarouselItem key={index} className="h-full">
+                  <div className="relative w-full h-full">
+                    <img
+                      src={image}
+                      alt={`${recipe.title} - Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
