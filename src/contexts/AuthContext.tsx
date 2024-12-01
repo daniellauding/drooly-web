@@ -66,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           } catch (error) {
             console.error("[AuthProvider] Error handling user data:", error);
+            // Don't clear user data on error, just show toast
             toast({
               variant: "destructive",
               title: "Error loading user data",
@@ -83,7 +84,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Authentication error",
           description: "Please try signing in again.",
         });
-        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -98,8 +98,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     loading,
-    login: authService.loginUser,
-    register: authService.registerUser,
+    login: async (email: string, password: string) => {
+      await authService.loginUser(email, password);
+    },
+    register: async (email: string, password: string, name: string) => {
+      await authService.registerUser(email, password, name);
+    },
     logout: authService.logoutUser,
     verifyEmail: authService.verifyUserEmail,
     sendVerificationEmail: () => {

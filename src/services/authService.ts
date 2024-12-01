@@ -19,7 +19,6 @@ export const loginUser = async (email: string, password: string) => {
   try {
     const { user } = await signInWithEmailAndPassword(auth, email, password);
     console.log("[AuthService] Login successful for:", user.uid);
-    return user;
   } catch (error) {
     console.error("[AuthService] Login failed:", error);
     throw error;
