@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera, Upload } from "lucide-react";
+import { Loader2, Camera, Upload, X } from "lucide-react";
 import { Recipe } from "@/types/recipe";
 import { createWorker } from 'tesseract.js';
 import { analyzeRecipeText } from "@/utils/recipeTextAnalysis";
@@ -19,6 +19,7 @@ export function ImageRecognitionDialog({
   onRecipeScanned 
 }: ImageRecognitionDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [processedFiles, setProcessedFiles] = useState<Set<string>>(new Set());
   const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,7 +49,7 @@ export function ImageRecognitionDialog({
         images: [imageUrl],
         featuredImageIndex: 0,
         sourceFile: file.name,
-        id: `scanned-${Date.now()}-${file.name}` // Ensure unique ID for each recipe
+        id: `scanned-${Date.now()}-${file.name}`
       };
     } catch (error) {
       console.error("Error processing image:", file.name, error);
@@ -56,15 +57,28 @@ export function ImageRecognitionDialog({
     }
   };
 
-  const handleImageCapture = async (files: FileList) => {
-    console.log("Starting to process", files.length, "images");
+  const handleImageCapture = (files: FileList) => {
+    console.log("Adding files to pending list:", files.length);
+    const newFiles = Array.from(files);
+    setPendingFiles(prev => [...prev, ...newFiles]);
+  };
+
+  const handleStartProcessing = async () => {
+    if (pendingFiles.length === 0) {
+      toast({
+        title: "No images to process",
+        description: "Please add some images first",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     const newRecipes: Partial<Recipe>[] = [];
     const newProcessedFiles = new Set(processedFiles);
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      for (const file of pendingFiles) {
         const fileId = `${file.name}-${file.size}-${file.lastModified}`;
         
         if (newProcessedFiles.has(fileId)) {
@@ -87,20 +101,10 @@ export function ImageRecognitionDialog({
 
       console.log("Successfully processed all images. Total recipes:", newRecipes.length);
       setProcessedFiles(newProcessedFiles);
-      
-      // Update local state with all scanned recipes
-      const updatedRecipes = [...scannedRecipes, ...newRecipes];
-      console.log("Updated recipes array:", updatedRecipes.map(r => ({
-        id: r.id,
-        title: r.title?.slice(0, 30),
-        ingredients: r.ingredients?.length
-      })));
-      
-      setScannedRecipes(updatedRecipes);
-      
-      // Pass all recipes to parent component
-      onRecipeScanned(updatedRecipes);
+      setScannedRecipes(newRecipes);
+      onRecipeScanned(newRecipes);
       onOpenChange(false);
+      setPendingFiles([]);
       
       toast({
         title: `Recipe${newRecipes.length > 1 ? 's' : ''} created from photo${newRecipes.length > 1 ? 's' : ''}`,
@@ -118,6 +122,10 @@ export function ImageRecognitionDialog({
     }
   };
 
+  const removeFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
@@ -125,7 +133,7 @@ export function ImageRecognitionDialog({
           <DialogTitle>Take Photos of Your Recipes</DialogTitle>
           <DialogDescription>
             Take clear photos of your recipes and we'll help you digitize them.
-            You can upload multiple recipe photos - each will be processed separately.
+            You can take multiple photos before processing them.
           </DialogDescription>
         </DialogHeader>
 
@@ -137,7 +145,7 @@ export function ImageRecognitionDialog({
               disabled={loading}
             >
               <Camera className="h-8 w-8" />
-              {loading ? "Processing..." : "Take Photo"}
+              Take Photo
             </Button>
             <Button
               variant="outline"
@@ -150,10 +158,40 @@ export function ImageRecognitionDialog({
             </Button>
           </div>
 
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-              <span className="ml-2">Processing images...</span>
+          {pendingFiles.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-medium">Pending Images ({pendingFiles.length})</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {pendingFiles.map((file, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Pending image ${index + 1}`}
+                      className="w-full h-40 object-cover rounded-lg"
+                    />
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <Button 
+                onClick={handleStartProcessing} 
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Processing images...
+                  </>
+                ) : (
+                  'Start Processing'
+                )}
+              </Button>
             </div>
           )}
         </div>
@@ -171,7 +209,6 @@ export function ImageRecognitionDialog({
           type="file"
           accept="image/*"
           capture="environment"
-          multiple
           className="hidden"
           onChange={(e) => e.target.files && handleImageCapture(e.target.files)}
         />
