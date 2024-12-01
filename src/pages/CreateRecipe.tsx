@@ -37,7 +37,10 @@ export default function CreateRecipe() {
   const [showExitPrompt, setShowExitPrompt] = useState(false);
   const [showImageRecognition, setShowImageRecognition] = useState(mode === 'photo');
   const { handleSaveRecipe } = useRecipeSaveHandler(isEditing, id);
-  const [recipe, setRecipe] = useState<Recipe>({
+  
+  const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>([]);
+  const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
+  const [currentRecipe, setCurrentRecipe] = useState<Recipe>({
     id: '',
     title: "",
     description: "",
@@ -78,9 +81,6 @@ export default function CreateRecipe() {
       comments: 0
     }
   });
-  
-  const [scannedRecipes, setScannedRecipes] = useState<Partial<Recipe>[]>([]);
-  const [activeRecipeIndex, setActiveRecipeIndex] = useState(0);
 
   const { data: existingRecipe, isLoading } = useQuery({
     queryKey: ['recipe', id],
@@ -91,7 +91,7 @@ export default function CreateRecipe() {
   useEffect(() => {
     if (existingRecipe) {
       console.log("Setting existing recipe data:", existingRecipe);
-      setRecipe(existingRecipe);
+      setCurrentRecipe(existingRecipe);
       setHasUnsavedChanges(false);
     }
   }, [existingRecipe]);
@@ -110,7 +110,21 @@ export default function CreateRecipe() {
   }, [hasUnsavedChanges]);
 
   const handleRecipeChange = (updates: Partial<Recipe>) => {
-    setRecipe(prev => ({ ...prev, ...updates }));
+    console.log("Updating recipe:", {
+      activeIndex: activeRecipeIndex,
+      updates
+    });
+    
+    setCurrentRecipe(prev => {
+      const updated = { ...prev, ...updates };
+      // Update the scanned recipes array with the changes
+      setScannedRecipes(prevRecipes => {
+        const newRecipes = [...prevRecipes];
+        newRecipes[activeRecipeIndex] = updated;
+        return newRecipes;
+      });
+      return updated;
+    });
     setHasUnsavedChanges(true);
   };
 
@@ -151,7 +165,7 @@ export default function CreateRecipe() {
       return;
     }
 
-    await handleSaveRecipe(recipe, user.uid, user.displayName || "", false);
+    await handleSaveRecipe(currentRecipe, user.uid, user.displayName || "", false);
     
     // Check for first recipe and recipe streak achievements
     const firstRecipeAchieved = await updateAchievementProgress(user.uid, 'firstRecipe', 1);
@@ -183,7 +197,7 @@ export default function CreateRecipe() {
       return;
     }
 
-    await handleSaveRecipe(recipe, user.uid, user.displayName || "", true);
+    await handleSaveRecipe(currentRecipe, user.uid, user.displayName || "", true);
     setHasUnsavedChanges(false);
   };
 
@@ -192,14 +206,14 @@ export default function CreateRecipe() {
     
     switch(section) {
       case "basic-info":
-        if (!recipe.title?.trim()) errors.push("Title is required");
-        if (!recipe.description?.trim()) errors.push("Description is required");
+        if (!currentRecipe.title?.trim()) errors.push("Title is required");
+        if (!currentRecipe.description?.trim()) errors.push("Description is required");
         break;
       case "ingredients":
-        if (!recipe.ingredients?.length) errors.push("At least one ingredient is required");
+        if (!currentRecipe.ingredients?.length) errors.push("At least one ingredient is required");
         break;
       case "details":
-        if (!recipe.difficulty) errors.push("Difficulty is required");
+        if (!currentRecipe.difficulty) errors.push("Difficulty is required");
         break;
     }
 
@@ -207,7 +221,7 @@ export default function CreateRecipe() {
   };
 
   const handleAddStep = () => {
-    setRecipe(prev => ({
+    setCurrentRecipe(prev => ({
       ...prev,
       steps: [
         ...prev.steps,
@@ -224,7 +238,7 @@ export default function CreateRecipe() {
 
   const handleAISuggestions = (suggestions: Partial<Recipe>) => {
     console.log("Applying AI suggestions to recipe:", suggestions);
-    setRecipe(prev => ({
+    setCurrentRecipe(prev => ({
       ...prev,
       ...suggestions
     }));
@@ -232,39 +246,19 @@ export default function CreateRecipe() {
 
   const handleRecipeScanned = async (recipes: Partial<Recipe>[]) => {
     console.log("Received scanned recipes:", recipes.length);
-    console.log("Scanned recipes details:", recipes.map(r => ({
-      id: r.id,
-      title: r.title?.slice(0, 30),
-      ingredients: r.ingredients?.length,
-      steps: r.steps?.length
-    })));
-    
     setScannedRecipes(recipes);
     
     if (recipes.length > 0) {
       const firstRecipe = recipes[0];
-      console.log("Setting first recipe as current:", {
-        id: firstRecipe.id,
-        title: firstRecipe.title?.slice(0, 30)
-      });
-      
-      setRecipe(prev => ({
+      setCurrentRecipe(prev => ({
         ...prev,
-        ...firstRecipe,
-        title: firstRecipe.title || prev.title,
-        description: firstRecipe.description || prev.description,
-        ingredients: firstRecipe.ingredients || prev.ingredients,
-        instructions: firstRecipe.instructions || prev.instructions,
-        steps: firstRecipe.steps || prev.steps,
+        ...firstRecipe
       }));
       
-      // Only enable step-based mode if steps were detected
       if (firstRecipe.steps && firstRecipe.steps.length > 0) {
         setIsStepBased(true);
-        console.log("Enabling step-based mode due to detected steps:", firstRecipe.steps);
       }
       
-      // Open relevant sections when data is available
       const sectionsToOpen = ["basic-info"];
       if (firstRecipe.ingredients?.length) sectionsToOpen.push("ingredients");
       if (firstRecipe.steps?.length) sectionsToOpen.push("steps");
@@ -279,29 +273,16 @@ export default function CreateRecipe() {
   };
 
   const handleRecipeSelect = (index: number) => {
-    console.log("Recipe selection in CreateRecipe:", {
+    console.log("Switching to recipe:", {
       selectedIndex: index,
-      selectedRecipe: scannedRecipes[index] ? {
-        id: scannedRecipes[index].id,
-        title: scannedRecipes[index].title,
-        ingredients: scannedRecipes[index].ingredients?.map(ing => 
-          typeof ing === 'string' ? ing : `${ing.amount} ${ing.unit} ${ing.name}`
-        ),
-        images: scannedRecipes[index].images
-      } : 'No recipe'
+      recipe: scannedRecipes[index]
     });
     
     setActiveRecipeIndex(index);
     if (scannedRecipes[index]) {
-      setRecipe(prev => ({
+      setCurrentRecipe(prev => ({
         ...prev,
-        ...scannedRecipes[index],
-        title: scannedRecipes[index].title || prev.title,
-        description: scannedRecipes[index].description || prev.description,
-        ingredients: scannedRecipes[index].ingredients || prev.ingredients,
-        instructions: scannedRecipes[index].instructions || prev.instructions,
-        steps: scannedRecipes[index].steps || prev.steps,
-        images: scannedRecipes[index].images || prev.images
+        ...scannedRecipes[index]
       }));
     }
   };
@@ -327,7 +308,7 @@ export default function CreateRecipe() {
         />
 
         <RecipeAccordions
-          recipe={recipe}
+          recipe={currentRecipe}
           openSections={openSections}
           validationErrors={validationErrors}
           isStepBased={isStepBased}
