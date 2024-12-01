@@ -13,14 +13,12 @@ import { RecipeCreationOptions } from "@/components/recipe/RecipeCreationOptions
 import { RecipeHeaderSection } from "@/components/recipe/sections/RecipeHeaderSection";
 import { ScannedRecipesNav } from "@/components/recipe/sections/ScannedRecipesNav";
 import { useRecipeSaveHandler } from "@/components/recipe/RecipeSaveHandler";
-import { Save, Camera } from "lucide-react";
+import { Save } from "lucide-react";
 import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirmationDialog";
 import { BetaStrip } from "@/components/home/BetaStrip";
 import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
 import { updateAchievementProgress, achievements } from "@/services/achievementService";
 import { AchievementToast } from "@/components/achievements/AchievementToast";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 
 export default function CreateRecipe() {
   const { id } = useParams();
@@ -332,13 +330,34 @@ export default function CreateRecipe() {
     }
   };
 
+  const handleStepBasedChange = (enabled: boolean) => {
+    console.log("Changing step-based mode:", enabled);
+    setIsStepBased(enabled);
+    if (enabled && (!currentRecipe.steps || currentRecipe.steps.length === 0)) {
+      handleRecipeChange({
+        steps: [{
+          title: "",
+          instructions: "",
+          duration: "",
+          media: [],
+          ingredients: []
+        }]
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen pb-20">
       <BetaStrip />
       <TopBar />
       <main className="container max-w-4xl mx-auto py-6 px-4 space-y-8">
         <div className="flex items-center justify-between">
-          <RecipeHeaderSection isEditing={isEditing} />
+          <RecipeHeaderSection 
+            isEditing={isEditing} 
+            onSaveAsDraft={handleSaveAsDraft}
+            isStepBased={isStepBased}
+            onStepBasedChange={handleStepBasedChange}
+          />
         </div>
 
         <ScannedRecipesNav

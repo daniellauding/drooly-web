@@ -16,6 +16,8 @@ export function RecipeHeaderSection({
   isStepBased = false,
   onStepBasedChange
 }: RecipeHeaderSectionProps) {
+  console.log("RecipeHeaderSection render:", { isStepBased });
+  
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
