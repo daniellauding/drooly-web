@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -6,15 +6,12 @@ import { Input } from "@/components/ui/input";
 import { SingleSelect } from "@/components/SingleSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Recipe } from "@/types/recipe";
-
-const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 interface AddToWeeklyPlanModalProps {
   open: boolean;
@@ -23,6 +20,9 @@ interface AddToWeeklyPlanModalProps {
   recipeTitle?: string;
   recipeImage?: string;
 }
+
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 export function AddToWeeklyPlanModal({
   open,
@@ -46,28 +46,54 @@ export function AddToWeeklyPlanModal({
     } as Recipe : null
   );
 
+  useEffect(() => {
+    if (user) {
+      loadCustomIngredients();
+    }
+  }, [user]);
+
+  const loadCustomIngredients = async () => {
+    if (!user) return;
+
+    try {
+      console.log("Loading custom ingredients for user:", user.uid);
+      const customIngredientsRef = doc(db, "users", user.uid, "customIngredients", "current");
+      const docSnap = await getDoc(customIngredientsRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log("Loaded custom ingredients:", data);
+        // Handle the loaded custom ingredients if needed
+      }
+    } catch (error) {
+      console.error("Error loading custom ingredients:", error);
+    }
+  };
+
   const searchRecipes = async (query: string) => {
     if (!query || !query.trim() || !user) return;
 
     try {
+      console.log("Searching recipes with query:", query);
       const recipesRef = collection(db, "recipes");
       const q = query(
         recipesRef,
-        where("title", ">=", query),
-        where("title", "<=", query + "\uf8ff")
+        where("title", ">=", query.toLowerCase()),
+        where("title", "<=", query.toLowerCase() + "\uf8ff")
       );
       
       const querySnapshot = await getDocs(q);
       const results: Recipe[] = [];
       
       querySnapshot.forEach((doc) => {
-        const data = doc.data() as Omit<Recipe, 'id'>;
+        const data = doc.data() as Recipe;
         results.push({
           id: doc.id,
           ...data
-        } as Recipe);
+        });
       });
       
+      console.log("Found recipes:", results.length);
       setRecipes(results);
     } catch (error) {
       console.error("Error searching recipes:", error);
@@ -78,6 +104,13 @@ export function AddToWeeklyPlanModal({
     if (!user) return;
 
     try {
+      console.log("Submitting weekly plan:", {
+        title,
+        selectedDay,
+        mealType,
+        selectedRecipe
+      });
+
       const weeklyPlanDoc = await addDoc(collection(db, "weeklyPlans"), {
         userId: user.uid,
         owner: user.uid,
@@ -93,6 +126,8 @@ export function AddToWeeklyPlanModal({
         status: "planned",
         collaborators: {}
       });
+
+      console.log("Weekly plan created:", weeklyPlanDoc.id);
 
       toast({
         title: "Success!",
