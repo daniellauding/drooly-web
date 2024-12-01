@@ -5,27 +5,33 @@ interface FeedbackData {
   email: string;
   subject: string;
   message: string;
-  createdBy: string;
+  createdBy?: string; // Made optional since non-auth users won't have this
 }
 
 export const submitFeedback = async (feedbackData: FeedbackData) => {
   console.log('Submitting feedback:', feedbackData);
 
   try {
-    // Validate required fields
-    if (!feedbackData.email || !feedbackData.message) {
-      console.error('Missing required fields:', { 
-        email: feedbackData.email, 
-        message: feedbackData.message 
-      });
-      throw new Error('Missing required fields for feedback submission');
+    // Validate email format
+    const emailRegex = /^[^@]+@[^@]+\.[^@]+$/;
+    if (!feedbackData.email || !emailRegex.test(feedbackData.email)) {
+      console.error('Invalid email format:', feedbackData.email);
+      throw new Error('Valid email is required for feedback submission');
+    }
+
+    // Validate message
+    if (!feedbackData.message) {
+      console.error('Missing message in feedback');
+      throw new Error('Message is required for feedback submission');
     }
 
     const feedbackRef = collection(db, 'feedback');
     const newFeedback = {
       ...feedbackData,
       createdAt: Timestamp.now(),
-      status: 'new'
+      status: 'new',
+      // Only include createdBy if it exists
+      ...(feedbackData.createdBy && { createdBy: feedbackData.createdBy })
     };
 
     console.log('Attempting to save feedback to Firestore:', newFeedback);

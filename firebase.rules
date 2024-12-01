@@ -17,8 +17,10 @@ service cloud.firestore {
 
     match /feedback/{feedbackId} {
       allow read: if request.auth != null;
-      allow create: if request.auth != null && 
-                   request.resource.data.createdBy == request.auth.uid;
+      // Allow create for anyone, but require email field
+      allow create: if request.resource.data.email is string &&
+                   request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@]+$');
+      // Only allow update/delete for authenticated users who created the feedback
       allow update, delete: if request.auth != null && 
                            resource.data.createdBy == request.auth.uid;
     }
@@ -45,13 +47,6 @@ service cloud.firestore {
     }
 
     match /invites/{inviteId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-                           resource.data.createdBy == request.auth.uid;
-    }
-
-    match /feedback/{feedbackId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && 
