@@ -45,7 +45,14 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
-    console.log("Initializing map with recipes:", recipes.length);
+    console.log("CuisineMapDialog - All recipes received:", recipes);
+    console.log("CuisineMapDialog - Recipes with cuisines:", recipes.filter(r => r.cuisine));
+    
+    // Log each recipe's cuisine
+    recipes.forEach(recipe => {
+      console.log(`Recipe "${recipe.title}" - Cuisine: ${recipe.cuisine || 'No cuisine specified'}`);
+    });
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
@@ -57,15 +64,19 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     const groupedRecipes = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = recipe.cuisine.toLowerCase().trim();
+        console.log(`Adding recipe "${recipe.title}" to cuisine group: ${cuisineKey}`);
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
         acc[cuisineKey].push(recipe);
+      } else {
+        console.log(`Recipe "${recipe.title}" has no cuisine specified`);
       }
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    console.log("Grouped recipes by cuisine:", groupedRecipes);
+    console.log("CuisineMapDialog - Grouped recipes by cuisine:", groupedRecipes);
+    console.log("CuisineMapDialog - Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES));
 
     // Add markers for each cuisine group
     Object.entries(groupedRecipes).forEach(([cuisine, cuisineRecipes]) => {
@@ -75,7 +86,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         return;
       }
 
-      console.log(`Adding marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
+      console.log(`Adding marker for ${cuisine} with ${cuisineRecipes.length} recipes at coordinates:`, coordinates);
 
       // Create popup content
       const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
