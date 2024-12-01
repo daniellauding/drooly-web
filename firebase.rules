@@ -14,8 +14,8 @@ service cloud.firestore {
     }
 
     match /recipes/{recipeId} {
-      // Allow public read access to published recipes
-      allow read: if resource.data.status == 'published';
+      // Allow both public and authenticated access to published recipes
+      allow read: if true;
       allow create: if isAuthenticated() && 
                    request.resource.data.creatorId == request.auth.uid;
       allow update: if isAuthenticated() && 
