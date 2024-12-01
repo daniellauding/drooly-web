@@ -11,6 +11,9 @@ import { RecipeProgressCard } from "@/components/shopping/RecipeProgressCard";
 import { CustomIngredientAdd } from "@/components/shopping/CustomIngredientAdd";
 import { IngredientItem, RecipeProgress } from "@/components/shopping/types";
 import { ShoppingHistory } from "@/components/shopping/ShoppingHistory";
+import { Card } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 export default function Ingredients() {
   const { user } = useAuth();
@@ -278,3 +281,4 @@ export default function Ingredients() {
     </div>
   );
 }
+
