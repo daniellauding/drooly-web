@@ -44,13 +44,27 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
-    // Log all available cuisines from the constants
+    // Debug log 1: Available cuisines from constants
     console.log("Available cuisines from CUISINES constant:", CUISINES);
     
-    // Group recipes by cuisine and log counts
+    // Debug log 2: Available cuisine coordinates
+    console.log("Available cuisine coordinates:", 
+      Object.keys(CUISINE_COORDINATES).map(cuisine => 
+        `${cuisine} [${CUISINE_COORDINATES[cuisine].join(', ')}]`
+      )
+    );
+    
+    // Group recipes by cuisine and normalize cuisine names
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = recipe.cuisine.toLowerCase().trim();
+        console.log("Processing recipe:", {
+          id: recipe.id,
+          title: recipe.title,
+          cuisine: recipe.cuisine,
+          normalizedCuisine: cuisineKey
+        });
+        
         if (!acc[cuisineKey]) {
           acc[cuisineKey] = [];
         }
@@ -59,26 +73,33 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    // Log recipes grouped by cuisine
+    // Debug log 3: Recipes grouped by cuisine
     console.log("Recipes grouped by cuisine:", 
       Object.entries(recipeByCuisine).map(([cuisine, recipes]) => 
         `${cuisine}: ${recipes.length} recipes`
       )
     );
 
-    // Log which cuisines have coordinates
-    console.log("Cuisines with coordinates:", 
-      Object.keys(CUISINE_COORDINATES).map(cuisine => 
-        `${cuisine}${recipeByCuisine[cuisine] ? ` (${recipeByCuisine[cuisine].length} recipes)` : ' (no recipes)'}`
-      )
+    // Debug log 4: Cuisines with coordinates
+    console.log("Cuisines with coordinates and recipe counts:", 
+      Object.keys(CUISINE_COORDINATES).map(cuisine => ({
+        cuisine,
+        hasCoordinates: true,
+        recipeCount: recipeByCuisine[cuisine]?.length || 0
+      }))
     );
 
-    // Log cuisines that have recipes but no coordinates
+    // Debug log 5: Cuisines with recipes but no coordinates
     const cuisinesWithoutCoordinates = Object.keys(recipeByCuisine).filter(
       cuisine => !CUISINE_COORDINATES[cuisine]
     );
     if (cuisinesWithoutCoordinates.length > 0) {
-      console.warn("Cuisines with recipes but no coordinates:", cuisinesWithoutCoordinates);
+      console.warn("⚠️ Cuisines with recipes but no coordinates:", 
+        cuisinesWithoutCoordinates.map(cuisine => ({
+          cuisine,
+          recipeCount: recipeByCuisine[cuisine].length
+        }))
+      );
     }
 
     map.current = new mapboxgl.Map({
