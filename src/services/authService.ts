@@ -16,8 +16,14 @@ let lastEmailSent = 0;
 
 export const loginUser = async (email: string, password: string) => {
   console.log("[AuthService] Attempting login for:", email);
-  const { user } = await signInWithEmailAndPassword(auth, email, password);
-  return user;
+  try {
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    console.log("[AuthService] Login successful for:", user.uid);
+    return user;
+  } catch (error) {
+    console.error("[AuthService] Login failed:", error);
+    throw error;
+  }
 };
 
 export const getUserData = async (user: User) => {
@@ -33,14 +39,14 @@ export const getUserData = async (user: User) => {
     return userData;
   } catch (error) {
     console.error("[AuthService] Error fetching user data:", error);
-    throw error; // Propagate the error to handle it in the auth context
+    throw error;
   }
 };
 
 export const createUserDocument = async (user: User) => {
   console.log("[AuthService] Creating user document for:", user.uid);
   try {
-    await setDoc(doc(db, "users", user.uid), {
+    const userData = {
       email: user.email,
       name: user.displayName || "",
       role: "user",
@@ -48,8 +54,11 @@ export const createUserDocument = async (user: User) => {
       emailVerified: user.emailVerified,
       manuallyVerified: false,
       avatarUrl: user.photoURL || ""
-    });
+    };
+    
+    await setDoc(doc(db, "users", user.uid), userData);
     console.log("[AuthService] User document created successfully");
+    return userData;
   } catch (error) {
     console.error("[AuthService] Error creating user document:", error);
     throw error;
