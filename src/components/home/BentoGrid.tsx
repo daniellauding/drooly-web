@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Camera } from "lucide-react";
 import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
 import { AuthModal } from "../auth/AuthModal";
+import { CookingMethodsSlider } from "./CookingMethodsSlider";
 
 interface BentoGridProps {
   recipes: Recipe[];
@@ -23,9 +24,10 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const [showImageRecognition, setShowImageRecognition] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingRecipes, setPendingRecipes] = useState<Partial<Recipe>[]>([]);
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const PREVIEW_COUNT = 8;
   const navigate = useNavigate();
-  
+
   console.log('BentoGrid received recipes count:', recipes.length);
 
   const handleRecipesFound = (newRecipes: Recipe[]) => {
@@ -40,7 +42,6 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       setShowAuthModal(true);
       return;
     }
-    // Pass scanned recipes through state when navigating
     navigate('/create-recipe', { 
       state: { 
         scannedRecipes,
@@ -55,6 +56,17 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       navigate('/create-recipe', { state: { scannedRecipes: pendingRecipes } });
       setPendingRecipes([]);
     }
+  };
+
+  const filterRecipesByMethod = (items: (Recipe | any)[]) => {
+    if (!selectedMethod) return items;
+    
+    return items.filter((item) => {
+      if ('cookingMethods' in item) {
+        return item.cookingMethods?.includes(selectedMethod);
+      }
+      return true;
+    });
   };
 
   const interactiveCards = [
@@ -119,7 +131,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       });
     }
 
-    return items;
+    return filterRecipesByMethod(items);
   };
 
   const gridItems = getGridItems();
@@ -128,6 +140,11 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
 
   return (
     <div className="relative">
+      <CookingMethodsSlider 
+        onMethodSelect={setSelectedMethod}
+        selectedMethod={selectedMethod}
+      />
+      
       <div className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6",
         shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
