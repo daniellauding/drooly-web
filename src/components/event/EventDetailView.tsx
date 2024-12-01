@@ -1,3 +1,9 @@
+import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Event } from "@/types/event";
+import { TopBar } from "../TopBar";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -5,15 +11,36 @@ import { EventTimeline } from "./EventTimeline";
 import { EventParticipants } from "./EventParticipants";
 import { EventMenu } from "./EventMenu";
 import { EventDiscussion } from "./EventDiscussion";
-import { RecipeCard } from "../RecipeCard";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../ui/use-toast";
 
-interface EventDetailViewProps {
-  onBack: () => void;
-}
-
-export function EventDetailView({ onBack }: EventDetailViewProps) {
+export function EventDetailView() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { data: event, isLoading } = useQuery({
+    queryKey: ['event', id],
+    queryFn: async () => {
+      console.log('Fetching event with ID:', id);
+      if (!id) throw new Error('No event ID provided');
+      
+      const eventDoc = await getDoc(doc(db, 'events', id));
+      if (!eventDoc.exists()) {
+        throw new Error('Event not found');
+      }
+      
+      return { id: eventDoc.id, ...eventDoc.data() } as Event;
+    },
+  });
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!event) {
+    return <div className="flex items-center justify-center min-h-screen">Event not found</div>;
+  }
 
   const handleVote = (recipeId: string) => {
     console.log('Voted for recipe:', recipeId);
@@ -24,57 +51,56 @@ export function EventDetailView({ onBack }: EventDetailViewProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="mb-4"
-        onClick={onBack}
-      >
-        <ArrowLeft className="h-5 w-5" />
-      </Button>
+    <div className="min-h-screen bg-background">
+      <TopBar />
+      <main className="container max-w-4xl mx-auto px-4 py-6">
+        <div className="space-y-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="mb-4"
+            onClick={() => navigate('/events')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
 
-      <h1 className="text-2xl font-bold">New Year's Eve Dinner</h1>
-      
-      <Card className="p-4">
-        <div className="flex items-center gap-4 mb-4">
-          <CalendarDays className="h-5 w-5 text-primary" />
-          <span className="font-medium">Dec 31, 2024</span>
+          <h1 className="text-2xl font-bold">{event.title}</h1>
+          
+          {event.coverImage && (
+            <div className="relative w-full h-48 md:h-64 rounded-lg overflow-hidden">
+              <img 
+                src={event.coverImage} 
+                alt={event.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+          
+          <Card className="p-4">
+            <div className="flex items-center gap-4 mb-4">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              <span className="font-medium">{event.date} at {event.time}</span>
+            </div>
+            <p className="text-gray-600">
+              {event.description}
+            </p>
+            <div className="mt-4">
+              <strong>Location:</strong> {event.location.name}
+            </div>
+          </Card>
+
+          <EventParticipants 
+            participants={event.guests.map(guest => ({
+              name: guest.name,
+              status: guest.status,
+              avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=" + guest.id
+            }))} 
+          />
+
+          <EventMenu dishes={event.dishes || []} />
+          <EventDiscussion messages={[]} />
         </div>
-        <p className="text-gray-600">
-          Join us for an amazing New Year's celebration with delicious food and great company!
-        </p>
-      </Card>
-
-      <EventParticipants 
-        participants={[
-          { name: "Sarah", status: "accepted", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80" },
-          { name: "Mike", status: "accepted", avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80" },
-          { name: "Emma", status: "pending", avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&q=80" }
-        ]} 
-      />
-
-      <EventTimeline 
-        events={[
-          {
-            id: "1",
-            time: "10:30 AM",
-            description: "Sarah suggested Spicy Ramen Bowl",
-            user: "Sarah",
-            avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&q=80"
-          },
-          {
-            id: "2",
-            time: "10:35 AM",
-            description: "Mike voted for Spicy Ramen Bowl",
-            user: "Mike",
-            avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=100&q=80"
-          }
-        ]} 
-      />
-
-      <EventMenu dishes={[]} />
-      <EventDiscussion messages={[]} />
+      </main>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import Backoffice from "./pages/Backoffice";
 import About from "./pages/About";
 import Events from "./pages/Events";
 import CreateEvent from "./pages/CreateEvent";
+import { EventDetailView } from "./components/event/EventDetailView";
 import "./i18n/config";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ function App() {
             <Route path="/register" element={<Navigate to="/signup" replace />} />
             <Route path="/backoffice" element={<Backoffice />} />
             <Route path="/events" element={<Events />} />
+            <Route path="/events/:id" element={<EventDetailView />} />
             <Route path="/create-event" element={<CreateEvent />} />
             <Route path="/about" element={<About />} />
           </Routes>
