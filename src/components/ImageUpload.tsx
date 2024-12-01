@@ -38,7 +38,8 @@ export function ImageUpload({
     console.log("Processing image:", file.name);
     const imageUrl = await processFile(file);
     if (imageUrl) {
-      setCropImage(imageUrl);
+      // Instead of setting cropImage directly, add the image to the list
+      onChange([...images, imageUrl], featuredImageIndex);
     }
   };
 
@@ -47,7 +48,7 @@ export function ImageUpload({
     if (acceptedFiles.length > 0) {
       await handleImageProcessing(acceptedFiles[0]);
     }
-  }, []);
+  }, [images, featuredImageIndex, onChange]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
