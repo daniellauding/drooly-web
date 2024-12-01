@@ -8,25 +8,11 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Check, ChefHat } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-
-interface IngredientItem {
-  name: string;
-  amount: string;
-  unit: string;
-  recipeId: string;
-  recipeTitle: string;
-  bought: boolean;
-}
-
-interface RecipeProgress {
-  total: number;
-  checked: number;
-  percentage: number;
-}
+import { ShoppingListHeader } from "@/components/shopping/ShoppingListHeader";
+import { RecipeProgressCard } from "@/components/shopping/RecipeProgressCard";
+import { CustomIngredientAdd } from "@/components/shopping/CustomIngredientAdd";
+import { IngredientItem, RecipeProgress } from "@/components/shopping/types";
 
 export default function Ingredients() {
   const { user } = useAuth();
@@ -36,17 +22,13 @@ export default function Ingredients() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [recipeProgress, setRecipeProgress] = useState<Record<string, RecipeProgress>>({});
 
-  // Load checked items from Firebase
   useEffect(() => {
     const loadCheckedItems = async () => {
       if (!user) return;
-
       try {
         const checkedItemsDoc = await getDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"));
         if (checkedItemsDoc.exists()) {
-          const data = checkedItemsDoc.data();
-          setCheckedItems(new Set(data.items));
-          console.log("Loaded checked items:", data.items);
+          setCheckedItems(new Set(checkedItemsDoc.data().items));
         }
       } catch (error) {
         console.error("Error loading checked items:", error);
@@ -86,7 +68,6 @@ export default function Ingredients() {
 
         setIngredients(allIngredients);
         
-        // Initialize progress for each recipe
         const initialProgress: Record<string, RecipeProgress> = {};
         fetchedRecipes.forEach(recipe => {
           initialProgress[recipe.id] = {
@@ -97,7 +78,6 @@ export default function Ingredients() {
         });
         setRecipeProgress(initialProgress);
 
-        // Update progress based on loaded checked items
         updateProgressForAllRecipes(checkedItems);
       } catch (error) {
         console.error("Error fetching recipes:", error);
@@ -136,22 +116,24 @@ export default function Ingredients() {
 
     const key = `${ingredient.recipeId}-${ingredient.name}`;
     const newChecked = new Set(checkedItems);
-    const isNowChecked = !checkedItems.has(key);
     
-    if (isNowChecked) {
+    if (!checkedItems.has(key)) {
       newChecked.add(key);
     } else {
       newChecked.delete(key);
     }
     
     setCheckedItems(newChecked);
+    await saveCheckedItems(newChecked);
+    updateProgressForAllRecipes(newChecked);
+  };
 
-    // Save to Firebase
+  const saveCheckedItems = async (items: Set<string>) => {
+    if (!user) return;
     try {
       await setDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"), {
-        items: Array.from(newChecked)
+        items: Array.from(items)
       });
-      console.log("Saved checked items to Firebase:", Array.from(newChecked));
     } catch (error) {
       console.error("Error saving checked items:", error);
       toast({
@@ -160,75 +142,55 @@ export default function Ingredients() {
         variant: "destructive"
       });
     }
-
-    // Update progress for the recipe
-    setRecipeProgress(prev => {
-      const recipeId = ingredient.recipeId;
-      const currentProgress = prev[recipeId];
-      const newCheckedCount = ingredients
-        .filter(ing => ing.recipeId === recipeId)
-        .reduce((count, ing) => {
-          const ingKey = `${ing.recipeId}-${ing.name}`;
-          return count + (newChecked.has(ingKey) ? 1 : 0);
-        }, 0);
-
-      return {
-        ...prev,
-        [recipeId]: {
-          ...currentProgress,
-          checked: newCheckedCount,
-          percentage: (newCheckedCount / currentProgress.total) * 100
-        }
-      };
-    });
   };
 
   const clearChecked = async () => {
     if (!user) return;
-
     setCheckedItems(new Set());
-    
-    // Clear in Firebase
-    try {
-      await setDoc(doc(db, "users", user.uid, "shoppingList", "checkedItems"), {
-        items: []
-      });
-      console.log("Cleared checked items in Firebase");
-    } catch (error) {
-      console.error("Error clearing checked items:", error);
-    }
-
-    // Reset progress for all recipes
-    setRecipeProgress(prev => {
-      const resetProgress: Record<string, RecipeProgress> = {};
-      Object.keys(prev).forEach(recipeId => {
-        resetProgress[recipeId] = {
-          ...prev[recipeId],
-          checked: 0,
-          percentage: 0
-        };
-      });
-      return resetProgress;
-    });
-    
+    await saveCheckedItems(new Set());
+    updateProgressForAllRecipes(new Set());
     toast({
       title: "Shopping list cleared",
       description: "All items have been unchecked"
     });
   };
 
+  const markAllAsBought = async () => {
+    if (!user) return;
+    const allKeys = ingredients.map(ing => `${ing.recipeId}-${ing.name}`);
+    const newChecked = new Set(allKeys);
+    setCheckedItems(newChecked);
+    await saveCheckedItems(newChecked);
+    updateProgressForAllRecipes(newChecked);
+    toast({
+      title: "All items marked as bought",
+      description: "Your shopping list has been completed"
+    });
+  };
+
+  const handleAddCustomIngredient = async (name: string, amount: string, unit: string) => {
+    const customIngredient: IngredientItem = {
+      name,
+      amount,
+      unit,
+      recipeId: 'custom',
+      recipeTitle: 'Other Items',
+      bought: false
+    };
+    setIngredients(prev => [...prev, customIngredient]);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <TopBar />
       <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Shopping List</h1>
-          {checkedItems.size > 0 && (
-            <Button variant="outline" onClick={clearChecked}>
-              Clear All
-            </Button>
-          )}
-        </div>
+        <ShoppingListHeader
+          checkedItemsCount={checkedItems.size}
+          onClearAll={clearChecked}
+          onMarkAllBought={markAllAsBought}
+        />
+
+        <CustomIngredientAdd onAdd={handleAddCustomIngredient} />
 
         <Tabs defaultValue="all" className="w-full">
           <TabsList>
@@ -261,39 +223,13 @@ export default function Ingredients() {
           <TabsContent value="by-recipe" className="mt-6">
             <div className="space-y-6">
               {recipes.map(recipe => (
-                <Card key={recipe.id} className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <ChefHat className="w-5 h-5 text-primary" />
-                    <h3 className="text-lg font-semibold">{recipe.title}</h3>
-                  </div>
-                  <div className="mb-4">
-                    <Progress value={recipeProgress[recipe.id]?.percentage || 0} />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {recipeProgress[recipe.id]?.checked || 0} of {recipeProgress[recipe.id]?.total || 0} ingredients checked
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    {recipe.ingredients.map((ingredient, idx) => (
-                      <div key={`${recipe.id}-${ingredient.name}-${idx}`}>
-                        <div className="flex items-center gap-4 py-2">
-                          <Checkbox
-                            checked={checkedItems.has(`${recipe.id}-${ingredient.name}`)}
-                            onCheckedChange={() => handleCheck({
-                              ...ingredient,
-                              recipeId: recipe.id,
-                              recipeTitle: recipe.title,
-                              bought: false
-                            })}
-                          />
-                          <span className={checkedItems.has(`${recipe.id}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
-                            {ingredient.amount} {ingredient.unit} {ingredient.name}
-                          </span>
-                        </div>
-                        {idx < recipe.ingredients.length - 1 && <Separator />}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
+                <RecipeProgressCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  progress={recipeProgress[recipe.id]}
+                  checkedItems={checkedItems}
+                  onCheck={handleCheck}
+                />
               ))}
             </div>
           </TabsContent>
