@@ -3,46 +3,17 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Recipe } from "@/types/recipe";
-import { CUISINES } from "@/types/recipe";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { CuisineDebugPanel } from "./map/CuisineDebugPanel";
+import { CUISINE_COORDINATES, normalizeCuisineName } from "./map/cuisineCoordinates";
+import { createCuisineMapMarker } from "./map/CuisineMapMarker";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
-
-const CUISINE_COORDINATES: Record<string, [number, number]> = {
-  'italian': [12.4964, 41.9028],
-  'french': [2.3522, 48.8566],
-  'japanese': [139.6503, 35.6762],
-  'chinese': [116.4074, 39.9042],
-  'thai': [100.5018, 13.7563],
-  'indian': [77.1025, 28.7041],
-  'mexican': [-99.1332, 19.4326],
-  'greek': [23.7275, 37.9838],
-  'spanish': [-3.7038, 40.4168],
-  'vietnamese': [105.8542, 21.0285],
-  'korean': [126.9780, 37.5665],
-  'turkish': [32.8597, 39.9334],
-  'lebanese': [35.5018, 33.8938],
-  'moroccan': [-6.8498, 34.0209],
-  'brazilian': [-47.8645, -15.7942],
-  'american': [-98.5795, 39.8283],
-  'mediterranean': [14.4378, 35.9375],
-  'middle eastern': [39.1947, 30.5852],
-  'caribbean': [-75.0148, 18.7357],
-  'ethiopian': [38.7578, 9.0320],
-  'german': [13.4050, 52.5200],
-  'swedish': [18.0686, 59.3293],
-};
 
 interface CuisineMapDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   recipes: Recipe[];
 }
-
-const normalizeCuisineName = (cuisine: string): string => {
-  return cuisine.toLowerCase().trim();
-};
 
 export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDialogProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -53,7 +24,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     console.log("Raw recipes array:", recipes);
     console.log("Total recipes:", recipes.length);
     
-    // Log each recipe's raw data
     recipes.forEach((recipe, index) => {
       console.log(`Recipe ${index + 1} - ${recipe.title}:`, {
         rawCuisine: recipe.cuisine,
@@ -109,44 +79,11 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         return;
       }
 
-      console.log(`Adding marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
-
-      const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(`
-        <div class="p-2">
-          <h3 class="font-bold text-base capitalize">${cuisine} Cuisine</h3>
-          <p class="text-sm text-gray-600">${cuisineRecipes.length} recipes</p>
-          <ul class="mt-2 space-y-1">
-            ${cuisineRecipes.slice(0, 3).map(recipe => `
-              <li class="text-sm">
-                <a href="/recipe/${recipe.id}" class="text-blue-600 hover:underline">
-                  ${recipe.title}
-                </a>
-              </li>
-            `).join('')}
-            ${cuisineRecipes.length > 3 ? `
-              <li class="text-sm text-gray-500">
-                +${cuisineRecipes.length - 3} more recipes
-              </li>
-            ` : ''}
-          </ul>
-        </div>
-      `);
-
-      const marker = new mapboxgl.Marker({
-        color: "#FF5A5F",
-        scale: 0.8
-      })
-        .setLngLat(coordinates)
-        .setPopup(popup)
-        .addTo(map.current!);
-
-      const markerElement = marker.getElement();
-      markerElement.style.transition = 'transform 0.2s ease';
-      markerElement.addEventListener('mouseenter', () => {
-        markerElement.style.transform = 'scale(1.2)';
-      });
-      markerElement.addEventListener('mouseleave', () => {
-        markerElement.style.transform = 'scale(1)';
+      createCuisineMapMarker({
+        cuisine,
+        coordinates,
+        recipes: cuisineRecipes,
+        map: map.current!
       });
     });
 
@@ -168,26 +105,10 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
           Discover recipes from different cuisines. Click on the markers to see available recipes from each region.
         </DialogDescription>
         
-        <div className="mb-4 space-y-4">
-          <Button 
-            variant="outline" 
-            onClick={showRecipeCuisines}
-            className="w-full"
-          >
-            Debug Cuisine Data
-          </Button>
-
-          <ScrollArea className="h-[200px] border rounded-md p-4">
-            <div className="space-y-2">
-              <h3 className="font-medium">Raw Cuisine Values from Firebase:</h3>
-              {recipes.map((recipe, index) => (
-                <div key={recipe.id} className="text-sm">
-                  <span className="font-medium">{recipe.title}</span>: {recipe.cuisine || 'No cuisine set'}
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
+        <CuisineDebugPanel 
+          recipes={recipes}
+          onDebug={showRecipeCuisines}
+        />
 
         <div ref={mapContainer} className="w-full h-[600px] rounded-lg" />
       </DialogContent>
