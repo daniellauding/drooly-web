@@ -1,6 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Heart, Share2, Printer, BookOpen, ArrowLeft, Edit, Calendar } from "lucide-react";
+import { Heart, Share2, Printer, BookOpen, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
@@ -19,7 +19,7 @@ import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
 import { WantToCookButton } from "@/components/recipe/WantToCookButton";
 import { AddToEventModal } from "@/components/recipe/AddToEventModal";
 import { IngredientsSection } from "@/components/recipe/sections/IngredientsSection";
-import { RecipeMetadata } from "@/components/recipe/sections/RecipeMetadata";
+import { RecipeHeaderSection } from "@/components/recipe/sections/RecipeHeaderSection";
 
 export default function RecipeDetail() {
   const { id } = useParams();
@@ -69,27 +69,6 @@ export default function RecipeDetail() {
 
   return (
     <div className="min-h-screen bg-[#F7F9FC]">
-      <div className="fixed top-4 left-4 right-4 z-10 flex justify-between">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="bg-white/80 backdrop-blur-sm hover:bg-white/90"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        {user && recipe.creatorId === user.uid && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="bg-white/80 backdrop-blur-sm hover:bg-white/90"
-            onClick={() => navigate(`/recipe/edit/${id}`)}
-          >
-            <Edit className="h-5 w-5" />
-          </Button>
-        )}
-      </div>
-
       <div className="relative h-[50vh] w-full overflow-hidden">
         {validImages.length > 0 ? (
           <Carousel className="w-full h-full">
@@ -121,15 +100,14 @@ export default function RecipeDetail() {
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 text-white">
-          <h1 className="text-2xl sm:text-4xl font-bold mb-2">{recipe.title}</h1>
-          <RecipeMetadata 
-            chef={recipe.creatorName || 'Anonymous'}
-            date={new Date(recipe.createdAt.seconds * 1000).toLocaleDateString()}
-            cookTime={recipe.cookTime || '30 min'}
-            cuisine={recipe.cuisine}
-          />
-        </div>
+        <RecipeHeaderSection 
+          recipe={recipe}
+          onNavigateBack={() => navigate(-1)}
+          onEdit={() => navigate(`/recipe/edit/${id}`)}
+          onShowPlanModal={() => setShowPlanModal(true)}
+          onShowEventModal={() => setShowEventModal(true)}
+          isCreator={user && recipe.creatorId === user.uid}
+        />
       </div>
 
       <div className="container max-w-4xl mx-auto px-4 py-6 sm:py-8">
