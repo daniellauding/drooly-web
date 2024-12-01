@@ -31,7 +31,7 @@ const CUISINE_COORDINATES: Record<string, [number, number]> = {
   'caribbean': [-75.0148, 18.7357],
   'ethiopian': [38.7578, 9.0320],
   'german': [13.4050, 52.5200],
-  'swedish': [18.0686, 59.3293],  // Added Swedish coordinates
+  'swedish': [18.0686, 59.3293],
 };
 
 interface CuisineMapDialogProps {
@@ -57,6 +57,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     recipes.forEach((recipe, index) => {
       console.log(`Recipe ${index + 1} - ${recipe.title}:`, {
         rawCuisine: recipe.cuisine,
+        normalizedCuisine: recipe.cuisine?.toLowerCase().trim(),
+        hasCoordinates: !!CUISINE_COORDINATES[recipe.cuisine?.toLowerCase().trim() || ''],
         type: typeof recipe.cuisine,
         hasValue: Boolean(recipe.cuisine),
         fullRecipe: recipe
@@ -71,23 +73,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     
     console.log("Recipes with cuisine:", recipesWithCuisine.length);
     console.log("Recipes with cuisine details:", recipesWithCuisine);
-
-    // Group by cuisine
-    const cuisineGroups = recipesWithCuisine.reduce((acc, recipe) => {
-      const cuisine = recipe.cuisine?.toLowerCase().trim() || 'unknown';
-      if (!acc[cuisine]) {
-        acc[cuisine] = [];
-      }
-      acc[cuisine].push({
-        title: recipe.title,
-        originalCuisine: recipe.cuisine,
-        normalizedCuisine: cuisine,
-        hasCoordinates: !!CUISINE_COORDINATES[cuisine]
-      });
-      return acc;
-    }, {} as Record<string, any[]>);
-
-    console.log("Cuisine Groups:", cuisineGroups);
     console.log("Available cuisine coordinates:", Object.keys(CUISINE_COORDINATES));
     console.groupEnd();
   };
