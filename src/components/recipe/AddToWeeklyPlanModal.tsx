@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { SingleSelect } from "@/components/SingleSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
 import { RecipeSearch } from "./RecipeSearch";
@@ -41,29 +41,6 @@ export function AddToWeeklyPlanModal({
       images: initialRecipeImage ? [initialRecipeImage] : [],
     } as Recipe : null
   );
-
-  useEffect(() => {
-    if (user) {
-      loadCustomIngredients();
-    }
-  }, [user]);
-
-  const loadCustomIngredients = async () => {
-    if (!user) return;
-
-    try {
-      console.log("Loading custom ingredients for user:", user.uid);
-      const customIngredientsRef = doc(db, "users", user.uid, "customIngredients", "current");
-      const docSnap = await getDoc(customIngredientsRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        console.log("Loaded custom ingredients:", data);
-      }
-    } catch (error) {
-      console.error("Error loading custom ingredients:", error);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!user) return;

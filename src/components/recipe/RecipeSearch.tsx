@@ -38,7 +38,7 @@ export function RecipeSearch({ userId, onRecipeSelect, selectedRecipe }: RecipeS
       })) as Recipe[];
       
       console.log("Found recipes:", results.length);
-      setRecipes(results);
+      setRecipes(results || []);
     } catch (error) {
       console.error("Error searching recipes:", error);
       setRecipes([]);
@@ -56,7 +56,7 @@ export function RecipeSearch({ userId, onRecipeSelect, selectedRecipe }: RecipeS
         }}
       />
       <CommandEmpty>No recipes found.</CommandEmpty>
-      {recipes.length > 0 && (
+      {recipes && recipes.length > 0 && (
         <CommandGroup className="max-h-[200px] overflow-auto">
           {recipes.map((recipe) => (
             <CommandItem
