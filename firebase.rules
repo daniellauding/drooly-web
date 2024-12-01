@@ -65,5 +65,9 @@ service cloud.firestore {
         resource.data.sharedWith == request.auth.uid
       );
     }
+
+    match /users/{userId}/todos/{todoId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
   }
 }
