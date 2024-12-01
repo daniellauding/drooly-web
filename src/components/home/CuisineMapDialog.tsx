@@ -7,6 +7,7 @@ import { CUISINES } from "@/types/recipe";
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
+// Normalize all keys to lowercase
 const CUISINE_COORDINATES: Record<string, [number, number]> = {
   'italian': [12.4964, 41.9028],
   'french': [2.3522, 48.8566],
@@ -85,7 +86,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       Object.keys(CUISINE_COORDINATES).map(cuisine => ({
         cuisine,
         hasCoordinates: true,
-        recipeCount: recipeByCuisine[cuisine]?.length || 0
+        recipeCount: recipeByCuisine[cuisine.toLowerCase()]?.length || 0
       }))
     );
 
@@ -111,6 +112,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
     // Add markers for each cuisine group
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
+      // Look up coordinates using lowercase key
       const coordinates = CUISINE_COORDINATES[cuisine];
       if (!coordinates) {
         console.log(`No coordinates found for cuisine: ${cuisine}`);
