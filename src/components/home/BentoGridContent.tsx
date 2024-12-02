@@ -22,6 +22,7 @@ export function BentoGridContent({
   selectedMethod,
   onAuthModalOpen 
 }: BentoGridContentProps) {
+  console.log('BentoGridContent rendering with recipes:', recipes.length);
   const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showKitchenModal, setShowKitchenModal] = useState(false);
@@ -50,6 +51,7 @@ export function BentoGridContent({
   };
 
   const handleBentoBoxClick = (actionType: string) => {
+    console.log('Bento box clicked:', actionType);
     switch (actionType) {
       case 'events':
         handleAuthRequired(() => navigate('/events'));
@@ -95,6 +97,7 @@ export function BentoGridContent({
   };
 
   const gridItems = getGridItems();
+  console.log('Grid items prepared:', gridItems.length);
   const shouldShowOverlay = !user && gridItems.length > PREVIEW_COUNT;
   const displayItems = user ? gridItems : gridItems.slice(0, PREVIEW_COUNT);
 
@@ -104,13 +107,16 @@ export function BentoGridContent({
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 relative",
         shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:via-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
       )}>
-        {displayItems.map((item, index) => (
-          <BentoGridItem
-            key={index}
-            box={item}
-            onClick={() => handleBentoBoxClick(item.action)}
-          />
-        ))}
+        {displayItems.map((item, index) => {
+          console.log('Rendering item:', item);
+          return (
+            <BentoGridItem
+              key={index}
+              box={item}
+              onClick={() => handleBentoBoxClick(item.action)}
+            />
+          );
+        })}
       </div>
 
       <BentoModals
