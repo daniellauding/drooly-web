@@ -47,9 +47,23 @@ export function BentoGridContent({
     action();
   };
 
-  const handleRecipesFound = (recipes: Recipe[]) => {
-    console.log("New recipes found:", recipes.length);
-    setLocalGeneratedRecipes(recipes);
+  const handleRecipesFound = (newRecipes: Recipe[]) => {
+    console.log("New recipes found:", newRecipes.length);
+    setLocalGeneratedRecipes(newRecipes);
+  };
+
+  // Handle single recipe additions from URL and Clipboard imports
+  const handleSingleRecipeFound = (recipe: Partial<Recipe>) => {
+    if (recipe) {
+      setLocalGeneratedRecipes(prev => [...prev, recipe as Recipe]);
+    }
+  };
+
+  // Handle ingredients-based recipe generation
+  const handleIngredientsBasedRecipes = async (ingredients: string[]) => {
+    // This function will be passed to IngredientSearchModal
+    console.log("Handling ingredients:", ingredients);
+    // The actual recipe generation happens in the IngredientSearchModal component
   };
 
   const bentoBoxes = [
@@ -206,13 +220,13 @@ export function BentoGridContent({
       <RecipeUrlDialog
         open={showUrlDialog}
         onOpenChange={setShowUrlDialog}
-        onRecipeScraped={handleRecipesFound}
+        onRecipeScraped={handleSingleRecipeFound}
       />
 
       <ClipboardImportDialog
         open={showClipboardDialog}
         onOpenChange={setShowClipboardDialog}
-        onRecipeImported={handleRecipesFound}
+        onRecipeImported={handleSingleRecipeFound}
       />
 
       <CuisineMapDialog
@@ -224,7 +238,7 @@ export function BentoGridContent({
       <IngredientSearchModal
         open={showKitchenModal}
         onOpenChange={setShowKitchenModal}
-        onRecipesGenerated={handleRecipesFound}
+        onRecipesGenerated={handleIngredientsBasedRecipes}
         isLoading={false}
       />
     </div>
