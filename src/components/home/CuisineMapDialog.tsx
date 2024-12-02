@@ -21,38 +21,57 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
 
-  console.log("CuisineMapDialog - Recipes received:", recipes.length);
+  console.log("[CuisineMapDialog] Initializing with props:", {
+    open,
+    recipesCount: recipes.length,
+    hasMapContainer: !!mapContainer.current,
+    hasExistingMap: !!map.current
+  });
 
   const resetMapView = () => {
+    console.log("[CuisineMapDialog] Resetting map view");
     if (map.current) {
       map.current.flyTo({
         center: [0, 20],
         zoom: 1.5,
         duration: 1500
       });
+    } else {
+      console.warn("[CuisineMapDialog] Cannot reset view - map not initialized");
     }
   };
 
   useEffect(() => {
-    if (!open || !mapContainer.current) return;
+    if (!open || !mapContainer.current) {
+      console.log("[CuisineMapDialog] Skipping map initialization:", {
+        isOpen: open,
+        hasContainer: !!mapContainer.current
+      });
+      return;
+    }
 
-    // Clear existing markers
+    console.log("[CuisineMapDialog] Cleaning up existing markers:", markers.current.length);
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
-    console.log("Initializing map with recipes:", recipes.length);
-
     if (!map.current) {
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/light-v11',
-        center: [0, 20],
-        zoom: 1.5,
-        minZoom: 1,
-        maxZoom: 12
-      });
+      console.log("[CuisineMapDialog] Creating new map instance");
+      try {
+        map.current = new mapboxgl.Map({
+          container: mapContainer.current,
+          style: 'mapbox://styles/mapbox/light-v11',
+          center: [0, 20],
+          zoom: 1.5,
+          minZoom: 1,
+          maxZoom: 12
+        });
 
-      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        console.log("[CuisineMapDialog] Map instance created successfully");
+      } catch (error) {
+        console.error("[CuisineMapDialog] Error creating map instance:", error);
+        return;
+      }
     }
 
     const currentMap = map.current;
@@ -69,30 +88,42 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    console.log("Recipes grouped by cuisine:", Object.keys(recipeByCuisine).length);
+    console.log("[CuisineMapDialog] Recipe grouping:", {
+      totalRecipes: recipes.length,
+      cuisineGroups: Object.keys(recipeByCuisine).length,
+      cuisines: Object.keys(recipeByCuisine)
+    });
 
     // Create markers for each cuisine group
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
       
       if (!coordinates) {
-        console.warn(`No coordinates found for cuisine: ${cuisine}`);
+        console.warn(`[CuisineMapDialog] No coordinates found for cuisine: ${cuisine}`);
         return;
       }
 
-      console.log(`Creating marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
-      const marker = createCuisineMapMarker({
-        cuisine,
-        coordinates,
-        recipes: cuisineRecipes,
-        map: currentMap
+      console.log(`[CuisineMapDialog] Creating marker for ${cuisine}:`, {
+        recipesCount: cuisineRecipes.length,
+        coordinates
       });
-      
-      markers.current.push(marker);
+
+      try {
+        const marker = createCuisineMapMarker({
+          cuisine,
+          coordinates,
+          recipes: cuisineRecipes,
+          map: currentMap
+        });
+        markers.current.push(marker);
+      } catch (error) {
+        console.error(`[CuisineMapDialog] Error creating marker for ${cuisine}:`, error);
+      }
     });
 
     // Cleanup function
     return () => {
+      console.log("[CuisineMapDialog] Cleaning up map resources");
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
     };
