@@ -61,8 +61,11 @@ export function WeeklyStoriesSection() {
   });
 
   if (!weeklyPlanStories.length) {
+    console.log("No weekly plan stories available");
     return null;
   }
+
+  console.log("Rendering weekly plan stories:", weeklyPlanStories);
 
   return (
     <div className="mb-6">
