@@ -12,6 +12,7 @@ import { Plus, Camera, Globe, Filter } from "lucide-react";
 import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
 import { AuthModal } from "../auth/AuthModal";
 import { CookingMethodsSlider } from "./CookingMethodsSlider";
+import { WeeklyStoriesSection } from "./WeeklyStoriesSection";
 import { CuisineMapDialog } from "./CuisineMapDialog";
 import { RecipeFilter } from "../recipe/RecipeFilter";
 
@@ -29,7 +30,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [pendingRecipes, setPendingRecipes] = useState<Partial<Recipe>[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const PREVIEW_COUNT = 6; // Changed to show 6 recipes for logged out users
+  const PREVIEW_COUNT = 6;
   const navigate = useNavigate();
 
   console.log('BentoGrid received recipes count:', recipes.length);
@@ -94,27 +95,10 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
 
   const getGridItems = () => {
     const items = [];
-
-    // Add seasonal recipes and quiz at the beginning
     items.push({ isSpecial: true, type: 'seasonal' });
     items.push({ isSpecial: true, type: 'quiz' });
-
-    // Add interactive cards for both logged in and logged out users
-    items.push({
-      isInteractive: true,
-      ...interactiveCards[0], // Take Photo & Scan
-      recipes: [...recipes, ...generatedRecipes]
-    });
-
-    items.push({
-      isInteractive: true,
-      ...interactiveCards[1], // What's in your kitchen?
-      recipes: [...recipes, ...generatedRecipes]
-    });
-
-    // Add all recipes
+    items.push(...interactiveCards.map(card => ({ isInteractive: true, ...card, recipes: [...recipes, ...generatedRecipes] })));
     items.push(...recipes, ...generatedRecipes);
-
     return filterRecipesByMethod(items);
   };
 
@@ -138,6 +122,8 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
           Filters
         </Button>
       </div>
+
+      <WeeklyStoriesSection />
       
       <div className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6",
