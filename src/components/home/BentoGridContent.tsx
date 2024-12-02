@@ -2,15 +2,10 @@ import { useState } from "react";
 import { Recipe } from "@/services/recipeService";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { AuthModal } from "@/components/auth/AuthModal";
-import { Card } from "@/components/ui/card";
 import { BentoRecipeImport } from "./bento/BentoRecipeImport";
 import { bentoBoxes } from "./bento/BentoBoxConfig";
-import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
-import { CuisineMapDialog } from "./CuisineMapDialog";
-import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
-import { RecipeUrlDialog } from "@/components/recipe/RecipeUrlDialog";
-import { ClipboardImportDialog } from "@/components/recipe/ClipboardImportDialog";
+import { BentoGridItem } from "./bento/BentoGridItem";
+import { BentoModals } from "./bento/BentoModals";
 
 interface BentoGridContentProps {
   recipes: Recipe[];
@@ -90,29 +85,6 @@ export function BentoGridContent({
     });
   };
 
-  const renderBentoBox = (box: any) => (
-    <Card
-      className={cn(
-        "p-6 cursor-pointer transition-all duration-200",
-        box.color,
-        box.hoverColor
-      )}
-      onClick={() => handleBentoBoxClick(box.action)}
-    >
-      <div className="flex flex-col items-center text-center space-y-4">
-        <box.icon className={cn("w-8 h-8", box.textColor)} />
-        <div>
-          <h3 className={cn("font-semibold mb-2", box.textColor)}>
-            {box.title}
-          </h3>
-          <p className={cn("text-sm", box.textColor)}>
-            {box.description}
-          </p>
-        </div>
-      </div>
-    </Card>
-  );
-
   const getGridItems = () => {
     const items = [];
     items.push(...bentoBoxes);
@@ -132,44 +104,29 @@ export function BentoGridContent({
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 relative",
         shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:via-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
       )}>
-        {displayItems.map((item, index) => renderBentoBox(item))}
+        {displayItems.map((item, index) => (
+          <BentoGridItem
+            key={index}
+            box={item}
+            onClick={() => handleBentoBoxClick(item.action)}
+          />
+        ))}
       </div>
 
-      <AuthModal 
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        defaultTab="login"
-      />
-
-      <IngredientSearchModal
-        open={showKitchenModal}
-        onOpenChange={setShowKitchenModal}
-        onRecipesGenerated={() => {}}
-        isLoading={false}
-      />
-
-      <CuisineMapDialog
-        open={showCuisineMap}
-        onOpenChange={setShowCuisineMap}
+      <BentoModals
+        showAuthModal={showAuthModal}
+        setShowAuthModal={setShowAuthModal}
+        showKitchenModal={showKitchenModal}
+        setShowKitchenModal={setShowKitchenModal}
+        showCuisineMap={showCuisineMap}
+        setShowCuisineMap={setShowCuisineMap}
+        showImageRecognition={showImageRecognition}
+        setShowImageRecognition={setShowImageRecognition}
+        showUrlDialog={showUrlDialog}
+        setShowUrlDialog={setShowUrlDialog}
+        showClipboardDialog={showClipboardDialog}
+        setShowClipboardDialog={setShowClipboardDialog}
         recipes={recipes}
-      />
-
-      <ImageRecognitionDialog
-        open={showImageRecognition}
-        onOpenChange={setShowImageRecognition}
-        onRecipeScanned={() => {}}
-      />
-
-      <RecipeUrlDialog
-        open={showUrlDialog}
-        onOpenChange={setShowUrlDialog}
-        onRecipeScraped={() => {}}
-      />
-
-      <ClipboardImportDialog
-        open={showClipboardDialog}
-        onOpenChange={setShowClipboardDialog}
-        onRecipeImported={() => {}}
       />
 
       <BentoRecipeImport
