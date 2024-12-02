@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Recipe } from "@/services/recipeService";
 import { useAuth } from "@/contexts/AuthContext";
 import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
