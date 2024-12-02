@@ -1,4 +1,4 @@
-import { Home, Plus, Calendar, User } from "lucide-react";
+import { Home, Plus, Calendar, User, PartyPopper } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -32,6 +32,17 @@ export function MobileNav() {
             <CreateRecipeDrawer />
           </SheetContent>
         </Sheet>
+
+        <Link
+          to="/events"
+          className={cn(
+            "flex flex-col items-center p-2 text-muted-foreground",
+            location.pathname === "/events" && "text-primary"
+          )}
+        >
+          <PartyPopper className="h-5 w-5" />
+          <span className="text-xs">Events</span>
+        </Link>
 
         <Link
           to="/todo"
