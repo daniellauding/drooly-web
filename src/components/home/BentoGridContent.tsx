@@ -6,6 +6,7 @@ import { FlavorQuiz } from "./FlavorQuiz";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface BentoGridContentProps {
   recipes: Recipe[];
@@ -23,6 +24,7 @@ export function BentoGridContent({
   selectedMethod 
 }: BentoGridContentProps) {
   const navigate = useNavigate();
+  const [localGeneratedRecipes, setLocalGeneratedRecipes] = useState<Recipe[]>([]);
   const PREVIEW_COUNT = 6;
 
   const interactiveCards = [
@@ -54,12 +56,17 @@ export function BentoGridContent({
     });
   };
 
+  const handleRecipesFound = (newRecipes: Recipe[]) => {
+    console.log("New recipes found:", newRecipes.length);
+    setLocalGeneratedRecipes(newRecipes);
+  };
+
   const getGridItems = () => {
     const items = [];
     items.push({ isSpecial: true, type: 'seasonal' });
     items.push({ isSpecial: true, type: 'quiz' });
     items.push(...interactiveCards.map(card => ({ isInteractive: true, ...card })));
-    items.push(...recipes, ...generatedRecipes);
+    items.push(...recipes, ...generatedRecipes, ...localGeneratedRecipes);
     return filterRecipesByMethod(items);
   };
 
@@ -67,41 +74,44 @@ export function BentoGridContent({
   const shouldShowOverlay = !user && gridItems.length > PREVIEW_COUNT;
   const displayItems = user ? gridItems : gridItems.slice(0, PREVIEW_COUNT);
 
+  const renderGridItem = (item: any, index: number) => {
+    if (item.isSpecial) {
+      if (item.type === 'seasonal') {
+        return <SeasonalRecipes key="seasonal" recipes={recipes} />;
+      }
+      if (item.type === 'quiz') {
+        return <FlavorQuiz key="quiz" />;
+      }
+    }
+
+    if ('isInteractive' in item) {
+      return (
+        <BentoInteractiveCard
+          key={`interactive-${index}`}
+          item={item}
+          onRecipesFound={handleRecipesFound}
+          recipes={[...recipes, ...generatedRecipes, ...localGeneratedRecipes]}
+        />
+      );
+    }
+
+    const recipe = item as Recipe;
+    return (
+      <BentoGridItem
+        key={recipe.id}
+        recipe={recipe}
+        index={index}
+        onRecipeClick={() => navigate(`/recipe/${recipe.id}`)}
+      />
+    );
+  };
+
   return (
     <div className={cn(
       "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6",
       shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
     )}>
-      {displayItems.map((item, index) => {
-        if (item.isSpecial) {
-          if (item.type === 'seasonal') {
-            return <SeasonalRecipes key="seasonal" recipes={recipes} />;
-          }
-          if (item.type === 'quiz') {
-            return <FlavorQuiz key="quiz" />;
-          }
-        }
-
-        if ('isInteractive' in item) {
-          return (
-            <BentoInteractiveCard
-              key={`interactive-${index}`}
-              item={item}
-              recipes={[...recipes, ...generatedRecipes]}
-            />
-          );
-        }
-
-        const recipe = item as Recipe;
-        return (
-          <BentoGridItem
-            key={recipe.id}
-            recipe={recipe}
-            index={index}
-            onRecipeClick={() => navigate(`/recipe/${recipe.id}`)}
-          />
-        );
-      })}
+      {displayItems.map((item, index) => renderGridItem(item, index))}
 
       {shouldShowOverlay && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 backdrop-blur-[2px] z-10">
