@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Plus, Share2, Users, Minus } from "lucide-react";
+import { Plus, Share2, Users } from "lucide-react";
 import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { SharePlanDialog } from "./SharePlanDialog";
 import { useToast } from "@/components/ui/use-toast";
-import { WeeklyPlanDay } from "./WeeklyPlanDay";
+
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
 interface WeeklyPlan {
   id: string;
@@ -33,7 +35,7 @@ export function WeeklyPlanContent() {
   const [selectedPlan, setSelectedPlan] = useState<WeeklyPlan | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-
+  
   const { data: weeklyPlans = [], isLoading } = useQuery({
     queryKey: ['weeklyPlans', user?.uid],
     queryFn: async () => {
@@ -69,24 +71,25 @@ export function WeeklyPlanContent() {
     enabled: !!user?.uid
   });
 
-  const deletePlanMutation = useMutation({
-    mutationFn: async (planId: string) => {
-      console.log('Deleting plan:', planId);
+  const sharePlanMutation = useMutation({
+    mutationFn: async ({ planId, email }: { planId: string; email: string }) => {
       const planRef = doc(db, "weeklyPlans", planId);
-      await deleteDoc(planRef);
+      await updateDoc(planRef, {
+        [`collaborators.${email}`]: true
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['weeklyPlans'] });
       toast({
-        title: "Plan removed",
-        description: "The meal plan has been removed from your schedule"
+        title: "Plan shared successfully",
+        description: "The user can now view and edit this plan"
       });
     },
     onError: (error) => {
-      console.error("Error removing plan:", error);
+      console.error("Error sharing plan:", error);
       toast({
-        title: "Error removing plan",
-        description: "Failed to remove the plan. Please try again.",
+        title: "Error sharing plan",
+        description: "Failed to share the plan. Please try again.",
         variant: "destructive"
       });
     }
@@ -117,19 +120,56 @@ export function WeeklyPlanContent() {
 
       <div className="grid gap-6">
         {groupedPlans.map(({ day, meals }) => (
-          <WeeklyPlanDay
-            key={day}
-            day={day}
-            meals={meals}
-            onShare={handleShare}
-            onDelete={(planId) => deletePlanMutation.mutate(planId)}
-          />
+          <Card key={day} className="p-4">
+            <h3 className="font-medium mb-4">{day}</h3>
+            <div className="space-y-4">
+              {meals.map(({ type, plans }) => (
+                <div key={type} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{type}</Badge>
+                    {plans.length === 0 && (
+                      <span className="text-sm text-muted-foreground">No meals planned</span>
+                    )}
+                  </div>
+                  {plans.map((plan) => (
+                    <Card key={plan.id} className="p-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {plan.recipeImage && (
+                            <img 
+                              src={plan.recipeImage} 
+                              alt={plan.recipeTitle}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          )}
+                          <div>
+                            <p className="font-medium">{plan.title}</p>
+                            <p className="text-sm text-muted-foreground">{plan.recipeTitle}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleShare(plan)}
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </Card>
         ))}
       </div>
 
       <AddToWeeklyPlanModal
         open={showAddModal}
         onOpenChange={setShowAddModal}
+        recipeId=""
+        recipeTitle=""
+        recipeImage=""
       />
 
       <SharePlanDialog
@@ -137,14 +177,10 @@ export function WeeklyPlanContent() {
         onOpenChange={setShowShareDialog}
         onShare={(email) => {
           if (selectedPlan) {
-            // Handle share mutation here
-            setShowShareDialog(false);
+            sharePlanMutation.mutate({ planId: selectedPlan.id, email });
           }
         }}
       />
     </div>
   );
 }
-
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];

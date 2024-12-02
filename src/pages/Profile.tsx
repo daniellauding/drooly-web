@@ -41,41 +41,53 @@ export default function Profile() {
 
   const targetUserId = profileUserId || user?.uid;
 
-  // Query for user's recipes
-  const { data: recipes, isLoading: recipesLoading } = useQuery({
-    queryKey: ['recipes', targetUserId],
+  const { data: recipes = [], isLoading: recipesLoading } = useQuery({
+    queryKey: ['userRecipes', targetUserId],
     queryFn: async () => {
       if (!targetUserId) return [];
+      console.log('Fetching recipes for user:', targetUserId);
       const recipesRef = collection(db, 'recipes');
       const q = query(recipesRef, where('creatorId', '==', targetUserId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Recipe[];
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
     },
     enabled: !!targetUserId
   });
 
-  // Query for saved recipes
-  const { data: savedRecipes, isLoading: savedRecipesLoading } = useQuery({
+  const { data: savedRecipes = [], isLoading: savedRecipesLoading } = useQuery({
     queryKey: ['savedRecipes', targetUserId],
     queryFn: async () => {
       if (!targetUserId) return [];
+      console.log('Fetching saved recipes for user:', targetUserId);
       const recipesRef = collection(db, 'recipes');
       const q = query(recipesRef, where('stats.saves', 'array-contains', targetUserId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Recipe[];
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
     },
     enabled: !!targetUserId
   });
 
-  // Query for liked recipes
-  const { data: likedRecipes, isLoading: likedRecipesLoading } = useQuery({
+  const { data: likedRecipes = [], isLoading: likedRecipesLoading } = useQuery({
     queryKey: ['likedRecipes', targetUserId],
     queryFn: async () => {
       if (!targetUserId) return [];
+      console.log('Fetching liked recipes for user:', targetUserId);
       const recipesRef = collection(db, 'recipes');
       const q = query(recipesRef, where('stats.likes', 'array-contains', targetUserId));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Recipe[];
+      const querySnapshot = await getDocs(q);
+      
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
     },
     enabled: !!targetUserId
   });
@@ -90,10 +102,8 @@ export default function Profile() {
       try {
         console.log("Fetching user data for:", targetUserId);
         const userDoc = await getDoc(doc(db, "users", targetUserId));
-        
         if (userDoc.exists()) {
           const data = userDoc.data();
-          console.log("Successfully fetched user data:", data);
           setIsAdmin(data.role === 'superadmin');
           setUserData(prev => ({
             ...prev,
@@ -103,13 +113,7 @@ export default function Profile() {
             followers: data.followers || [],
             following: data.following || []
           }));
-        } else {
-          console.log("No user document found");
-          toast({
-            variant: "destructive",
-            title: "User not found",
-            description: "The requested user profile could not be found.",
-          });
+          console.log("Fetched user data:", data);
         }
         
         if (targetUserId === user?.uid) {
@@ -121,14 +125,11 @@ export default function Profile() {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        // Only show error toast if data is not already loaded
-        if (!userData.id) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to load user data. Please try again.",
-          });
-        }
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load user data. Please try again.",
+        });
       }
     };
 
@@ -183,7 +184,7 @@ export default function Profile() {
 
           <TabsContent value="recipes" className="mt-6">
             <ProfileRecipeGrid
-              recipes={recipes || []}
+              recipes={recipes}
               isLoading={recipesLoading}
               emptyMessage="No recipes yet"
             />
@@ -191,7 +192,7 @@ export default function Profile() {
 
           <TabsContent value="saved" className="mt-6">
             <ProfileRecipeGrid
-              recipes={savedRecipes || []}
+              recipes={savedRecipes}
               isLoading={savedRecipesLoading}
               emptyMessage="No saved recipes yet"
             />
@@ -199,7 +200,7 @@ export default function Profile() {
 
           <TabsContent value="liked" className="mt-6">
             <ProfileRecipeGrid
-              recipes={likedRecipes || []}
+              recipes={likedRecipes}
               isLoading={likedRecipesLoading}
               emptyMessage="No liked recipes yet"
             />

@@ -7,40 +7,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useShoppingItems } from './shopping/useShoppingItems';
 import { useRecurringItems } from './shopping/useRecurringItems';
 
-const STORAGE_KEY = 'custom_ingredients';
-
 export function useShoppingList(userId: string | undefined) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
   const { checkedItems, setCheckedItems, saveCheckedItems } = useShoppingItems(userId);
   const { setRecurring } = useRecurringItems(userId);
   const { toast } = useToast();
-
-  // Load custom ingredients from localStorage on mount
-  useEffect(() => {
-    if (!userId) return;
-    
-    const storedIngredients = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
-    if (storedIngredients) {
-      const parsedIngredients = JSON.parse(storedIngredients);
-      console.log("Loaded custom ingredients from storage:", parsedIngredients);
-      setIngredients(prev => {
-        const nonCustomIngredients = prev.filter(ing => ing.recipeId !== 'custom');
-        return [...nonCustomIngredients, ...parsedIngredients];
-      });
-    }
-  }, [userId]);
-
-  // Save custom ingredients to localStorage whenever they change
-  useEffect(() => {
-    if (!userId) return;
-    
-    const customIngredients = ingredients.filter(ing => ing.recipeId === 'custom');
-    if (customIngredients.length > 0) {
-      console.log("Saving custom ingredients to storage:", customIngredients);
-      localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(customIngredients));
-    }
-  }, [ingredients, userId]);
 
   useEffect(() => {
     if (!userId) {
@@ -182,8 +154,6 @@ export function useShoppingList(userId: string | undefined) {
       recipeTitle: 'Custom Items',
       bought: false
     };
-    
-    console.log("Adding custom ingredient:", customIngredient);
     setIngredients(prev => [...prev, customIngredient]);
   };
 
