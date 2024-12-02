@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { SingleSelect } from "@/components/SingleSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useToast } from "@/components/ui/use-toast";
 import { Recipe } from "@/types/recipe";
-import { RecipeSearch } from "./RecipeSearch";
+import { RecipeCard } from "../RecipeCard";
+import { useQuery } from "@tanstack/react-query";
 
 const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack"];
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -34,6 +35,7 @@ export function AddToWeeklyPlanModal({
   const [title, setTitle] = useState("");
   const [selectedDay, setSelectedDay] = useState(DAYS[0]);
   const [mealType, setMealType] = useState(MEAL_TYPES[0]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(
     initialRecipeId && initialRecipeTitle ? {
       id: initialRecipeId,
@@ -41,6 +43,30 @@ export function AddToWeeklyPlanModal({
       images: initialRecipeImage ? [initialRecipeImage] : [],
     } as Recipe : null
   );
+
+  const { data: recipes = [] } = useQuery({
+    queryKey: ['recipes', searchQuery],
+    queryFn: async () => {
+      console.log("Fetching recipes for search:", searchQuery);
+      const recipesRef = collection(db, "recipes");
+      const q = query(
+        recipesRef,
+        where("status", "==", "published")
+      );
+      const snapshot = await getDocs(q);
+      const allRecipes = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Recipe[];
+      
+      return searchQuery
+        ? allRecipes.filter(recipe => 
+            recipe.title.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : allRecipes;
+    },
+    enabled: open
+  });
 
   const handleSubmit = async () => {
     if (!user) {
@@ -94,7 +120,7 @@ export function AddToWeeklyPlanModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Add to Weekly Cooking Plan</DialogTitle>
           <DialogDescription>
@@ -104,17 +130,35 @@ export function AddToWeeklyPlanModal({
         <div className="space-y-4 py-4">
           <div className="space-y-4">
             <div>
-              <Label>Search Recipe (optional)</Label>
-              {user && (
-                <RecipeSearch
-                  userId={user.uid}
-                  selectedRecipe={selectedRecipe}
-                  onRecipeSelect={(recipe) => {
-                    setSelectedRecipe(recipe);
-                    setTitle(recipe.title);
-                  }}
-                />
-              )}
+              <Label>Search Recipes</Label>
+              <Input
+                placeholder="Search recipes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="mb-4"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto">
+                {recipes.map((recipe) => (
+                  <div
+                    key={recipe.id}
+                    className={`cursor-pointer ${selectedRecipe?.id === recipe.id ? 'ring-2 ring-primary' : ''}`}
+                    onClick={() => {
+                      setSelectedRecipe(recipe);
+                      setTitle(recipe.title);
+                    }}
+                  >
+                    <RecipeCard
+                      id={recipe.id}
+                      title={recipe.title}
+                      image={recipe.images?.[0]}
+                      cookTime={recipe.totalTime}
+                      difficulty={recipe.difficulty}
+                      chef={recipe.creatorName}
+                      onDismiss={() => {}}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>

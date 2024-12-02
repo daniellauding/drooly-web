@@ -41,57 +41,6 @@ export default function Profile() {
 
   const targetUserId = profileUserId || user?.uid;
 
-  const { data: recipes = [], isLoading: recipesLoading } = useQuery({
-    queryKey: ['userRecipes', targetUserId],
-    queryFn: async () => {
-      if (!targetUserId) return [];
-      console.log('Fetching recipes for user:', targetUserId);
-      const recipesRef = collection(db, 'recipes');
-      const q = query(recipesRef, where('creatorId', '==', targetUserId));
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Recipe[];
-    },
-    enabled: !!targetUserId
-  });
-
-  const { data: savedRecipes = [], isLoading: savedRecipesLoading } = useQuery({
-    queryKey: ['savedRecipes', targetUserId],
-    queryFn: async () => {
-      if (!targetUserId) return [];
-      console.log('Fetching saved recipes for user:', targetUserId);
-      const recipesRef = collection(db, 'recipes');
-      const q = query(recipesRef, where('stats.saves', 'array-contains', targetUserId));
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Recipe[];
-    },
-    enabled: !!targetUserId
-  });
-
-  const { data: likedRecipes = [], isLoading: likedRecipesLoading } = useQuery({
-    queryKey: ['likedRecipes', targetUserId],
-    queryFn: async () => {
-      if (!targetUserId) return [];
-      console.log('Fetching liked recipes for user:', targetUserId);
-      const recipesRef = collection(db, 'recipes');
-      const q = query(recipesRef, where('stats.likes', 'array-contains', targetUserId));
-      const querySnapshot = await getDocs(q);
-      
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Recipe[];
-    },
-    enabled: !!targetUserId
-  });
-
   useEffect(() => {
     if (!targetUserId) {
       navigate('/login');
@@ -102,8 +51,10 @@ export default function Profile() {
       try {
         console.log("Fetching user data for:", targetUserId);
         const userDoc = await getDoc(doc(db, "users", targetUserId));
+        
         if (userDoc.exists()) {
           const data = userDoc.data();
+          console.log("Successfully fetched user data:", data);
           setIsAdmin(data.role === 'superadmin');
           setUserData(prev => ({
             ...prev,
@@ -113,7 +64,13 @@ export default function Profile() {
             followers: data.followers || [],
             following: data.following || []
           }));
-          console.log("Fetched user data:", data);
+        } else {
+          console.log("No user document found");
+          toast({
+            variant: "destructive",
+            title: "User not found",
+            description: "The requested user profile could not be found.",
+          });
         }
         
         if (targetUserId === user?.uid) {
@@ -125,11 +82,14 @@ export default function Profile() {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to load user data. Please try again.",
-        });
+        // Only show error toast if data is not already loaded
+        if (!userData.id) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to load user data. Please try again.",
+          });
+        }
       }
     };
 
