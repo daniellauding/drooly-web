@@ -13,7 +13,6 @@ import { ClipboardImportDialog } from "@/components/recipe/ClipboardImportDialog
 import { CuisineMapDialog } from "./CuisineMapDialog";
 import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
 import { BentoGridOverlay } from "./bento/BentoGridOverlay";
-import { BentoQuickActions } from "./bento/BentoQuickActions";
 import { useToast } from "@/components/ui/use-toast";
 
 interface BentoGridContentProps {
@@ -57,22 +56,6 @@ export function BentoGridContent({
       action: () => handleAuthRequired(() => setShowImageRecognition(true)),
       color: "bg-purple-50 hover:bg-purple-100",
       textColor: "text-purple-700"
-    },
-    {
-      title: "What's in your kitchen?",
-      description: "Find recipes using ingredients you have",
-      icon: "Plus",
-      action: () => handleAuthRequired(() => setShowKitchenModal(true)),
-      color: "bg-blue-50 hover:bg-blue-100",
-      textColor: "text-blue-700"
-    },
-    {
-      title: "Explore Cuisines",
-      description: "Discover recipes from around the world",
-      icon: "Globe",
-      action: () => handleAuthRequired(() => setShowCuisineMap(true)),
-      color: "bg-indigo-50 hover:bg-indigo-100",
-      textColor: "text-indigo-700"
     }
   ];
 
@@ -134,13 +117,6 @@ export function BentoGridContent({
 
   return (
     <div className="space-y-6">
-      <BentoQuickActions
-        onKitchenClick={() => handleAuthRequired(() => setShowKitchenModal(true))}
-        onCuisineClick={() => handleAuthRequired(() => setShowCuisineMap(true))}
-        onUrlClick={() => handleAuthRequired(() => setShowUrlDialog(true))}
-        onClipboardClick={() => handleAuthRequired(() => setShowClipboardDialog(true))}
-      />
-
       <div className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 relative",
         shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:via-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
