@@ -6,28 +6,44 @@ import { AuthModal } from "@/components/auth/AuthModal";
 import { Card } from "@/components/ui/card";
 import { BentoRecipeImport } from "./bento/BentoRecipeImport";
 import { bentoBoxes } from "./bento/BentoBoxConfig";
+import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
+import { CuisineMapDialog } from "./CuisineMapDialog";
+import { ImageRecognitionDialog } from "@/components/recipe/ImageRecognitionDialog";
+import { RecipeUrlDialog } from "@/components/recipe/RecipeUrlDialog";
+import { ClipboardImportDialog } from "@/components/recipe/ClipboardImportDialog";
 
 interface BentoGridContentProps {
   recipes: Recipe[];
   generatedRecipes: Recipe[];
   user: any;
   selectedMethod: string | null;
+  onAuthModalOpen?: () => void;
 }
 
 export function BentoGridContent({ 
   recipes, 
   generatedRecipes, 
   user,
-  selectedMethod 
+  selectedMethod,
+  onAuthModalOpen 
 }: BentoGridContentProps) {
   const navigate = useNavigate();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showKitchenModal, setShowKitchenModal] = useState(false);
+  const [showCuisineMap, setShowCuisineMap] = useState(false);
+  const [showImageRecognition, setShowImageRecognition] = useState(false);
+  const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const [showClipboardDialog, setShowClipboardDialog] = useState(false);
   const [localGeneratedRecipes, setLocalGeneratedRecipes] = useState<Recipe[]>([]);
   const PREVIEW_COUNT = 6;
 
   const handleAuthRequired = (action: () => void) => {
     if (!user) {
-      setShowAuthModal(true);
+      if (onAuthModalOpen) {
+        onAuthModalOpen();
+      } else {
+        setShowAuthModal(true);
+      }
       return;
     }
     action();
@@ -123,6 +139,37 @@ export function BentoGridContent({
         open={showAuthModal}
         onOpenChange={setShowAuthModal}
         defaultTab="login"
+      />
+
+      <IngredientSearchModal
+        open={showKitchenModal}
+        onOpenChange={setShowKitchenModal}
+        onRecipesGenerated={() => {}}
+        isLoading={false}
+      />
+
+      <CuisineMapDialog
+        open={showCuisineMap}
+        onOpenChange={setShowCuisineMap}
+        recipes={recipes}
+      />
+
+      <ImageRecognitionDialog
+        open={showImageRecognition}
+        onOpenChange={setShowImageRecognition}
+        onRecipeScanned={() => {}}
+      />
+
+      <RecipeUrlDialog
+        open={showUrlDialog}
+        onOpenChange={setShowUrlDialog}
+        onRecipeScraped={() => {}}
+      />
+
+      <ClipboardImportDialog
+        open={showClipboardDialog}
+        onOpenChange={setShowClipboardDialog}
+        onRecipeImported={() => {}}
       />
 
       <BentoRecipeImport

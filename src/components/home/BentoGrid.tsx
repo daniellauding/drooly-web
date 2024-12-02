@@ -39,8 +39,8 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
         recipes={recipes}
         generatedRecipes={generatedRecipes}
         user={user}
-        onAuthModalOpen={onAuthModalOpen}
         selectedMethod={selectedMethod}
+        onAuthModalOpen={onAuthModalOpen}
       />
 
       <ImageRecognitionDialog
