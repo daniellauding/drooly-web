@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Recipe } from "@/services/recipeService";
 import { BentoGridItem } from "./BentoGridItem";
-import { BentoInteractiveCard } from "./BentoInteractiveCard";
 import { SeasonalRecipes } from "./SeasonalRecipes";
 import { FlavorQuiz } from "./FlavorQuiz";
 import { useNavigate } from "react-router-dom";
@@ -40,25 +39,6 @@ export function BentoGridContent({
   const [localGeneratedRecipes, setLocalGeneratedRecipes] = useState<Recipe[]>([]);
   const PREVIEW_COUNT = 6;
 
-  const handleAuthRequired = (action: () => void) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    action();
-  };
-
-  const interactiveCards = [
-    {
-      title: "Take Photo & Scan",
-      description: "Create recipes from photos of your cookbooks",
-      icon: "Camera",
-      action: () => handleAuthRequired(() => setShowImageRecognition(true)),
-      color: "bg-purple-50 hover:bg-purple-100",
-      textColor: "text-purple-700"
-    }
-  ];
-
   const handleRecipesFound = (newRecipes: Recipe[]) => {
     console.log("New recipes found:", newRecipes.length);
     setLocalGeneratedRecipes(newRecipes);
@@ -78,7 +58,6 @@ export function BentoGridContent({
     const items = [];
     items.push({ isSpecial: true, type: 'seasonal' });
     items.push({ isSpecial: true, type: 'quiz' });
-    items.push(...interactiveCards.map(card => ({ isInteractive: true, ...card })));
     items.push(...recipes, ...generatedRecipes, ...localGeneratedRecipes);
     return filterRecipesByMethod(items);
   };
@@ -91,17 +70,6 @@ export function BentoGridContent({
     if (item.isSpecial) {
       if (item.type === 'seasonal') return <SeasonalRecipes key="seasonal" recipes={recipes} />;
       if (item.type === 'quiz') return <FlavorQuiz key="quiz" />;
-    }
-
-    if ('isInteractive' in item) {
-      return (
-        <BentoInteractiveCard
-          key={`interactive-${index}`}
-          item={item}
-          onRecipesFound={handleRecipesFound}
-          recipes={[...recipes, ...generatedRecipes, ...localGeneratedRecipes]}
-        />
-      );
     }
 
     const recipe = item as Recipe;

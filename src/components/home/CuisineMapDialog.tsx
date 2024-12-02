@@ -19,6 +19,7 @@ interface CuisineMapDialogProps {
 export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDialogProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const markers = useRef<mapboxgl.Marker[]>([]);
 
   console.log("CuisineMapDialog - Recipes received:", recipes.length);
 
@@ -34,6 +35,10 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
   useEffect(() => {
     if (!open || !mapContainer.current) return;
+
+    // Clear existing markers
+    markers.current.forEach(marker => marker.remove());
+    markers.current = [];
 
     console.log("Initializing map with recipes:", recipes.length);
 
@@ -72,15 +77,19 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       }
 
       console.log(`Creating marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
-      createCuisineMapMarker({
+      const marker = createCuisineMapMarker({
         cuisine,
         coordinates,
         recipes: cuisineRecipes,
         map: currentMap
       });
+      
+      markers.current.push(marker);
     });
 
     return () => {
+      markers.current.forEach(marker => marker.remove());
+      markers.current = [];
       currentMap.remove();
     };
   }, [open, recipes]);
