@@ -13,6 +13,8 @@ import { CuisineMapDialog } from "./CuisineMapDialog";
 import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
 import { BentoGridOverlay } from "./bento/BentoGridOverlay";
 import { useToast } from "@/components/ui/use-toast";
+import { Card } from "@/components/ui/card";
+import { ChefHat, CalendarDays, ListTodo } from "lucide-react";
 
 interface BentoGridContentProps {
   recipes: Recipe[];
@@ -44,6 +46,44 @@ export function BentoGridContent({
     setLocalGeneratedRecipes(newRecipes);
   };
 
+  const handleAuthRequired = (action: () => void) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    action();
+  };
+
+  const bentoBoxes = [
+    {
+      title: "What's in your kitchen?",
+      description: "Find recipes using ingredients you have",
+      icon: ChefHat,
+      action: () => handleAuthRequired(() => setShowKitchenModal(true)),
+      color: "bg-purple-50",
+      hoverColor: "hover:bg-purple-100",
+      textColor: "text-purple-700"
+    },
+    {
+      title: "Plan an Event",
+      description: "Organize food events with friends and family",
+      icon: CalendarDays,
+      action: () => handleAuthRequired(() => navigate('/events')),
+      color: "bg-blue-50",
+      hoverColor: "hover:bg-blue-100",
+      textColor: "text-blue-700"
+    },
+    {
+      title: "My Planning",
+      description: "Manage your shopping list and meal plans",
+      icon: ListTodo,
+      action: () => handleAuthRequired(() => navigate('/todo')),
+      color: "bg-green-50",
+      hoverColor: "hover:bg-green-100",
+      textColor: "text-green-700"
+    }
+  ];
+
   const filterRecipesByMethod = (items: (Recipe | any)[]) => {
     if (!selectedMethod) return items;
     return items.filter((item) => {
@@ -66,6 +106,34 @@ export function BentoGridContent({
   const shouldShowOverlay = !user && gridItems.length > PREVIEW_COUNT;
   const displayItems = user ? gridItems : gridItems.slice(0, PREVIEW_COUNT);
 
+  const renderBentoBoxes = () => (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      {bentoBoxes.map((box, index) => (
+        <Card
+          key={index}
+          className={cn(
+            "p-6 cursor-pointer transition-all duration-200",
+            box.color,
+            box.hoverColor
+          )}
+          onClick={box.action}
+        >
+          <div className="flex flex-col items-center text-center space-y-4">
+            <box.icon className={cn("w-8 h-8", box.textColor)} />
+            <div>
+              <h3 className={cn("font-semibold mb-2", box.textColor)}>
+                {box.title}
+              </h3>
+              <p className={cn("text-sm", box.textColor)}>
+                {box.description}
+              </p>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+
   const renderGridItem = (item: any, index: number) => {
     if (item.isSpecial) {
       if (item.type === 'seasonal') return <SeasonalRecipes key="seasonal" recipes={recipes} />;
@@ -85,6 +153,8 @@ export function BentoGridContent({
 
   return (
     <div className="space-y-6">
+      {renderBentoBoxes()}
+      
       <div className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 relative",
         shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:via-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
@@ -129,7 +199,7 @@ export function BentoGridContent({
       <IngredientSearchModal
         open={showKitchenModal}
         onOpenChange={setShowKitchenModal}
-        onRecipesGenerated={() => {}}
+        onRecipesGenerated={handleRecipesFound}
         isLoading={false}
       />
     </div>
