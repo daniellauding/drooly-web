@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Recipe } from "@/services/recipeService";
-import { BentoGridItem } from "./BentoGridItem";
-import { SeasonalRecipes } from "./SeasonalRecipes";
-import { FlavorQuiz } from "./FlavorQuiz";
+import { BentoGridRecipeItem } from "./bento/BentoGridRecipeItem";
+import { BentoGridOverlay } from "./bento/BentoGridOverlay";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { AuthModal } from "@/components/auth/AuthModal";
@@ -11,10 +10,9 @@ import { RecipeUrlDialog } from "@/components/recipe/RecipeUrlDialog";
 import { ClipboardImportDialog } from "@/components/recipe/ClipboardImportDialog";
 import { CuisineMapDialog } from "./CuisineMapDialog";
 import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
-import { BentoGridOverlay } from "./bento/BentoGridOverlay";
 import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
-import { ChefHat, CalendarDays, ListTodo } from "lucide-react";
+import { ChefHat, CalendarDays, ListTodo, Globe, Camera, Link, ClipboardPaste } from "lucide-react";
 
 interface BentoGridContentProps {
   recipes: Recipe[];
@@ -41,17 +39,17 @@ export function BentoGridContent({
   const [localGeneratedRecipes, setLocalGeneratedRecipes] = useState<Recipe[]>([]);
   const PREVIEW_COUNT = 6;
 
-  const handleRecipesFound = (newRecipes: Recipe[]) => {
-    console.log("New recipes found:", newRecipes.length);
-    setLocalGeneratedRecipes(newRecipes);
-  };
-
   const handleAuthRequired = (action: () => void) => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
     action();
+  };
+
+  const handleRecipesFound = (recipes: Recipe[]) => {
+    console.log("New recipes found:", recipes.length);
+    setLocalGeneratedRecipes(recipes);
   };
 
   const bentoBoxes = [
@@ -81,6 +79,42 @@ export function BentoGridContent({
       color: "bg-green-50",
       hoverColor: "hover:bg-green-100",
       textColor: "text-green-700"
+    },
+    {
+      title: "Explore Cuisines",
+      description: "Discover recipes from around the world",
+      icon: Globe,
+      action: () => handleAuthRequired(() => setShowCuisineMap(true)),
+      color: "bg-orange-50",
+      hoverColor: "hover:bg-orange-100",
+      textColor: "text-orange-700"
+    },
+    {
+      title: "Take Photo & Scan",
+      description: "Import recipes from photos",
+      icon: Camera,
+      action: () => handleAuthRequired(() => setShowImageRecognition(true)),
+      color: "bg-pink-50",
+      hoverColor: "hover:bg-pink-100",
+      textColor: "text-pink-700"
+    },
+    {
+      title: "Import from URL",
+      description: "Convert any recipe to your collection",
+      icon: Link,
+      action: () => handleAuthRequired(() => setShowUrlDialog(true)),
+      color: "bg-indigo-50",
+      hoverColor: "hover:bg-indigo-100",
+      textColor: "text-indigo-700"
+    },
+    {
+      title: "Paste from Clipboard",
+      description: "Import recipes from your clipboard",
+      icon: ClipboardPaste,
+      action: () => handleAuthRequired(() => setShowClipboardDialog(true)),
+      color: "bg-teal-50",
+      hoverColor: "hover:bg-teal-100",
+      textColor: "text-teal-700"
     }
   ];
 
@@ -96,6 +130,7 @@ export function BentoGridContent({
 
   const getGridItems = () => {
     const items = [];
+    items.push(...bentoBoxes.map(box => ({ ...box, isBentoBox: true })));
     items.push({ isSpecial: true, type: 'seasonal' });
     items.push({ isSpecial: true, type: 'quiz' });
     items.push(...recipes, ...generatedRecipes, ...localGeneratedRecipes);
@@ -106,55 +141,45 @@ export function BentoGridContent({
   const shouldShowOverlay = !user && gridItems.length > PREVIEW_COUNT;
   const displayItems = user ? gridItems : gridItems.slice(0, PREVIEW_COUNT);
 
-  const renderBentoBoxes = () => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-      {bentoBoxes.map((box, index) => (
+  const renderGridItem = (item: any, index: number) => {
+    if (item.isBentoBox) {
+      return (
         <Card
           key={index}
           className={cn(
             "p-6 cursor-pointer transition-all duration-200",
-            box.color,
-            box.hoverColor
+            item.color,
+            item.hoverColor
           )}
-          onClick={box.action}
+          onClick={item.action}
         >
           <div className="flex flex-col items-center text-center space-y-4">
-            <box.icon className={cn("w-8 h-8", box.textColor)} />
+            <item.icon className={cn("w-8 h-8", item.textColor)} />
             <div>
-              <h3 className={cn("font-semibold mb-2", box.textColor)}>
-                {box.title}
+              <h3 className={cn("font-semibold mb-2", item.textColor)}>
+                {item.title}
               </h3>
-              <p className={cn("text-sm", box.textColor)}>
-                {box.description}
+              <p className={cn("text-sm", item.textColor)}>
+                {item.description}
               </p>
             </div>
           </div>
         </Card>
-      ))}
-    </div>
-  );
-
-  const renderGridItem = (item: any, index: number) => {
-    if (item.isSpecial) {
-      if (item.type === 'seasonal') return <SeasonalRecipes key="seasonal" recipes={recipes} />;
-      if (item.type === 'quiz') return <FlavorQuiz key="quiz" />;
+      );
     }
 
-    const recipe = item as Recipe;
     return (
-      <BentoGridItem
-        key={recipe.id}
-        recipe={recipe}
+      <BentoGridRecipeItem
+        key={index}
+        item={item}
         index={index}
-        onRecipeClick={() => navigate(`/recipe/${recipe.id}`)}
+        onRecipeClick={(id) => navigate(`/recipe/${id}`)}
       />
     );
   };
 
   return (
     <div className="space-y-6">
-      {renderBentoBoxes()}
-      
       <div className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6 relative",
         shouldShowOverlay && "after:absolute after:inset-0 after:from-transparent after:via-transparent after:to-white after:bg-gradient-to-b after:h-full after:pointer-events-none"
@@ -175,19 +200,19 @@ export function BentoGridContent({
       <ImageRecognitionDialog
         open={showImageRecognition}
         onOpenChange={setShowImageRecognition}
-        onRecipeScanned={() => {}}
+        onRecipeScanned={handleRecipesFound}
       />
 
       <RecipeUrlDialog
         open={showUrlDialog}
         onOpenChange={setShowUrlDialog}
-        onRecipeScraped={() => {}}
+        onRecipeScraped={handleRecipesFound}
       />
 
       <ClipboardImportDialog
         open={showClipboardDialog}
         onOpenChange={setShowClipboardDialog}
-        onRecipeImported={() => {}}
+        onRecipeImported={handleRecipesFound}
       />
 
       <CuisineMapDialog
