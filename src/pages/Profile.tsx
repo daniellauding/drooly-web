@@ -41,6 +41,45 @@ export default function Profile() {
 
   const targetUserId = profileUserId || user?.uid;
 
+  // Query for user's recipes
+  const { data: recipes, isLoading: recipesLoading } = useQuery({
+    queryKey: ['recipes', targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return [];
+      const recipesRef = collection(db, 'recipes');
+      const q = query(recipesRef, where('creatorId', '==', targetUserId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Recipe[];
+    },
+    enabled: !!targetUserId
+  });
+
+  // Query for saved recipes
+  const { data: savedRecipes, isLoading: savedRecipesLoading } = useQuery({
+    queryKey: ['savedRecipes', targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return [];
+      const recipesRef = collection(db, 'recipes');
+      const q = query(recipesRef, where('stats.saves', 'array-contains', targetUserId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Recipe[];
+    },
+    enabled: !!targetUserId
+  });
+
+  // Query for liked recipes
+  const { data: likedRecipes, isLoading: likedRecipesLoading } = useQuery({
+    queryKey: ['likedRecipes', targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return [];
+      const recipesRef = collection(db, 'recipes');
+      const q = query(recipesRef, where('stats.likes', 'array-contains', targetUserId));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Recipe[];
+    },
+    enabled: !!targetUserId
+  });
+
   useEffect(() => {
     if (!targetUserId) {
       navigate('/login');
@@ -144,7 +183,7 @@ export default function Profile() {
 
           <TabsContent value="recipes" className="mt-6">
             <ProfileRecipeGrid
-              recipes={recipes}
+              recipes={recipes || []}
               isLoading={recipesLoading}
               emptyMessage="No recipes yet"
             />
@@ -152,7 +191,7 @@ export default function Profile() {
 
           <TabsContent value="saved" className="mt-6">
             <ProfileRecipeGrid
-              recipes={savedRecipes}
+              recipes={savedRecipes || []}
               isLoading={savedRecipesLoading}
               emptyMessage="No saved recipes yet"
             />
@@ -160,7 +199,7 @@ export default function Profile() {
 
           <TabsContent value="liked" className="mt-6">
             <ProfileRecipeGrid
-              recipes={likedRecipes}
+              recipes={likedRecipes || []}
               isLoading={likedRecipesLoading}
               emptyMessage="No liked recipes yet"
             />
