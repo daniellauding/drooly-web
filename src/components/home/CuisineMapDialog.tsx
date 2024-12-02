@@ -42,19 +42,22 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
     console.log("Initializing map with recipes:", recipes.length);
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [0, 20],
-      zoom: 1.5,
-      minZoom: 1,
-      maxZoom: 12
-    });
+    if (!map.current) {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/light-v11',
+        center: [0, 20],
+        zoom: 1.5,
+        minZoom: 1,
+        maxZoom: 12
+      });
+
+      map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    }
 
     const currentMap = map.current;
 
-    currentMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
+    // Group recipes by cuisine
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = normalizeCuisineName(recipe.cuisine);
@@ -68,6 +71,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
     console.log("Recipes grouped by cuisine:", Object.keys(recipeByCuisine).length);
 
+    // Create markers for each cuisine group
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
       
@@ -87,10 +91,10 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       markers.current.push(marker);
     });
 
+    // Cleanup function
     return () => {
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
-      currentMap.remove();
     };
   }, [open, recipes]);
 
