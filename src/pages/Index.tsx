@@ -8,11 +8,13 @@ import { BentoGrid } from "@/components/home/BentoGrid";
 import { useQuery } from "@tanstack/react-query";
 import { fetchFirebaseRecipes } from "@/services/firebaseRecipes";
 import { SearchDialog } from "@/components/navigation/SearchDialog";
-import { collection, query, getDocs } from "firebase/firestore";
+import { collection, query, getDocs, where, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Story } from "@/types/story";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
+  const { user } = useAuth();
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   
@@ -21,24 +23,58 @@ export default function Home() {
     queryFn: fetchFirebaseRecipes
   });
 
-  const { data: stories = [], isLoading: storiesLoading } = useQuery({
-    queryKey: ['stories'],
+  const { data: weeklyPlanStories = [], isLoading: storiesLoading } = useQuery({
+    queryKey: ['weeklyPlanStories'],
     queryFn: async () => {
-      console.log("Fetching stories...");
-      const q = query(collection(db, "stories"));
+      console.log("Fetching weekly plan stories...");
+      const weeklyPlansRef = collection(db, "weeklyPlans");
+      const q = query(
+        weeklyPlansRef,
+        where("status", "==", "planned"),
+        orderBy("createdAt", "desc"),
+        limit(10)
+      );
+      
       const snapshot = await getDocs(q);
-      const fetchedStories = snapshot.docs.map(doc => ({
+      const plans = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      } as Story));
-      console.log("Fetched stories:", fetchedStories);
-      return fetchedStories;
-    }
+      }));
+
+      // Transform weekly plans into stories format
+      const stories = plans.reduce((acc: Story[], plan: any) => {
+        const existingUserStory = acc.find(story => story.name === plan.userName);
+        
+        if (existingUserStory) {
+          existingUserStory.stories.push({
+            id: plan.id,
+            image: plan.recipeImage || '/placeholder.svg',
+            caption: `${plan.title} - ${plan.day} ${plan.mealType}`
+          });
+        } else {
+          acc.push({
+            id: plan.userId,
+            name: plan.userName,
+            avatar: plan.userAvatar || '/placeholder.svg',
+            stories: [{
+              id: plan.id,
+              image: plan.recipeImage || '/placeholder.svg',
+              caption: `${plan.title} - ${plan.day} ${plan.mealType}`
+            }]
+          });
+        }
+        
+        return acc;
+      }, []);
+
+      console.log("Transformed weekly plan stories:", stories);
+      return stories;
+    },
+    enabled: !!user
   });
 
   const handleSearch = (query: string) => {
     console.log('Searching for:', query);
-    // Search functionality will be handled by SearchDialog
   };
 
   return (
@@ -49,9 +85,9 @@ export default function Home() {
         <SearchExamples />
         
         <div className="container mx-auto px-4 py-6 space-y-12">
-          {stories.length > 0 && (
+          {weeklyPlanStories && weeklyPlanStories.length > 0 && (
             <WeeklyStories
-              users={stories}
+              users={weeklyPlanStories}
               onUserClick={(index) => setSelectedStoryIndex(index)}
             />
           )}
@@ -61,9 +97,9 @@ export default function Home() {
             onAuthModalOpen={() => {}} 
           />
           
-          {selectedStoryIndex !== null && stories.length > 0 && (
+          {selectedStoryIndex !== null && weeklyPlanStories && weeklyPlanStories.length > 0 && (
             <StoryViewer
-              stories={stories}
+              stories={weeklyPlanStories}
               initialUserIndex={selectedStoryIndex}
               onClose={() => setSelectedStoryIndex(null)}
             />

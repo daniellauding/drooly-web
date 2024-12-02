@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Plus, Share2, Users } from "lucide-react";
+import { Plus, Share2, Users, Minus } from "lucide-react";
 import { AddToWeeklyPlanModal } from "@/components/recipe/AddToWeeklyPlanModal";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +69,28 @@ export function WeeklyPlanContent() {
       return [...ownPlans, ...collaborativePlans] as WeeklyPlan[];
     },
     enabled: !!user?.uid
+  });
+
+  const deletePlanMutation = useMutation({
+    mutationFn: async (planId: string) => {
+      const planRef = doc(db, "weeklyPlans", planId);
+      await deleteDoc(planRef);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['weeklyPlans'] });
+      toast({
+        title: "Plan removed",
+        description: "The meal plan has been removed from your schedule"
+      });
+    },
+    onError: (error) => {
+      console.error("Error removing plan:", error);
+      toast({
+        title: "Error removing plan",
+        description: "Failed to remove the plan. Please try again.",
+        variant: "destructive"
+      });
+    }
   });
 
   const sharePlanMutation = useMutation({
@@ -147,13 +169,23 @@ export function WeeklyPlanContent() {
                             <p className="text-sm text-muted-foreground">{plan.recipeTitle}</p>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleShare(plan)}
-                        >
-                          <Share2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleShare(plan)}
+                          >
+                            <Share2 className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deletePlanMutation.mutate(plan.id)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   ))}
