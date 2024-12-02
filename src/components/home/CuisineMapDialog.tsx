@@ -20,6 +20,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
+  console.log("CuisineMapDialog - Recipes received:", recipes.length);
+
   const resetMapView = () => {
     if (map.current) {
       map.current.flyTo({
@@ -46,10 +48,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
     const currentMap = map.current;
 
-    // Add navigation controls
     currentMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Group recipes by cuisine
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = normalizeCuisineName(recipe.cuisine);
@@ -63,7 +63,6 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
     console.log("Recipes grouped by cuisine:", Object.keys(recipeByCuisine).length);
 
-    // Add markers for each cuisine that has recipes
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
       
@@ -82,9 +81,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     });
 
     return () => {
-      if (currentMap) {
-        currentMap.remove();
-      }
+      currentMap.remove();
     };
   }, [open, recipes]);
 
