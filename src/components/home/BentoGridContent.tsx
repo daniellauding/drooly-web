@@ -65,6 +65,14 @@ export function BentoGridContent({
       action: () => handleAuthRequired(() => setShowKitchenModal(true)),
       color: "bg-blue-50 hover:bg-blue-100",
       textColor: "text-blue-700"
+    },
+    {
+      title: "Explore Cuisines",
+      description: "Discover recipes from around the world",
+      icon: "Globe",
+      action: () => handleAuthRequired(() => setShowCuisineMap(true)),
+      color: "bg-indigo-50 hover:bg-indigo-100",
+      textColor: "text-indigo-700"
     }
   ];
 

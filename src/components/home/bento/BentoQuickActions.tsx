@@ -1,12 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { CookingPot, Globe, Link, ClipboardPaste } from "lucide-react";
 
-interface QuickAction {
-  label: string;
-  icon: React.ComponentType;
-  onClick: () => void;
-}
-
 interface BentoQuickActionsProps {
   onKitchenClick: () => void;
   onCuisineClick: () => void;
@@ -20,25 +14,25 @@ export function BentoQuickActions({
   onUrlClick,
   onClipboardClick
 }: BentoQuickActionsProps) {
-  const quickActions: QuickAction[] = [
+  const quickActions = [
     {
       label: "What's in your kitchen?",
-      icon: CookingPot,
+      Icon: CookingPot,
       onClick: onKitchenClick
     },
     {
       label: "Explore cuisines",
-      icon: Globe,
+      Icon: Globe,
       onClick: onCuisineClick
     },
     {
       label: "Import from URL",
-      icon: Link,
+      Icon: Link,
       onClick: onUrlClick
     },
     {
       label: "Paste from clipboard",
-      icon: ClipboardPaste,
+      Icon: ClipboardPaste,
       onClick: onClipboardClick
     }
   ];
@@ -52,7 +46,7 @@ export function BentoQuickActions({
           onClick={action.onClick}
           className="text-sm gap-2"
         >
-          <action.icon className="w-4 h-4" />
+          <action.Icon className="w-4 h-4" />
           {action.label}
         </Button>
       ))}
