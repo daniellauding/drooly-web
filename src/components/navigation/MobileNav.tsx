@@ -1,4 +1,4 @@
-import { Home, Plus, Calendar, User, PartyPopper } from "lucide-react";
+import { Home, Plus, ListTodo, PartyPopper, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -28,7 +28,7 @@ export function MobileNav() {
               <span className="text-xs">Create</span>
             </button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[96%]">
+          <SheetContent side="bottom" className="h-fit max-h-[80vh]">
             <CreateRecipeDrawer />
           </SheetContent>
         </Sheet>
@@ -51,7 +51,7 @@ export function MobileNav() {
             location.pathname === "/todo" && "text-primary"
           )}
         >
-          <Calendar className="h-5 w-5" />
+          <ListTodo className="h-5 w-5" />
           <span className="text-xs">Plan</span>
         </Link>
 
