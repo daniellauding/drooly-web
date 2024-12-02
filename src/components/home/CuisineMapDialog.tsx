@@ -8,6 +8,7 @@ import { createCuisineMapMarker } from "./map/CuisineMapMarker";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 
+// Set your Mapbox access token
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsbGF1ZGluZyIsImEiOiJjbTQ2MHJlaGUwYnNzMm1yNnRxc2RhajlqIn0.1LXl5jCB3XJIdo4XBHvKkg';
 
 interface CuisineMapDialogProps {
@@ -21,39 +22,41 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
 
-  console.log("[CuisineMapDialog] Initializing with props:", {
-    open,
-    recipesCount: recipes.length,
+  console.log("[CuisineMapDialog] Dialog state:", { 
+    open, 
     hasMapContainer: !!mapContainer.current,
-    hasExistingMap: !!map.current
+    hasMap: !!map.current,
+    recipesCount: recipes.length 
   });
 
   const resetMapView = () => {
-    console.log("[CuisineMapDialog] Resetting map view");
+    console.log("[CuisineMapDialog] Attempting to reset map view");
     if (map.current) {
       map.current.flyTo({
         center: [0, 20],
         zoom: 1.5,
         duration: 1500
       });
-    } else {
-      console.warn("[CuisineMapDialog] Cannot reset view - map not initialized");
     }
   };
 
   useEffect(() => {
+    console.log("[CuisineMapDialog] Effect triggered:", {
+      open,
+      hasContainer: !!mapContainer.current,
+      existingMap: !!map.current
+    });
+
     if (!open || !mapContainer.current) {
-      console.log("[CuisineMapDialog] Skipping map initialization:", {
-        isOpen: open,
-        hasContainer: !!mapContainer.current
-      });
+      console.log("[CuisineMapDialog] Skipping map initialization - dialog closed or no container");
       return;
     }
 
-    console.log("[CuisineMapDialog] Cleaning up existing markers:", markers.current.length);
+    // Clean up existing markers
     markers.current.forEach(marker => marker.remove());
     markers.current = [];
 
+    // Initialize map if it doesn't exist
     if (!map.current) {
       console.log("[CuisineMapDialog] Creating new map instance");
       try {
@@ -74,56 +77,53 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       }
     }
 
+    // Wait for map to load before adding markers
     const currentMap = map.current;
-
-    // Group recipes by cuisine
-    const recipeByCuisine = recipes.reduce((acc, recipe) => {
-      if (recipe.cuisine) {
-        const cuisineKey = normalizeCuisineName(recipe.cuisine);
-        if (!acc[cuisineKey]) {
-          acc[cuisineKey] = [];
-        }
-        acc[cuisineKey].push(recipe);
-      }
-      return acc;
-    }, {} as Record<string, Recipe[]>);
-
-    console.log("[CuisineMapDialog] Recipe grouping:", {
-      totalRecipes: recipes.length,
-      cuisineGroups: Object.keys(recipeByCuisine).length,
-      cuisines: Object.keys(recipeByCuisine)
-    });
-
-    // Create markers for each cuisine group
-    Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
-      const coordinates = CUISINE_COORDINATES[cuisine];
+    currentMap.on('load', () => {
+      console.log("[CuisineMapDialog] Map loaded, creating markers");
       
-      if (!coordinates) {
-        console.warn(`[CuisineMapDialog] No coordinates found for cuisine: ${cuisine}`);
-        return;
-      }
+      // Group recipes by cuisine
+      const recipeByCuisine = recipes.reduce((acc, recipe) => {
+        if (recipe.cuisine) {
+          const cuisineKey = normalizeCuisineName(recipe.cuisine);
+          if (!acc[cuisineKey]) {
+            acc[cuisineKey] = [];
+          }
+          acc[cuisineKey].push(recipe);
+        }
+        return acc;
+      }, {} as Record<string, Recipe[]>);
 
-      console.log(`[CuisineMapDialog] Creating marker for ${cuisine}:`, {
-        recipesCount: cuisineRecipes.length,
-        coordinates
+      console.log("[CuisineMapDialog] Grouped recipes:", {
+        totalRecipes: recipes.length,
+        cuisineGroups: Object.keys(recipeByCuisine).length
       });
 
-      try {
-        const marker = createCuisineMapMarker({
-          cuisine,
-          coordinates,
-          recipes: cuisineRecipes,
-          map: currentMap
-        });
-        markers.current.push(marker);
-      } catch (error) {
-        console.error(`[CuisineMapDialog] Error creating marker for ${cuisine}:`, error);
-      }
+      // Create markers for each cuisine group
+      Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
+        const coordinates = CUISINE_COORDINATES[cuisine];
+        if (!coordinates) {
+          console.warn(`[CuisineMapDialog] No coordinates found for cuisine: ${cuisine}`);
+          return;
+        }
+
+        try {
+          const marker = createCuisineMapMarker({
+            cuisine,
+            coordinates,
+            recipes: cuisineRecipes,
+            map: currentMap
+          });
+          markers.current.push(marker);
+        } catch (error) {
+          console.error(`[CuisineMapDialog] Error creating marker for ${cuisine}:`, error);
+        }
+      });
     });
 
     // Cleanup function
     return () => {
-      console.log("[CuisineMapDialog] Cleaning up map resources");
+      console.log("[CuisineMapDialog] Cleaning up");
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
     };
