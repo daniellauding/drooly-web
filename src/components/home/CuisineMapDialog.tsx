@@ -20,6 +20,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
 
+  console.log("CuisineMapDialog - Recipes received:", recipes.length);
+
   const resetMapView = () => {
     if (map.current) {
       map.current.flyTo({
@@ -33,6 +35,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
   useEffect(() => {
     if (!open || !mapContainer.current) return;
 
+    console.log("Initializing map with recipes:", recipes.length);
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
@@ -44,10 +48,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
     const currentMap = map.current;
 
-    // Add navigation controls
     currentMap.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-    // Group recipes by cuisine
     const recipeByCuisine = recipes.reduce((acc, recipe) => {
       if (recipe.cuisine) {
         const cuisineKey = normalizeCuisineName(recipe.cuisine);
@@ -59,7 +61,8 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
       return acc;
     }, {} as Record<string, Recipe[]>);
 
-    // Add markers for each cuisine that has recipes
+    console.log("Recipes grouped by cuisine:", Object.keys(recipeByCuisine).length);
+
     Object.entries(recipeByCuisine).forEach(([cuisine, cuisineRecipes]) => {
       const coordinates = CUISINE_COORDINATES[cuisine];
       
@@ -68,6 +71,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
         return;
       }
 
+      console.log(`Creating marker for ${cuisine} with ${cuisineRecipes.length} recipes`);
       createCuisineMapMarker({
         cuisine,
         coordinates,
@@ -77,9 +81,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
     });
 
     return () => {
-      if (currentMap) {
-        currentMap.remove();
-      }
+      currentMap.remove();
     };
   }, [open, recipes]);
 

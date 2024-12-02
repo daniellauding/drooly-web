@@ -1,6 +1,5 @@
 import mapboxgl from 'mapbox-gl';
 import { Recipe } from "@/types/recipe";
-import { useNavigate } from "react-router-dom";
 
 interface CuisineMapMarkerProps {
   cuisine: string;
@@ -51,17 +50,8 @@ export function createCuisineMapMarker({ cuisine, coordinates, recipes, map }: C
   // Style the marker element
   const markerElement = marker.getElement();
   markerElement.style.cursor = 'pointer';
-  markerElement.style.transition = 'transform 0.2s ease';
+  markerElement.classList.add('cuisine-marker');
   
-  // Add hover effects
-  markerElement.addEventListener('mouseenter', () => {
-    markerElement.style.transform = 'scale(1.2)';
-  });
-  
-  markerElement.addEventListener('mouseleave', () => {
-    markerElement.style.transform = 'scale(1)';
-  });
-
   // Add click handler for zooming
   markerElement.addEventListener('click', () => {
     map.flyTo({
