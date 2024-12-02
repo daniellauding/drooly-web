@@ -1,7 +1,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/MultiSelect";
 import { Slider } from "@/components/ui/slider";
@@ -61,11 +61,12 @@ interface RecipeFilters {
 }
 
 interface RecipeFilterProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onFilterChange: (filters: RecipeFilters) => void;
 }
 
-export function RecipeFilter({ onFilterChange }: RecipeFilterProps) {
-  const [open, setOpen] = React.useState(false);
+export function RecipeFilter({ open, onOpenChange, onFilterChange }: RecipeFilterProps) {
   const [filters, setFilters] = React.useState<RecipeFilters>({
     ingredients: [],
     categories: [],
@@ -109,24 +110,21 @@ export function RecipeFilter({ onFilterChange }: RecipeFilterProps) {
     };
     setFilters(resetFilters);
     onFilterChange(resetFilters);
-    setOpen(false);
+    onOpenChange(false);
   };
 
   const applyFilters = () => {
     onFilterChange(filters);
-    setOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Filters</Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center">
             Recipe Filters
-            <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
               <X className="h-4 w-4" />
             </Button>
           </DialogTitle>

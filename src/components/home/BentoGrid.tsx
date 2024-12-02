@@ -8,11 +8,12 @@ import { FlavorQuiz } from "./FlavorQuiz";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
-import { Plus, Camera, Globe } from "lucide-react";
+import { Plus, Camera, Globe, Filter } from "lucide-react";
 import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
 import { AuthModal } from "../auth/AuthModal";
 import { CookingMethodsSlider } from "./CookingMethodsSlider";
 import { CuisineMapDialog } from "./CuisineMapDialog";
+import { RecipeFilter } from "../recipe/RecipeFilter";
 
 interface BentoGridProps {
   recipes: Recipe[];
@@ -25,9 +26,10 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
   const [showImageRecognition, setShowImageRecognition] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCuisineMap, setShowCuisineMap] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [pendingRecipes, setPendingRecipes] = useState<Partial<Recipe>[]>([]);
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const PREVIEW_COUNT = 8;
+  const PREVIEW_COUNT = 6; // Changed to show 6 recipes for logged out users
   const navigate = useNavigate();
 
   console.log('BentoGrid received recipes count:', recipes.length);
@@ -81,59 +83,37 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       textColor: "text-purple-700"
     },
     {
-      title: "Explore Cuisines",
-      description: "Discover recipes from around the world",
-      icon: Globe,
-      action: () => setShowCuisineMap(true),
+      title: "What's in your kitchen?",
+      description: "Find recipes using ingredients you have",
+      icon: Plus,
+      action: () => navigate('/ingredients'),
       color: "bg-blue-50 hover:bg-blue-100",
       textColor: "text-blue-700"
-    },
-    {
-      title: "Quick Search",
-      description: "Find exactly what you're looking for",
-      icon: Plus,
-      action: () => navigate('/create-recipe?mode=search'),
-      color: "bg-purple-50 hover:bg-purple-100",
-      textColor: "text-purple-700"
     }
   ];
 
   const getGridItems = () => {
     const items = [];
-    let interactiveIndex = 0;
 
     // Add seasonal recipes and quiz at the beginning
     items.push({ isSpecial: true, type: 'seasonal' });
     items.push({ isSpecial: true, type: 'quiz' });
 
+    // Add interactive cards for both logged in and logged out users
+    items.push({
+      isInteractive: true,
+      ...interactiveCards[0], // Take Photo & Scan
+      recipes: [...recipes, ...generatedRecipes]
+    });
+
+    items.push({
+      isInteractive: true,
+      ...interactiveCards[1], // What's in your kitchen?
+      recipes: [...recipes, ...generatedRecipes]
+    });
+
     // Add all recipes
     items.push(...recipes, ...generatedRecipes);
-    
-    // Add interactive cards every 6 recipes
-    for (let i = 0; i < items.length; i += 6) {
-      if (interactiveIndex < interactiveCards.length) {
-        items.splice(i + 2, 0, {
-          isInteractive: true,
-          ...interactiveCards[interactiveIndex],
-          recipes: [...recipes, ...generatedRecipes] // Pass all recipes to interactive cards
-        });
-        interactiveIndex++;
-      }
-    }
-
-    // Add create recipe card for non-logged in users
-    if (!user) {
-      items.splice(2, 0, {
-        isInteractive: true,
-        title: "Create Your Own",
-        description: "Login or register to start sharing recipes",
-        icon: Plus,
-        action: onAuthModalOpen,
-        color: "bg-green-50 hover:bg-green-100",
-        textColor: "text-green-700",
-        recipes: [...recipes, ...generatedRecipes] // Pass all recipes here too
-      });
-    }
 
     return filterRecipesByMethod(items);
   };
@@ -144,10 +124,20 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
 
   return (
     <div className="relative">
-      <CookingMethodsSlider 
-        onMethodSelect={setSelectedMethod}
-        selectedMethod={selectedMethod}
-      />
+      <div className="flex justify-between items-center mb-4 px-6">
+        <CookingMethodsSlider 
+          onMethodSelect={setSelectedMethod}
+          selectedMethod={selectedMethod}
+        />
+        <Button 
+          variant="outline" 
+          onClick={() => setShowFilters(true)}
+          className="ml-4"
+        >
+          <Filter className="h-4 w-4 mr-2" />
+          Filters
+        </Button>
+      </div>
       
       <div className={cn(
         "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6",
@@ -169,7 +159,7 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
                 key={`interactive-${index}`}
                 item={item}
                 onRecipesFound={handleRecipesFound}
-                recipes={[...recipes, ...generatedRecipes]} // Pass all recipes here
+                recipes={[...recipes, ...generatedRecipes]}
               />
             );
           }
@@ -208,13 +198,19 @@ export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
       <CuisineMapDialog 
         open={showCuisineMap}
         onOpenChange={setShowCuisineMap}
-        recipes={[...recipes, ...generatedRecipes]} // Pass both regular and generated recipes
+        recipes={[...recipes, ...generatedRecipes]}
       />
 
       <AuthModal 
         open={showAuthModal}
         onOpenChange={setShowAuthModal}
         defaultTab="login"
+      />
+
+      <RecipeFilter
+        open={showFilters}
+        onOpenChange={setShowFilters}
+        onFilterChange={() => {}}
       />
     </div>
   );
