@@ -131,7 +131,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[900px] h-[80vh]">
+      <DialogContent className="sm:max-w-[900px] h-[80vh] overflow-hidden">
         <DialogTitle className="text-xl font-semibold mb-2">
           Explore Cuisines Around the World
         </DialogTitle>
@@ -139,7 +139,7 @@ export function CuisineMapDialog({ open, onOpenChange, recipes }: CuisineMapDial
           Click on markers to zoom in and see recipes from each region. Use the home button to reset the view.
         </DialogDescription>
         
-        <div className="relative flex-1 h-full min-h-[500px]">
+        <div className="relative flex-1 h-[calc(100%-100px)]">
           <Button
             variant="outline"
             size="sm"
