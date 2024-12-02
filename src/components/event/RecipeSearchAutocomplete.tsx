@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { Command } from "@/components/ui/command";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Check, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Recipe } from "@/types/recipe";
 
 interface RecipeSearchAutocompleteProps {
@@ -17,30 +16,29 @@ interface RecipeSearchAutocompleteProps {
 export function RecipeSearchAutocomplete({ onSelect, value, onChange }: RecipeSearchAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<Recipe[]>([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (!value || value.length < 2) {
-        setSuggestions([]);
-        return;
-      }
-
       try {
+        console.log('Fetching recipe suggestions');
         const recipesRef = collection(db, "recipes");
-        const q = query(
-          recipesRef,
-          where("title", ">=", value),
-          where("title", "<=", value + "\uf8ff")
-        );
-        
+        const q = query(recipesRef);
         const querySnapshot = await getDocs(q);
-        const recipes = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Recipe[];
         
-        setSuggestions(recipes);
+        const recipes = querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Recipe[];
+        
+        const filteredRecipes = value
+          ? recipes.filter(recipe => 
+              recipe.title.toLowerCase().includes(value.toLowerCase())
+            )
+          : recipes;
+
+        console.log('Found recipes:', filteredRecipes.length);
+        setSuggestions(filteredRecipes);
       } catch (error) {
         console.error("Error fetching recipe suggestions:", error);
       }
@@ -49,30 +47,21 @@ export function RecipeSearchAutocomplete({ onSelect, value, onChange }: RecipeSe
     fetchSuggestions();
   }, [value]);
 
-  const handleSelect = (recipe: Recipe | string) => {
+  const handleSelect = (recipe: Recipe) => {
+    console.log('Selected recipe:', recipe);
     onSelect(recipe);
     onChange("");
     setOpen(false);
   };
 
-  const handleCreateNew = () => {
-    navigate("/create-recipe");
-  };
-
   return (
-    <Popover open={open && (suggestions.length > 0 || value.length > 0)} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Input
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="Search for a recipe"
           className="w-full"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && value) {
-              e.preventDefault();
-              handleSelect(value);
-            }
-          }}
         />
       </PopoverTrigger>
       <PopoverContent className="p-0" align="start">
@@ -92,10 +81,9 @@ export function RecipeSearchAutocomplete({ onSelect, value, onChange }: RecipeSe
               </div>
             </div>
           ))}
-          {value && !suggestions.find(r => r.title === value) && (
+          {value && !suggestions.find(r => r.title.toLowerCase() === value.toLowerCase()) && (
             <div
               className="flex items-center gap-2 px-4 py-2 hover:bg-accent cursor-pointer border-t"
-              onClick={handleCreateNew}
             >
               <Plus className="h-4 w-4" />
               <div>
