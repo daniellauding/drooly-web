@@ -1,5 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Recipe } from "@/services/recipeService";
+import { BentoGridRecipeItem } from "./BentoGridRecipeItem";
 
 interface BentoBoxProps {
   box: {
@@ -12,13 +14,25 @@ interface BentoBoxProps {
     action?: string;
     isSpecial?: boolean;
     type?: string;
-  };
+  } | Recipe;
   onClick?: () => void;
 }
 
 export function BentoGridItem({ box, onClick }: BentoBoxProps) {
   console.log('BentoGridItem rendering with box:', box);
   
+  // Handle recipe items
+  if ('id' in box) {
+    console.log('Rendering recipe item:', box.title);
+    return (
+      <BentoGridRecipeItem
+        item={box}
+        index={0}
+        onRecipeClick={() => onClick?.()}
+      />
+    );
+  }
+
   // Handle special cases
   if (box.isSpecial) {
     console.log('Rendering special box type:', box.type);

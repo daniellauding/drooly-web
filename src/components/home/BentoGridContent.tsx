@@ -1,11 +1,15 @@
 import { useState } from "react";
 import { Recipe } from "@/services/recipeService";
-import { useNavigate } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { BentoRecipeImport } from "./bento/BentoRecipeImport";
-import { bentoBoxes } from "./bento/BentoBoxConfig";
+import { useAuth } from "@/contexts/AuthContext";
+import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
+import { AuthModal } from "../auth/AuthModal";
+import { CuisineMapDialog } from "./CuisineMapDialog";
+import { RecipeFilter } from "../recipe/RecipeFilter";
+import { BentoGridHeader } from "./BentoGridHeader";
 import { BentoGridItem } from "./bento/BentoGridItem";
+import { bentoBoxes } from "./bento/BentoBoxConfig";
 import { BentoModals } from "./bento/BentoModals";
+import { cn } from "@/lib/utils";
 
 interface BentoGridContentProps {
   recipes: Recipe[];
@@ -45,11 +49,6 @@ export function BentoGridContent({
     action();
   };
 
-  const handleRecipesFound = (newRecipes: Recipe[]) => {
-    console.log("New recipes found:", newRecipes.length);
-    setLocalGeneratedRecipes(newRecipes);
-  };
-
   const handleBentoBoxClick = (actionType: string) => {
     console.log('Bento box clicked:', actionType);
     switch (actionType) {
@@ -77,6 +76,11 @@ export function BentoGridContent({
     }
   };
 
+  const handleRecipeClick = (id: string) => {
+    console.log('Recipe clicked:', id);
+    navigate(`/recipe/${id}`);
+  };
+
   const filterRecipesByMethod = (items: (Recipe | any)[]) => {
     if (!selectedMethod) return items;
     return items.filter((item) => {
@@ -90,8 +94,6 @@ export function BentoGridContent({
   const getGridItems = () => {
     const items = [];
     items.push(...bentoBoxes);
-    items.push({ isSpecial: true, type: 'seasonal' });
-    items.push({ isSpecial: true, type: 'quiz' });
     items.push(...recipes, ...generatedRecipes, ...localGeneratedRecipes);
     return filterRecipesByMethod(items);
   };
@@ -113,7 +115,7 @@ export function BentoGridContent({
             <BentoGridItem
               key={index}
               box={item}
-              onClick={() => handleBentoBoxClick(item.action)}
+              onClick={() => 'id' in item ? handleRecipeClick(item.id) : handleBentoBoxClick(item.action)}
             />
           );
         })}
@@ -132,11 +134,6 @@ export function BentoGridContent({
         setShowUrlDialog={setShowUrlDialog}
         showClipboardDialog={showClipboardDialog}
         setShowClipboardDialog={setShowClipboardDialog}
-        recipes={recipes}
-      />
-
-      <BentoRecipeImport
-        onRecipesFound={handleRecipesFound}
         recipes={recipes}
       />
     </div>
