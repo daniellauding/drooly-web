@@ -28,6 +28,8 @@ export function WeeklyStoriesSection() {
         ...doc.data()
       }));
 
+      console.log("Raw weekly plans:", plans);
+
       // Transform weekly plans into stories format
       const stories = plans.reduce((acc: Story[], plan: any) => {
         const existingUserStory = acc.find(story => story.name === plan.userName);
@@ -41,7 +43,7 @@ export function WeeklyStoriesSection() {
         } else {
           acc.push({
             id: plan.userId,
-            name: plan.userName,
+            name: plan.userName || 'Anonymous',
             avatar: plan.userAvatar || '/placeholder.svg',
             stories: [{
               id: plan.id,
