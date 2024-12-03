@@ -1,20 +1,24 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Recipe } from '@/types/recipe';
 import { IngredientItem } from '@/components/shopping/types';
-import { useToast } from '@/hooks/use-toast';
 import { useShoppingItems } from './shopping/useShoppingItems';
 import { useRecurringItems } from './shopping/useRecurringItems';
+import { useIngredientOperations } from './shopping/useIngredientOperations';
 
 const STORAGE_KEY = 'custom_ingredients';
 
 export function useShoppingList(userId: string | undefined) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [ingredients, setIngredients] = useState<IngredientItem[]>([]);
   const { checkedItems, setCheckedItems, saveCheckedItems } = useShoppingItems(userId);
   const { setRecurring } = useRecurringItems(userId);
-  const { toast } = useToast();
+  const { 
+    ingredients, 
+    setIngredients, 
+    handleUpdateIngredient, 
+    addCustomIngredient 
+  } = useIngredientOperations(userId);
 
   useEffect(() => {
     if (!userId) return;
@@ -30,7 +34,6 @@ export function useShoppingList(userId: string | undefined) {
     }
   }, [userId]);
 
-  // Save custom ingredients to localStorage whenever they change
   useEffect(() => {
     if (!userId) return;
     
@@ -84,19 +87,11 @@ export function useShoppingList(userId: string | undefined) {
       setIngredients(allIngredients);
     } catch (error) {
       console.error("Error loading shopping list:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load your shopping list. Please check your internet connection and try again.",
-        variant: "destructive"
-      });
     }
   };
 
   const handleCheck = async (ingredient: IngredientItem) => {
-    if (!userId) {
-      console.log("Cannot check item: No user ID");
-      return;
-    }
+    if (!userId) return;
 
     const key = `${ingredient.recipeId}-${ingredient.name}`;
     const newChecked = new Set(checkedItems);
@@ -109,26 +104,10 @@ export function useShoppingList(userId: string | undefined) {
     
     setCheckedItems(newChecked);
     await saveCheckedItems(newChecked, ingredients);
-
-    // Add to history if item was checked
-    if (newChecked.has(key)) {
-      try {
-        await addDoc(collection(db, "users", userId, "shoppingHistory"), {
-          items: [ingredient],
-          checkedAt: Timestamp.now(),
-          recurrence: "none"
-        });
-      } catch (error) {
-        console.error("Error adding to history:", error);
-      }
-    }
   };
 
   const handleCheckAll = async (ingredients: IngredientItem[]) => {
-    if (!userId) {
-      console.log("Cannot check all: No user ID");
-      return;
-    }
+    if (!userId) return;
 
     const newChecked = new Set(checkedItems);
     const allChecked = ingredients.every(ing => 
@@ -149,10 +128,7 @@ export function useShoppingList(userId: string | undefined) {
   };
 
   const handleRemoveIngredient = async (ingredient: IngredientItem) => {
-    if (!userId) {
-      console.log("Cannot remove ingredient: No user ID");
-      return;
-    }
+    if (!userId) return;
 
     console.log("Removing ingredient:", ingredient);
     setIngredients(prev => prev.filter(ing => 
@@ -164,75 +140,6 @@ export function useShoppingList(userId: string | undefined) {
       const newChecked = new Set(checkedItems);
       newChecked.delete(key);
       await saveCheckedItems(newChecked, ingredients);
-    }
-  };
-
-  const addCustomIngredient = async (name: string, amount: string, unit: string) => {
-    if (!userId) {
-      console.log("Cannot add custom ingredient: No user ID");
-      return;
-    }
-
-    const customIngredient: IngredientItem = {
-      name,
-      amount,
-      unit,
-      recipeId: 'custom',
-      recipeTitle: 'Custom Items',
-      bought: false
-    };
-    
-    console.log("Adding custom ingredient:", customIngredient);
-    setIngredients(prev => [...prev, customIngredient]);
-  };
-
-  const handleUpdateIngredient = async (ingredient: IngredientItem, updates: Partial<IngredientItem>) => {
-    if (!userId) {
-      console.log("Cannot update ingredient: No user ID");
-      return;
-    }
-
-    try {
-      console.log("Updating ingredient:", { ingredient, updates });
-      
-      // Update in state
-      setIngredients(prev => prev.map(ing => 
-        (ing.recipeId === ingredient.recipeId && ing.name === ingredient.name)
-          ? { ...ing, ...updates }
-          : ing
-      ));
-
-      // Update in Firestore if it's a custom ingredient
-      if (ingredient.recipeId === 'custom') {
-        const listRef = doc(db, "users", userId, "shoppingLists", "current");
-        const listDoc = await getDoc(listRef);
-        
-        if (listDoc.exists()) {
-          const currentData = listDoc.data();
-          const updatedIngredients = (currentData.ingredients || []).map((ing: IngredientItem) =>
-            (ing.name === ingredient.name)
-              ? { ...ing, ...updates }
-              : ing
-          );
-          
-          await updateDoc(listRef, {
-            ingredients: updatedIngredients,
-            updatedAt: Timestamp.now()
-          });
-        }
-      }
-
-      toast({
-        title: "Success",
-        description: "Ingredient updated successfully"
-      });
-    } catch (error) {
-      console.error("Error updating ingredient:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update ingredient",
-        variant: "destructive"
-      });
     }
   };
 
