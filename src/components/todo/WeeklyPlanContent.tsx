@@ -71,8 +71,20 @@ export function WeeklyPlanContent() {
 
   const deletePlanMutation = useMutation({
     mutationFn: async (planId: string) => {
+      if (!user?.uid) throw new Error("User not authenticated");
       console.log('Deleting plan:', planId);
       const planRef = doc(db, "weeklyPlans", planId);
+      const planDoc = await getDoc(planRef);
+      
+      if (!planDoc.exists()) {
+        throw new Error("Plan not found");
+      }
+
+      const planData = planDoc.data();
+      if (planData.userId !== user.uid && !planData.collaborators?.[user.uid]) {
+        throw new Error("Not authorized to delete this plan");
+      }
+
       await deleteDoc(planRef);
     },
     onSuccess: () => {

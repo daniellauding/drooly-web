@@ -15,32 +15,15 @@ export function useShoppingItems(userId: string | undefined) {
       try {
         console.log("Loading checked items and custom ingredients for user:", userId);
         
-        // Load checked items
+        // Load checked items and custom ingredients
         const listRef = doc(db, "users", userId, "shoppingLists", "current");
         const listDoc = await getDoc(listRef);
         
         if (listDoc.exists()) {
           const data = listDoc.data();
           setCheckedItems(new Set(data.checkedItems || []));
-        }
-
-        // Load custom ingredients
-        const customIngredientsRef = collection(db, "users", userId, "customIngredients");
-        const customIngredientsSnapshot = await getDocs(customIngredientsRef);
-        
-        const customIngredients = customIngredientsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        console.log("Loaded custom ingredients:", customIngredients);
-        
-        // Update current shopping list with custom ingredients if they exist
-        if (customIngredients.length > 0) {
-          await setDoc(listRef, {
-            ingredients: customIngredients,
-            updatedAt: new Date()
-          }, { merge: true });
+          console.log("Loaded checked items:", data.checkedItems);
+          console.log("Loaded custom ingredients:", data.ingredients);
         }
       } catch (error) {
         console.error("Error loading checked items and custom ingredients:", error);
@@ -54,37 +37,20 @@ export function useShoppingItems(userId: string | undefined) {
     if (!userId) return;
 
     try {
+      const customIngredients = ingredients.filter(ing => ing.recipeId === 'custom');
       console.log("Saving checked items and custom ingredients:", {
         checkedItems: Array.from(newChecked),
-        customIngredients: ingredients.filter(ing => ing.recipeId === 'custom')
+        customIngredients
       });
 
       const listRef = doc(db, "users", userId, "shoppingLists", "current");
       
-      // Save to current shopping list
+      // Save both checked items and custom ingredients
       await setDoc(listRef, {
         checkedItems: Array.from(newChecked),
-        ingredients: ingredients.filter(ing => ing.recipeId === 'custom'),
+        ingredients: customIngredients,
         updatedAt: new Date()
       }, { merge: true });
-
-      // Save custom ingredients to separate collection for persistence
-      const customIngredientsRef = collection(db, "users", userId, "customIngredients");
-      const customIngredients = ingredients.filter(ing => ing.recipeId === 'custom');
-      
-      // Get existing custom ingredients
-      const snapshot = await getDocs(customIngredientsRef);
-      const existingIngredients = new Set(snapshot.docs.map(doc => doc.data().name));
-
-      // Add new custom ingredients
-      for (const ingredient of customIngredients) {
-        if (!existingIngredients.has(ingredient.name)) {
-          await setDoc(doc(customIngredientsRef), {
-            ...ingredient,
-            createdAt: new Date()
-          });
-        }
-      }
 
     } catch (error) {
       console.error("Error saving checked items and custom ingredients:", error);

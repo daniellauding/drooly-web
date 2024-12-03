@@ -1,6 +1,6 @@
+import { Card } from "@/components/ui/card";
 import { Recipe } from "@/types/recipe";
-import { RecipeCard } from "@/components/RecipeCard";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface RecipeSearchResultsProps {
   recipes: Recipe[];
@@ -8,36 +8,51 @@ interface RecipeSearchResultsProps {
   onSelectRecipe: (recipe: Recipe) => void;
 }
 
-export function RecipeSearchResults({ 
-  recipes, 
-  selectedRecipe, 
-  onSelectRecipe 
+export function RecipeSearchResults({
+  recipes,
+  selectedRecipe,
+  onSelectRecipe
 }: RecipeSearchResultsProps) {
   return (
-    <ScrollArea className="h-[400px] pr-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {recipes.map((recipe) => (
-          <div
-            key={recipe.id}
-            className={`cursor-pointer transition-all duration-200 ${
-              selectedRecipe?.id === recipe.id 
-                ? 'ring-2 ring-primary rounded-xl' 
-                : 'hover:scale-[1.02]'
-            }`}
-            onClick={() => onSelectRecipe(recipe)}
-          >
-            <RecipeCard
-              id={recipe.id}
-              title={recipe.title}
-              image={recipe.images?.[0]}
-              cookTime={recipe.totalTime}
-              difficulty={recipe.difficulty}
-              chef={recipe.creatorName}
-              stats={recipe.stats}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {recipes.map((recipe) => (
+        <Card
+          key={recipe.id}
+          className={`p-4 cursor-pointer hover:bg-accent ${
+            selectedRecipe?.id === recipe.id ? 'ring-2 ring-primary' : ''
+          }`}
+          onClick={(e) => {
+            e.preventDefault();
+            onSelectRecipe(recipe);
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <Checkbox
+              checked={selectedRecipe?.id === recipe.id}
+              onCheckedChange={() => onSelectRecipe(recipe)}
+              onClick={(e) => e.stopPropagation()}
             />
+            <div className="flex-1">
+              <div className="flex items-center gap-4">
+                {recipe.images?.[0] && (
+                  <img
+                    src={recipe.images[0]}
+                    alt={recipe.title}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                )}
+                <div>
+                  <h3 className="font-medium">{recipe.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {recipe.description?.slice(0, 100)}
+                    {recipe.description?.length > 100 ? '...' : ''}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-    </ScrollArea>
+        </Card>
+      ))}
+    </div>
   );
 }

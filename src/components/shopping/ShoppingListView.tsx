@@ -41,19 +41,21 @@ export function ShoppingListView({
 
       <TabsContent value="all" className="mt-6">
         <Card className="p-6">
-          {ingredients.map((ingredient, idx) => (
+          {ingredients.sort((a, b) => a.name.localeCompare(b.name)).map((ingredient, idx) => (
             <div key={`${ingredient.recipeId}-${ingredient.name}-${idx}`}>
               <div className="flex items-center gap-4 py-2">
                 <Checkbox
                   checked={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`)}
                   onCheckedChange={() => onCheck(ingredient)}
                 />
-                <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
-                  {ingredient.amount} {ingredient.unit} {ingredient.name}
-                </span>
-                <span className="text-sm text-muted-foreground ml-auto">
-                  {ingredient.recipeTitle}
-                </span>
+                <div className="flex-1">
+                  <span className={checkedItems.has(`${ingredient.recipeId}-${ingredient.name}`) ? "line-through text-muted-foreground" : ""}>
+                    {ingredient.amount} {ingredient.unit} {ingredient.name}
+                  </span>
+                  <span className="text-sm text-muted-foreground ml-2">
+                    ({ingredient.recipeTitle})
+                  </span>
+                </div>
               </div>
               {idx < ingredients.length - 1 && <Separator />}
             </div>
