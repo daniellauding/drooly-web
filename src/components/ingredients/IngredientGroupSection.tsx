@@ -5,6 +5,7 @@ import { Plus, Trash2, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { IngredientSuggestions } from "./IngredientSuggestions";
 import { Ingredient } from "@/services/recipeService";
+import { IngredientFormDialog } from "./IngredientFormDialog";
 
 interface IngredientGroupSectionProps {
   group: string;
@@ -22,6 +23,7 @@ export function IngredientGroupSection({
   onAddIngredient,
 }: IngredientGroupSectionProps) {
   const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const COMMON_UNITS = ["g", "kg", "ml", "l", "cup", "tbsp", "tsp", "piece", "to taste"];
 
   return (
@@ -88,12 +90,19 @@ export function IngredientGroupSection({
       <Button
         variant="outline"
         size="sm"
-        onClick={() => onAddIngredient("", group)}
+        onClick={() => setShowAddDialog(true)}
         className="w-full"
       >
         <Plus className="h-4 w-4 mr-2" />
         Add Ingredient to {group}
       </Button>
+
+      <IngredientFormDialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        onIngredientAdd={(name) => onAddIngredient(name, group)}
+        group={group}
+      />
     </div>
   );
 }

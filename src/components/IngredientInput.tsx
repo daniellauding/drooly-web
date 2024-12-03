@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/collapsible";
 import { AdvancedIngredientSection } from "./ingredients/AdvancedIngredientSection";
 import { IngredientGroupSection } from "./ingredients/IngredientGroupSection";
-import { IngredientSearchBar } from "./ingredients/IngredientSearchBar";
+import { IngredientFormDialog } from "./ingredients/IngredientFormDialog";
 import { Ingredient } from "@/services/recipeService";
 import { useTranslation } from "react-i18next";
 
@@ -23,6 +23,7 @@ const DEFAULT_AMOUNT = "1";
 
 export function IngredientInput({ ingredients, onChange }: IngredientInputProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { t } = useTranslation();
 
   const addIngredient = (name = "", group = "Main Ingredients") => {
@@ -75,7 +76,21 @@ export function IngredientInput({ ingredients, onChange }: IngredientInputProps)
         </Button>
       </div>
 
-      <IngredientSearchBar onIngredientAdd={addIngredient} />
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowAddDialog(true)}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Add Ingredient
+      </Button>
+
+      <IngredientFormDialog
+        open={showAddDialog}
+        onClose={() => setShowAddDialog(false)}
+        onIngredientAdd={addIngredient}
+      />
 
       {Object.entries(groupedIngredients).map(([group, groupIngredients]) => (
         <IngredientGroupSection
