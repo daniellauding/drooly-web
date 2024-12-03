@@ -1,4 +1,3 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -22,6 +21,7 @@ export function ShoppingListView({
   onCheck
 }: ShoppingListViewProps) {
   const [viewMode, setViewMode] = useState<"list" | "recipe">("list");
+  console.log("Current view mode:", viewMode); // Debug log
 
   const calculateProgress = (recipeId: string) => {
     const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipeId);
@@ -37,13 +37,21 @@ export function ShoppingListView({
   };
 
   const sortedIngredients = [...ingredients].sort((a, b) => a.name.localeCompare(b.name));
+  console.log("Sorted ingredients count:", sortedIngredients.length); // Debug log
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Select value={viewMode} onValueChange={(value: "list" | "recipe") => setViewMode(value)}>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <h2 className="text-lg font-semibold">Shopping List</h2>
+        <Select 
+          value={viewMode} 
+          onValueChange={(value: "list" | "recipe") => {
+            console.log("Changing view mode to:", value); // Debug log
+            setViewMode(value);
+          }}
+        >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select view" />
+            <SelectValue placeholder="View mode" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="list">All Ingredients</SelectItem>
