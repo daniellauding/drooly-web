@@ -32,13 +32,20 @@ export function CustomTodoContent() {
   const loadTodos = async () => {
     if (!user) return;
     try {
+      console.log("Loading todos for user:", user.uid);
       const todosRef = collection(db, "users", user.uid, "todos");
       const querySnapshot = await getDocs(todosRef);
-      const loadedTodos = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Todo[];
+      const loadedTodos = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          text: data.text,
+          completed: data.completed,
+          createdAt: data.createdAt?.toDate() || new Date(),
+        };
+      });
 
+      console.log("Loaded todos:", loadedTodos);
       setTodos(loadedTodos.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()));
     } catch (error) {
       console.error("Error loading todos:", error);
@@ -55,6 +62,7 @@ export function CustomTodoContent() {
     if (!user || !newTodo.trim()) return;
 
     try {
+      console.log("Adding new todo:", newTodo);
       const todosRef = collection(db, "users", user.uid, "todos");
       const newTodoDoc = await addDoc(todosRef, {
         text: newTodo.trim(),
@@ -62,13 +70,15 @@ export function CustomTodoContent() {
         createdAt: Timestamp.now()
       });
 
-      setTodos(prev => [{
+      const newTodoItem = {
         id: newTodoDoc.id,
         text: newTodo.trim(),
         completed: false,
         createdAt: new Date()
-      }, ...prev]);
-      
+      };
+
+      console.log("Added new todo:", newTodoItem);
+      setTodos(prev => [newTodoItem, ...prev]);
       setNewTodo("");
     } catch (error) {
       console.error("Error adding todo:", error);
@@ -84,6 +94,7 @@ export function CustomTodoContent() {
     if (!user) return;
     
     try {
+      console.log("Toggling todo:", todoId);
       const todoRef = doc(db, "users", user.uid, "todos", todoId);
       const updatedTodos = todos.map(todo => {
         if (todo.id === todoId) {
@@ -97,6 +108,7 @@ export function CustomTodoContent() {
         completed: !todos.find(t => t.id === todoId)?.completed
       }, { merge: true });
 
+      console.log("Todo toggled successfully");
       setTodos(updatedTodos);
     } catch (error) {
       console.error("Error toggling todo:", error);
@@ -112,8 +124,10 @@ export function CustomTodoContent() {
     if (!user) return;
 
     try {
+      console.log("Deleting todo:", todoId);
       await deleteDoc(doc(db, "users", user.uid, "todos", todoId));
       setTodos(prev => prev.filter(todo => todo.id !== todoId));
+      console.log("Todo deleted successfully");
     } catch (error) {
       console.error("Error deleting todo:", error);
       toast({
