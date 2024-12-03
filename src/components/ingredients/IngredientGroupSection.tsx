@@ -6,6 +6,7 @@ import { useState } from "react";
 import { IngredientSuggestions } from "./IngredientSuggestions";
 import { Ingredient } from "@/services/recipeService";
 import { IngredientFormDialog } from "./IngredientFormDialog";
+import { DeleteConfirmationDialog } from "../backoffice/DeleteConfirmationDialog";
 
 interface IngredientGroupSectionProps {
   group: string;
@@ -24,7 +25,22 @@ export function IngredientGroupSection({
 }: IngredientGroupSectionProps) {
   const [editingIngredientIndex, setEditingIngredientIndex] = useState<number | null>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
   const COMMON_UNITS = ["g", "kg", "ml", "l", "cup", "tbsp", "tsp", "piece", "to taste"];
+
+  const handleDeleteClick = (index: number) => {
+    setDeleteIndex(index);
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteIndex !== null) {
+      onRemoveIngredient(deleteIndex);
+      setShowDeleteDialog(false);
+      setDeleteIndex(null);
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -80,7 +96,7 @@ export function IngredientGroupSection({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onRemoveIngredient(index)}
+            onClick={() => handleDeleteClick(index)}
             className="text-destructive hover:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
@@ -102,6 +118,14 @@ export function IngredientGroupSection({
         onClose={() => setShowAddDialog(false)}
         onIngredientAdd={(name) => onAddIngredient(name, group)}
         group={group}
+      />
+
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirm={handleConfirmDelete}
+        title="Delete Ingredient"
+        description="Are you sure you want to delete this ingredient? This action cannot be undone."
       />
     </div>
   );

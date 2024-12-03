@@ -10,6 +10,7 @@ interface IngredientFormDialogProps {
   open: boolean;
   onClose: () => void;
   onIngredientAdd: (name: string, group?: string) => void;
+  ingredient?: { name: string; amount: string; unit: string; recurrence?: string };
   group?: string;
 }
 
@@ -17,12 +18,15 @@ export function IngredientFormDialog({
   open, 
   onClose, 
   onIngredientAdd,
+  ingredient,
   group 
 }: IngredientFormDialogProps) {
-  const [selectedIngredient, setSelectedIngredient] = useState("");
-  const [amount, setAmount] = useState("");
-  const [unit, setUnit] = useState("piece");
-  const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">("none");
+  const [selectedIngredient, setSelectedIngredient] = useState(ingredient?.name || "");
+  const [amount, setAmount] = useState(ingredient?.amount || "");
+  const [unit, setUnit] = useState(ingredient?.unit || "piece");
+  const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">(
+    (ingredient?.recurrence as "none" | "weekly" | "monthly") || "none"
+  );
   const { t } = useTranslation();
 
   const handleAdd = () => {
@@ -41,7 +45,9 @@ export function IngredientFormDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <div className="flex justify-between items-center">
-            <DialogTitle>{t('recipe.ingredients.addCustom')}</DialogTitle>
+            <DialogTitle>
+              {ingredient ? t('recipe.ingredients.edit') : t('recipe.ingredients.addCustom')}
+            </DialogTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
@@ -50,6 +56,7 @@ export function IngredientFormDialog({
         <div className="space-y-4 py-4">
           <IngredientSearchBar 
             onIngredientAdd={(name) => setSelectedIngredient(name)}
+            initialValue={ingredient?.name}
           />
           
           <IngredientForm
