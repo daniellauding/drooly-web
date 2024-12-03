@@ -21,7 +21,7 @@ export function ShoppingListView({
   onCheck
 }: ShoppingListViewProps) {
   const [viewMode, setViewMode] = useState<"list" | "recipe">("list");
-  console.log("Current view mode:", viewMode); // Debug log
+  console.log("Current view mode:", viewMode);
 
   const calculateProgress = (recipeId: string) => {
     const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipeId);
@@ -37,27 +37,28 @@ export function ShoppingListView({
   };
 
   const sortedIngredients = [...ingredients].sort((a, b) => a.name.localeCompare(b.name));
-  console.log("Sorted ingredients count:", sortedIngredients.length); // Debug log
+  console.log("Sorted ingredients count:", sortedIngredients.length);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <h2 className="text-lg font-semibold">Shopping List</h2>
-        <Select 
-          value={viewMode} 
-          onValueChange={(value: "list" | "recipe") => {
-            console.log("Changing view mode to:", value); // Debug log
-            setViewMode(value);
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="View mode" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="list">All Ingredients</SelectItem>
-            <SelectItem value="recipe">Group by Recipe</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <Select 
+            value={viewMode} 
+            onValueChange={(value: "list" | "recipe") => {
+              console.log("Changing view mode to:", value);
+              setViewMode(value);
+            }}
+          >
+            <SelectTrigger className="w-[180px] bg-white">
+              <SelectValue placeholder="View mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="list">All Ingredients</SelectItem>
+              <SelectItem value="recipe">Group by Recipe</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {viewMode === "list" ? (
