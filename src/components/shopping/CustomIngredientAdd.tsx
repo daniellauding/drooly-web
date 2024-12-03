@@ -21,7 +21,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, collection, addDoc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, collection, addDoc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface CustomIngredientAddProps {
@@ -73,11 +73,23 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
     try {
       console.log("Adding custom ingredient:", { name, amount, unit, recurrence });
       
-      // First, get the current shopping list
+      // Add to customIngredients collection
+      const customIngredientsRef = collection(db, "users", user.uid, "customIngredients");
+      await addDoc(customIngredientsRef, {
+        name: name.trim(),
+        amount: amount.trim(),
+        unit,
+        recipeId: 'custom',
+        recipeTitle: 'Custom Items',
+        bought: false,
+        createdAt: Timestamp.now(),
+        recurrence
+      });
+
+      // Also add to current shopping list
       const listRef = doc(db, "users", user.uid, "shoppingLists", "current");
       const listDoc = await getDoc(listRef);
       
-      // Prepare the new ingredient
       const newIngredient = {
         name: name.trim(),
         amount: amount.trim(),
@@ -89,20 +101,18 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
       };
 
       if (listDoc.exists()) {
-        // Update existing list
         const currentData = listDoc.data();
         const ingredients = currentData.ingredients || [];
         
         await updateDoc(listRef, {
           ingredients: [...ingredients, newIngredient],
-          updatedAt: new Date()
+          updatedAt: Timestamp.now()
         });
       } else {
-        // Create new list
         await setDoc(listRef, {
           ingredients: [newIngredient],
           checkedItems: [],
-          updatedAt: new Date()
+          updatedAt: Timestamp.now()
         });
       }
 
