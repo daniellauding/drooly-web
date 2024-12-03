@@ -16,7 +16,7 @@ export function ShoppingListTabs({ userId, listId }: ShoppingListTabsProps) {
       </TabsList>
 
       <TabsContent value="current">
-        <ShoppingListContent userId={userId} listId={listId} />
+        <ShoppingListContent />
       </TabsContent>
 
       <TabsContent value="history">

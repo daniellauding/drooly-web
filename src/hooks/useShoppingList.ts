@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, Timestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { Recipe } from '@/types/recipe';
 import { IngredientItem } from '@/components/shopping/types';
 import { useToast } from '@/hooks/use-toast';
@@ -16,7 +16,6 @@ export function useShoppingList(userId: string | undefined) {
   const { setRecurring } = useRecurringItems(userId);
   const { toast } = useToast();
 
-  // Load custom ingredients from localStorage on mount
   useEffect(() => {
     if (!userId) return;
     
@@ -187,6 +186,56 @@ export function useShoppingList(userId: string | undefined) {
     setIngredients(prev => [...prev, customIngredient]);
   };
 
+  const handleUpdateIngredient = async (ingredient: IngredientItem, updates: Partial<IngredientItem>) => {
+    if (!userId) {
+      console.log("Cannot update ingredient: No user ID");
+      return;
+    }
+
+    try {
+      console.log("Updating ingredient:", { ingredient, updates });
+      
+      // Update in state
+      setIngredients(prev => prev.map(ing => 
+        (ing.recipeId === ingredient.recipeId && ing.name === ingredient.name)
+          ? { ...ing, ...updates }
+          : ing
+      ));
+
+      // Update in Firestore if it's a custom ingredient
+      if (ingredient.recipeId === 'custom') {
+        const listRef = doc(db, "users", userId, "shoppingLists", "current");
+        const listDoc = await getDoc(listRef);
+        
+        if (listDoc.exists()) {
+          const currentData = listDoc.data();
+          const updatedIngredients = (currentData.ingredients || []).map((ing: IngredientItem) =>
+            (ing.name === ingredient.name)
+              ? { ...ing, ...updates }
+              : ing
+          );
+          
+          await updateDoc(listRef, {
+            ingredients: updatedIngredients,
+            updatedAt: Timestamp.now()
+          });
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "Ingredient updated successfully"
+      });
+    } catch (error) {
+      console.error("Error updating ingredient:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update ingredient",
+        variant: "destructive"
+      });
+    }
+  };
+
   return {
     recipes,
     ingredients,
@@ -194,6 +243,7 @@ export function useShoppingList(userId: string | undefined) {
     handleCheck,
     handleCheckAll,
     handleRemoveIngredient,
+    handleUpdateIngredient,
     addCustomIngredient,
     setRecurring
   };
