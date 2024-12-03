@@ -5,6 +5,8 @@ import { Separator } from "@/components/ui/separator";
 import { RecipeProgressCard } from "./RecipeProgressCard";
 import { Recipe } from "@/types/recipe";
 import { IngredientItem } from "./types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 interface ShoppingListViewProps {
   recipes: Recipe[];
@@ -19,6 +21,8 @@ export function ShoppingListView({
   checkedItems,
   onCheck
 }: ShoppingListViewProps) {
+  const [viewMode, setViewMode] = useState<"list" | "recipe">("list");
+
   const calculateProgress = (recipeId: string) => {
     const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipeId);
     const total = recipeIngredients.length;
@@ -32,16 +36,25 @@ export function ShoppingListView({
     };
   };
 
-  return (
-    <Tabs defaultValue="all" className="w-full">
-      <TabsList>
-        <TabsTrigger value="all">All Ingredients</TabsTrigger>
-        <TabsTrigger value="by-recipe">By Recipe</TabsTrigger>
-      </TabsList>
+  const sortedIngredients = [...ingredients].sort((a, b) => a.name.localeCompare(b.name));
 
-      <TabsContent value="all" className="mt-6">
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <Select value={viewMode} onValueChange={(value: "list" | "recipe") => setViewMode(value)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select view" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="list">All Ingredients</SelectItem>
+            <SelectItem value="recipe">Group by Recipe</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {viewMode === "list" ? (
         <Card className="p-6">
-          {ingredients.sort((a, b) => a.name.localeCompare(b.name)).map((ingredient, idx) => (
+          {sortedIngredients.map((ingredient, idx) => (
             <div key={`${ingredient.recipeId}-${ingredient.name}-${idx}`}>
               <div className="flex items-center gap-4 py-2">
                 <Checkbox
@@ -61,9 +74,7 @@ export function ShoppingListView({
             </div>
           ))}
         </Card>
-      </TabsContent>
-
-      <TabsContent value="by-recipe" className="mt-6">
+      ) : (
         <div className="space-y-6">
           {recipes.map(recipe => (
             <RecipeProgressCard
@@ -76,7 +87,7 @@ export function ShoppingListView({
             />
           ))}
         </div>
-      </TabsContent>
-    </Tabs>
+      )}
+    </div>
   );
 }
