@@ -7,11 +7,12 @@ import { useTranslation } from "react-i18next";
 
 interface IngredientSearchBarProps {
   onIngredientAdd: (name: string, group?: string) => void;
+  initialValue?: string;
 }
 
-export function IngredientSearchBar({ onIngredientAdd }: IngredientSearchBarProps) {
+export function IngredientSearchBar({ onIngredientAdd, initialValue = "" }: IngredientSearchBarProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [customIngredientInput, setCustomIngredientInput] = useState("");
+  const [customIngredientInput, setCustomIngredientInput] = useState(initialValue);
   const { t } = useTranslation();
 
   const handleCustomIngredientKeyDown = (e: React.KeyboardEvent) => {
