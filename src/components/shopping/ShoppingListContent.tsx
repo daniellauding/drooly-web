@@ -10,6 +10,7 @@ import { db } from "@/lib/firebase";
 import { IngredientItem } from "./types";
 import { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 
 interface ShoppingListContentProps {
   userId: string | undefined;
@@ -95,23 +96,26 @@ export function ShoppingListContent({ userId, listId }: ShoppingListContentProps
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <Select 
-          value={viewMode} 
-          onValueChange={(value: "list" | "recipe") => {
-            console.log("Changing view mode to:", value);
-            setViewMode(value);
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="View mode" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="list">All Ingredients</SelectItem>
-            <SelectItem value="recipe">Group by Recipe</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium">View Mode</h3>
+          <Select 
+            value={viewMode} 
+            onValueChange={(value: "list" | "recipe") => {
+              console.log("Changing view mode to:", value);
+              setViewMode(value);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Ingredients" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="list">All Ingredients</SelectItem>
+              <SelectItem value="recipe">Group by Recipe</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
 
       <ShoppingListHeader
         checkedItemsCount={checkedItems.size}
