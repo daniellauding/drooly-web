@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,17 @@ import { ShoppingListContent } from "./ShoppingListContent";
 import { RecipesToCookContent } from "./RecipesToCookContent";
 import { CustomTodoContent } from "./CustomTodoContent";
 import { WeeklyPlanContent } from "./WeeklyPlanContent";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export function TodoView() {
-  const [activeTab, setActiveTab] = useState("shopping");
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/todo') {
+      navigate('/ingredients');
+    }
+  }, [location, navigate]);
 
   return (
     <div className="space-y-6">
@@ -19,7 +27,7 @@ export function TodoView() {
         <h1 className="text-3xl font-bold">My Planning</h1>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs defaultValue="shopping" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="shopping" className="flex items-center gap-2">
             <ShoppingCart className="w-4 h-4" />

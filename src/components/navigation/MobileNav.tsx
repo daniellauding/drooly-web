@@ -45,10 +45,10 @@ export function MobileNav() {
         </Link>
 
         <Link
-          to="/todo"
+          to="/ingredients"
           className={cn(
             "flex flex-col items-center p-2 text-muted-foreground",
-            location.pathname === "/todo" && "text-primary"
+            location.pathname === "/ingredients" && "text-primary"
           )}
         >
           <ListTodo className="h-5 w-5" />
