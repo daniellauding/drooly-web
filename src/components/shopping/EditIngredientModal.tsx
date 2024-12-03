@@ -3,7 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { IngredientItem } from "./types";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Clock } from "lucide-react";
 
 interface EditIngredientModalProps {
   ingredient: IngredientItem | null;
@@ -15,23 +17,26 @@ interface EditIngredientModalProps {
 export function EditIngredientModal({ ingredient, open, onClose, onSave }: EditIngredientModalProps) {
   const [editAmount, setEditAmount] = useState(ingredient?.amount || "");
   const [editUnit, setEditUnit] = useState(ingredient?.unit || "");
+  const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">(ingredient?.recurrence || "none");
+
+  // Reset form when modal opens with new ingredient
+  useEffect(() => {
+    if (ingredient) {
+      setEditAmount(ingredient.amount);
+      setEditUnit(ingredient.unit);
+      setRecurrence(ingredient.recurrence || "none");
+    }
+  }, [ingredient]);
 
   const handleSave = () => {
     if (!ingredient) return;
     onSave(ingredient, {
       amount: editAmount,
-      unit: editUnit
+      unit: editUnit,
+      recurrence
     });
     onClose();
   };
-
-  // Reset form when modal opens with new ingredient
-  useState(() => {
-    if (ingredient) {
-      setEditAmount(ingredient.amount);
-      setEditUnit(ingredient.unit);
-    }
-  });
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -55,6 +60,20 @@ export function EditIngredientModal({ ingredient, open, onClose, onSave }: EditI
                 {["g", "kg", "ml", "l", "cup", "tbsp", "tsp", "piece"].map(unit => (
                   <SelectItem key={unit} value={unit}>{unit}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-2">
+            <Label>How often do you want to buy this ingredient?</Label>
+            <Select value={recurrence} onValueChange={(value: "none" | "weekly" | "monthly") => setRecurrence(value)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">One time only</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
               </SelectContent>
             </Select>
           </div>
