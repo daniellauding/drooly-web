@@ -8,6 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 import { addDoc, collection, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { IngredientItem } from "./types";
+import { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ShoppingListContentProps {
   userId: string | undefined;
@@ -19,6 +21,11 @@ export function ShoppingListContent({ userId, listId }: ShoppingListContentProps
   const { checkedItems, setCheckedItems, saveCheckedItems } = useShoppingItems(userId);
   const { setRecurring } = useRecurringItems(userId);
   const { toast } = useToast();
+  const [viewMode, setViewMode] = useState<"list" | "recipe">("list");
+
+  console.log("ShoppingListContent - Current view mode:", viewMode);
+  console.log("ShoppingListContent - Number of recipes:", recipes.length);
+  console.log("ShoppingListContent - Number of ingredients:", ingredients.length);
 
   const handleCheck = async (ingredient: IngredientItem) => {
     if (!userId) {
@@ -38,7 +45,6 @@ export function ShoppingListContent({ userId, listId }: ShoppingListContentProps
     setCheckedItems(newChecked);
     await saveCheckedItems(newChecked, ingredients);
 
-    // Add to history if item was checked
     if (newChecked.has(key)) {
       try {
         await addDoc(collection(db, "users", userId, "shoppingHistory"), {
@@ -88,7 +94,25 @@ export function ShoppingListContent({ userId, listId }: ShoppingListContentProps
   };
 
   return (
-    <>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <Select 
+          value={viewMode} 
+          onValueChange={(value: "list" | "recipe") => {
+            console.log("Changing view mode to:", value);
+            setViewMode(value);
+          }}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="View mode" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="list">All Ingredients</SelectItem>
+            <SelectItem value="recipe">Group by Recipe</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <ShoppingListHeader
         checkedItemsCount={checkedItems.size}
         onClearAll={clearChecked}
@@ -104,7 +128,8 @@ export function ShoppingListContent({ userId, listId }: ShoppingListContentProps
         ingredients={ingredients}
         checkedItems={checkedItems}
         onCheck={handleCheck}
+        viewMode={viewMode}
       />
-    </>
+    </div>
   );
 }

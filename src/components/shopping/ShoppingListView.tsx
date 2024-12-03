@@ -4,24 +4,23 @@ import { Separator } from "@/components/ui/separator";
 import { RecipeProgressCard } from "./RecipeProgressCard";
 import { Recipe } from "@/types/recipe";
 import { IngredientItem } from "./types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
 
 interface ShoppingListViewProps {
   recipes: Recipe[];
   ingredients: IngredientItem[];
   checkedItems: Set<string>;
   onCheck: (ingredient: IngredientItem) => void;
+  viewMode: "list" | "recipe";
 }
 
 export function ShoppingListView({
   recipes,
   ingredients,
   checkedItems,
-  onCheck
+  onCheck,
+  viewMode
 }: ShoppingListViewProps) {
-  const [viewMode, setViewMode] = useState<"list" | "recipe">("list");
-  console.log("Current view mode:", viewMode);
+  console.log("ShoppingListView - Current view mode:", viewMode);
 
   const calculateProgress = (recipeId: string) => {
     const recipeIngredients = ingredients.filter(ing => ing.recipeId === recipeId);
@@ -41,26 +40,6 @@ export function ShoppingListView({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4">
-          <Select 
-            value={viewMode} 
-            onValueChange={(value: "list" | "recipe") => {
-              console.log("Changing view mode to:", value);
-              setViewMode(value);
-            }}
-          >
-            <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue placeholder="View mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="list">All Ingredients</SelectItem>
-              <SelectItem value="recipe">Group by Recipe</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
       {viewMode === "list" ? (
         <Card className="p-6">
           {sortedIngredients.map((ingredient, idx) => (
