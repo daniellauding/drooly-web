@@ -11,6 +11,7 @@ import { CountrySelect } from "./CountrySelect";
 import { PhoneInput } from "./PhoneInput";
 import { countries, countryCodes } from "@/components/settings/profileConstants";
 import { FormFooter } from "./FormFooter";
+import { useTranslation } from "react-i18next";
 
 interface ProfileBasicInfoProps {
   userData: {
@@ -24,6 +25,7 @@ interface ProfileBasicInfoProps {
     bio: string;
     gender: string;
     country: string;
+    language?: string;
   };
   onUpdate: () => void;
   onClose: () => void;
@@ -31,6 +33,7 @@ interface ProfileBasicInfoProps {
 
 export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicInfoProps) {
   const { toast } = useToast();
+  const { i18n } = useTranslation();
   const [formData, setFormData] = useState({
     name: userData.name || "",
     birthday: userData.birthday || "",
@@ -40,6 +43,7 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
     gender: userData.gender || "prefer-not-to-say",
     avatarUrl: userData.avatarUrl || "",
     country: userData.country || "United States",
+    language: userData.language || i18n.language || "sv",
   });
 
   useEffect(() => {
@@ -52,6 +56,7 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
       gender: userData.gender || "prefer-not-to-say",
       avatarUrl: userData.avatarUrl || "",
       country: userData.country || "United States",
+      language: userData.language || i18n.language || "sv",
     });
   }, [userData]);
 
@@ -66,6 +71,9 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
         ...formData,
         updatedAt: new Date(),
       });
+      
+      // Update the application language
+      i18n.changeLanguage(formData.language);
       
       toast({
         title: "Profile updated",
@@ -112,6 +120,22 @@ export function ProfileBasicInfo({ userData, onUpdate, onClose }: ProfileBasicIn
             disabled
             className="bg-muted"
           />
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="language">Language</Label>
+          <Select 
+            value={formData.language}
+            onValueChange={value => setFormData(prev => ({ ...prev, language: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sv">Svenska</SelectItem>
+              <SelectItem value="en">English</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="grid gap-2">
