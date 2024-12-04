@@ -13,7 +13,7 @@ interface Translation {
   [key: string]: string;
 }
 
-const RECIPE_TRANSLATIONS = [
+const RECIPE_TRANSLATIONS: Translation[] = [
   { key: "recipe.create", en: "Create Recipe" },
   { key: "recipe.ingredients", en: "Ingredients" },
   { key: "recipe.steps", en: "Steps" },
@@ -41,7 +41,7 @@ const RECIPE_TRANSLATIONS = [
   { key: "recipe.energy.fat", en: "Fat" },
 ];
 
-const UI_TRANSLATIONS = [
+const UI_TRANSLATIONS: Translation[] = [
   { key: "welcome", en: "Welcome to Drooly" },
   { key: "login", en: "Log in" },
   { key: "signup", en: "Sign up" },
@@ -68,7 +68,10 @@ export function BackofficeTranslations() {
   const handleAddLanguage = () => {
     if (newLanguage && !languages.includes(newLanguage)) {
       setLanguages([...languages, newLanguage]);
-      setTranslations(translations.map(t => ({ ...t, [newLanguage]: "" })));
+      setTranslations(translations.map(t => ({
+        ...t,
+        [newLanguage]: ""
+      } as Translation)));
       setNewLanguage("");
       toast({
         title: "Language added",
@@ -88,7 +91,7 @@ export function BackofficeTranslations() {
     }
     
     setLanguages(languages.filter(l => l !== lang));
-    setTranslations(translations.map(({ [lang]: _, ...rest }) => rest));
+    setTranslations(translations.map(({ [lang]: _, ...rest }) => rest as Translation));
     toast({
       title: "Language removed",
       description: `Removed ${lang} from available languages`
