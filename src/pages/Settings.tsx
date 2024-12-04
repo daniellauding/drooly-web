@@ -8,6 +8,7 @@ import { DeleteConfirmationDialog } from "@/components/backoffice/DeleteConfirma
 import { useState } from "react";
 import { LanguageSelector } from "@/components/settings/LanguageSelector";
 import { useTranslation } from "react-i18next";
+import { Separator } from "@/components/ui/separator";
 
 export default function Settings() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function Settings() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <TabsTrigger value="preferences">General</TabsTrigger>
           </TabsList>
           
           <TabsContent value="profile">
@@ -41,7 +42,20 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="preferences" className="space-y-6">
-            <LanguageSelector />
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold">General Settings</h2>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Language</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Choose your preferred language for the application
+                  </p>
+                  <LanguageSelector />
+                </div>
+                <Separator className="my-4" />
+                {/* Add more general settings here */}
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
 
