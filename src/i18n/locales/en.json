@@ -3,65 +3,81 @@
     "settings": "Settings",
     "language": "Language",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "advanced": "Advanced",
+    "search": "Search",
+    "close": "Close"
   },
   "languages": {
     "en": "English",
     "sv": "Swedish"
   },
   "recipe": {
-    "ingredients": "Ingredients",
-    "instructions": "Instructions",
-    "servings": "Servings",
-    "cookTime": "Cooking Time",
-    "difficulty": "Difficulty",
-    "cuisines": {
-      "american": "American",
-      "italian": "Italian",
-      "japanese": "Japanese",
-      "mexican": "Mexican",
-      "indian": "Indian",
-      "french": "French",
-      "thai": "Thai",
-      "mediterranean": "Mediterranean",
-      "chinese": "Chinese",
-      "korean": "Korean"
+    "ingredients": {
+      "title": "Ingredients",
+      "add": "Add Ingredient",
+      "addCustom": "Add Custom Ingredient",
+      "edit": "Edit Ingredient",
+      "searchOrAdd": "Search or add ingredients...",
+      "amount": "Amount",
+      "unit": "Unit",
+      "group": "Group",
+      "delete": {
+        "title": "Delete Ingredient",
+        "message": "Are you sure you want to delete this ingredient?"
+      }
     },
-    "categories": {
-      "familyFriendly": "Family Friendly",
-      "fastAndEasy": "Fast & Easy",
-      "budgetFriendly": "Budget Friendly",
-      "mealPrep": "Meal Prep",
-      "healthy": "Healthy",
-      "comfortFood": "Comfort Food"
+    "cookingMethods": {
+      "baking": "Baking",
+      "frying": "Frying",
+      "boiling": "Boiling",
+      "grilling": "Grilling",
+      "steaming": "Steaming",
+      "roasting": "Roasting",
+      "sauteing": "Sautéing"
     },
-    "occasions": {
-      "christmas": "Christmas",
-      "thanksgiving": "Thanksgiving",
-      "easter": "Easter",
-      "halloween": "Halloween",
-      "newYear": "New Year"
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "expert": "Expert"
     },
-    "seasons": {
-      "spring": "Spring",
-      "summer": "Summer",
-      "fall": "Fall",
-      "winter": "Winter",
-      "yearRound": "Year Round"
+    "dietary": {
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "glutenFree": "Gluten Free",
+      "dairyFree": "Dairy Free",
+      "containsNuts": "Contains Nuts"
     },
-    "equipment": {
-      "oven": "Oven",
-      "stovetop": "Stovetop",
-      "grill": "Grill",
-      "slowCooker": "Slow Cooker",
-      "airFryer": "Air Fryer"
+    "servings": {
+      "title": "Servings",
+      "amount": "Amount",
+      "unit": {
+        "serving": "serving",
+        "piece": "piece",
+        "portion": "portion"
+      }
     },
-    "costs": {
-      "under5": "Under $5",
-      "under10": "$5-$10",
-      "under20": "$10-$20",
-      "under30": "$20-$30",
-      "over30": "$30+"
+    "energy": {
+      "title": "Energy Information",
+      "calories": "Calories",
+      "kilojoules": "Kilojoules",
+      "protein": "Protein (g)",
+      "carbohydrates": "Carbohydrates (g)",
+      "fat": "Fat (g)",
+      "fiber": "Fiber (g)"
+    },
+    "stepBased": {
+      "title": "Step-based Recipe",
+      "enable": "Enable step-based instructions",
+      "addStep": "Add Step",
+      "stepTitle": "Step Title",
+      "duration": "Duration",
+      "instructions": "Instructions"
     }
   }
 }

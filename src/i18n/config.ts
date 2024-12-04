@@ -16,9 +16,9 @@ i18n
         translation: svTranslations
       }
     },
-    fallbackLng: 'en',
+    fallbackLng: 'sv',
     detection: {
-      order: ['localStorage', 'navigator'],
+      order: ['navigator', 'htmlTag', 'path', 'subdomain'],
       caches: ['localStorage']
     },
     interpolation: {

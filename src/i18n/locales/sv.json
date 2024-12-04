@@ -3,65 +3,81 @@
     "settings": "Inställningar",
     "language": "Språk",
     "save": "Spara",
-    "cancel": "Avbryt"
+    "cancel": "Avbryt",
+    "delete": "Radera",
+    "edit": "Redigera",
+    "add": "Lägg till",
+    "remove": "Ta bort",
+    "advanced": "Avancerat",
+    "search": "Sök",
+    "close": "Stäng"
   },
   "languages": {
     "en": "Engelska",
     "sv": "Svenska"
   },
   "recipe": {
-    "ingredients": "Ingredienser",
-    "instructions": "Instruktioner",
-    "servings": "Portioner",
-    "cookTime": "Tillagningstid",
-    "difficulty": "Svårighetsgrad",
-    "cuisines": {
-      "american": "Amerikansk",
-      "italian": "Italiensk",
-      "japanese": "Japansk",
-      "mexican": "Mexikansk",
-      "indian": "Indisk",
-      "french": "Fransk",
-      "thai": "Thailändsk",
-      "mediterranean": "Medelhavsmat",
-      "chinese": "Kinesisk",
-      "korean": "Koreansk"
+    "ingredients": {
+      "title": "Ingredienser",
+      "add": "Lägg till ingrediens",
+      "addCustom": "Lägg till egen ingrediens",
+      "edit": "Redigera ingrediens",
+      "searchOrAdd": "Sök eller lägg till ingredienser...",
+      "amount": "Mängd",
+      "unit": "Enhet",
+      "group": "Grupp",
+      "delete": {
+        "title": "Radera ingrediens",
+        "message": "Är du säker på att du vill radera denna ingrediens?"
+      }
     },
-    "categories": {
-      "familyFriendly": "Familjevänlig",
-      "fastAndEasy": "Snabb & Enkel",
-      "budgetFriendly": "Budgetvänlig",
-      "mealPrep": "Matlådor",
-      "healthy": "Hälsosam",
-      "comfortFood": "Husmanskost"
+    "cookingMethods": {
+      "baking": "Bakning",
+      "frying": "Stekning",
+      "boiling": "Kokning",
+      "grilling": "Grillning",
+      "steaming": "Ångkokning",
+      "roasting": "Rostning",
+      "sauteing": "Sautering"
     },
-    "occasions": {
-      "christmas": "Jul",
-      "thanksgiving": "Thanksgiving",
-      "easter": "Påsk",
-      "halloween": "Halloween",
-      "newYear": "Nyår"
+    "difficulty": {
+      "easy": "Lätt",
+      "medium": "Medel",
+      "hard": "Svår",
+      "expert": "Expert"
     },
-    "seasons": {
-      "spring": "Vår",
-      "summer": "Sommar",
-      "fall": "Höst",
-      "winter": "Vinter",
-      "yearRound": "Året runt"
+    "dietary": {
+      "vegetarian": "Vegetarisk",
+      "vegan": "Vegansk",
+      "glutenFree": "Glutenfri",
+      "dairyFree": "Mjölkfri",
+      "containsNuts": "Innehåller nötter"
     },
-    "equipment": {
-      "oven": "Ugn",
-      "stovetop": "Spis",
-      "grill": "Grill",
-      "slowCooker": "Slowcooker",
-      "airFryer": "Luftfritös"
+    "servings": {
+      "title": "Portioner",
+      "amount": "Antal",
+      "unit": {
+        "serving": "portion",
+        "piece": "styck",
+        "portion": "portion"
+      }
     },
-    "costs": {
-      "under5": "Under 50kr",
-      "under10": "50-100kr",
-      "under20": "100-200kr",
-      "under30": "200-300kr",
-      "over30": "300kr+"
+    "energy": {
+      "title": "Energiinformation",
+      "calories": "Kalorier",
+      "kilojoules": "Kilojoule",
+      "protein": "Protein (g)",
+      "carbohydrates": "Kolhydrater (g)",
+      "fat": "Fett (g)",
+      "fiber": "Fiber (g)"
+    },
+    "stepBased": {
+      "title": "Stegbaserat recept",
+      "enable": "Aktivera stegvisa instruktioner",
+      "addStep": "Lägg till steg",
+      "stepTitle": "Stegtitel",
+      "duration": "Varaktighet",
+      "instructions": "Instruktioner"
     }
   }
 }
