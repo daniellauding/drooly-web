@@ -4,6 +4,8 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslations from './locales/en.json';
 import svTranslations from './locales/sv.json';
 
+console.log('Initializing i18n with translations:', { en: enTranslations, sv: svTranslations });
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
@@ -16,9 +18,10 @@ i18n
         translation: svTranslations
       }
     },
-    fallbackLng: 'sv',
+    fallbackLng: 'en',
+    debug: true, // Enable debug mode to see more logs
     detection: {
-      order: ['navigator', 'htmlTag', 'path', 'subdomain'],
+      order: ['localStorage', 'navigator'],
       caches: ['localStorage']
     },
     interpolation: {
