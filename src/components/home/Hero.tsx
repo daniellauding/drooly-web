@@ -11,7 +11,7 @@ interface HeroProps {
 export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  console.log('Current translations loaded for Hero component');
+  console.log('Rendering Hero with translations');
 
   const handleCreateRecipe = () => {
     navigate('/create');

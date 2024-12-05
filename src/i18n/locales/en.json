@@ -16,68 +16,53 @@
     "en": "English",
     "sv": "Swedish"
   },
-  "recipe": {
-    "ingredients": {
-      "title": "Ingredients",
-      "add": "Add Ingredient",
-      "addCustom": "Add Custom Ingredient",
-      "edit": "Edit Ingredient",
-      "searchOrAdd": "Search or add ingredients...",
-      "amount": "Amount",
-      "unit": "Unit",
-      "group": "Group",
-      "delete": {
-        "title": "Delete Ingredient",
-        "message": "Are you sure you want to delete this ingredient?"
+  "home": {
+    "hero": {
+      "title": "Search for almost anything",
+      "description": "Explore recipes, find inspiration, and create your own dishes with AI-powered search - discover recipes based on ingredients you have or want to use."
+    },
+    "search": {
+      "placeholder": "Search recipes, ingredients, or paste a recipe URL..."
+    },
+    "ai": {
+      "assist": "AI Assist"
+    },
+    "kitchen": {
+      "action": "What's in your kitchen?",
+      "description": "Find recipes using ingredients you have"
+    },
+    "cuisines": {
+      "action": "Explore cuisines",
+      "description": "Discover recipes from around the world"
+    },
+    "import": {
+      "url": {
+        "action": "Import from URL",
+        "description": "Convert any recipe to your collection"
+      },
+      "clipboard": {
+        "action": "Paste from clipboard",
+        "description": "Import recipe from your clipboard"
       }
+    }
+  },
+  "about": {
+    "title": "About Droo.ly",
+    "subtitle": "Your personal recipe companion",
+    "mission": {
+      "title": "Our Mission",
+      "description": "We're on a mission to make cooking more accessible, enjoyable, and social. Droo.ly helps you discover, create, and share recipes with friends and family."
     },
-    "cookingMethods": {
-      "baking": "Baking",
-      "frying": "Frying",
-      "boiling": "Boiling",
-      "grilling": "Grilling",
-      "steaming": "Steaming",
-      "roasting": "Roasting",
-      "sauteing": "Sautéing"
+    "features": {
+      "title": "What We Offer",
+      "create": "Create and share your favorite recipes",
+      "plan": "Plan meals with friends and family",
+      "discover": "Discover new recipes from our community",
+      "organize": "Organize your recipe collection"
     },
-    "difficulty": {
-      "easy": "Easy",
-      "medium": "Medium",
-      "hard": "Hard",
-      "expert": "Expert"
-    },
-    "dietary": {
-      "vegetarian": "Vegetarian",
-      "vegan": "Vegan",
-      "glutenFree": "Gluten Free",
-      "dairyFree": "Dairy Free",
-      "containsNuts": "Contains Nuts"
-    },
-    "servings": {
-      "title": "Servings",
-      "amount": "Amount",
-      "unit": {
-        "serving": "serving",
-        "piece": "piece",
-        "portion": "portion"
-      }
-    },
-    "energy": {
-      "title": "Energy Information",
-      "calories": "Calories",
-      "kilojoules": "Kilojoules",
-      "protein": "Protein (g)",
-      "carbohydrates": "Carbohydrates (g)",
-      "fat": "Fat (g)",
-      "fiber": "Fiber (g)"
-    },
-    "stepBased": {
-      "title": "Step-based Recipe",
-      "enable": "Enable step-based instructions",
-      "addStep": "Add Step",
-      "stepTitle": "Step Title",
-      "duration": "Duration",
-      "instructions": "Instructions"
+    "community": {
+      "title": "Join Our Community",
+      "description": "Whether you're a home cook or a professional chef, Droo.ly is the perfect place to store your recipes, find inspiration, and connect with other food lovers."
     }
   }
 }

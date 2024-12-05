@@ -9,7 +9,7 @@ export function LanguageSelector() {
 
   console.log('Current language:', i18n.language);
   console.log('Available languages:', i18n.languages);
-  console.log('Loaded namespaces:', i18n.reportNamespaces?.());
+  console.log('Loaded namespaces:', i18n.reportNamespaces?.getUsedNamespaces());
 
   const handleLanguageChange = (value: string) => {
     console.log('Changing language to:', value);
@@ -17,7 +17,7 @@ export function LanguageSelector() {
     
     toast({
       title: t('common.language'),
-      description: `Language changed to ${value === 'en' ? 'English' : 'Swedish'}`
+      description: `${t('languages.' + value)}`
     });
   };
 

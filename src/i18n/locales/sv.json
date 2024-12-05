@@ -46,68 +46,23 @@
       }
     }
   },
-  "recipe": {
-    "ingredients": {
-      "title": "Ingredienser",
-      "add": "Lägg till ingrediens",
-      "addCustom": "Lägg till egen ingrediens",
-      "edit": "Redigera ingrediens",
-      "searchOrAdd": "Sök eller lägg till ingredienser...",
-      "amount": "Mängd",
-      "unit": "Enhet",
-      "group": "Grupp",
-      "delete": {
-        "title": "Radera ingrediens",
-        "message": "Är du säker på att du vill radera denna ingrediens?"
-      }
+  "about": {
+    "title": "Om Droo.ly",
+    "subtitle": "Din personliga receptassistent",
+    "mission": {
+      "title": "Vårt uppdrag",
+      "description": "Vi har som mål att göra matlagning mer tillgänglig, rolig och social. Droo.ly hjälper dig att upptäcka, skapa och dela recept med vänner och familj."
     },
-    "cookingMethods": {
-      "baking": "Bakning",
-      "frying": "Stekning",
-      "boiling": "Kokning",
-      "grilling": "Grillning",
-      "steaming": "Ångkokning",
-      "roasting": "Rostning",
-      "sauteing": "Sautering"
+    "features": {
+      "title": "Vad vi erbjuder",
+      "create": "Skapa och dela dina favoritrecept",
+      "plan": "Planera måltider med vänner och familj",
+      "discover": "Upptäck nya recept från vår gemenskap",
+      "organize": "Organisera din receptsamling"
     },
-    "difficulty": {
-      "easy": "Lätt",
-      "medium": "Medel",
-      "hard": "Svår",
-      "expert": "Expert"
-    },
-    "dietary": {
-      "vegetarian": "Vegetarisk",
-      "vegan": "Vegansk",
-      "glutenFree": "Glutenfri",
-      "dairyFree": "Mjölkfri",
-      "containsNuts": "Innehåller nötter"
-    },
-    "servings": {
-      "title": "Portioner",
-      "amount": "Antal",
-      "unit": {
-        "serving": "portion",
-        "piece": "styck",
-        "portion": "portion"
-      }
-    },
-    "energy": {
-      "title": "Energiinformation",
-      "calories": "Kalorier",
-      "kilojoules": "Kilojoule",
-      "protein": "Protein (g)",
-      "carbohydrates": "Kolhydrater (g)",
-      "fat": "Fett (g)",
-      "fiber": "Fiber (g)"
-    },
-    "stepBased": {
-      "title": "Stegbaserat recept",
-      "enable": "Aktivera stegvisa instruktioner",
-      "addStep": "Lägg till steg",
-      "stepTitle": "Stegtitel",
-      "duration": "Varaktighet",
-      "instructions": "Instruktioner"
+    "community": {
+      "title": "Gå med i vår gemenskap",
+      "description": "Oavsett om du är hobbykock eller professionell kock är Droo.ly den perfekta platsen för att lagra dina recept, hitta inspiration och få kontakt med andra matälskare."
     }
   }
 }
