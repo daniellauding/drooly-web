@@ -43,32 +43,32 @@ const RECIPE_TRANSLATIONS: Translation[] = [
 ];
 
 const UI_TRANSLATIONS: Translation[] = [
-  { key: "welcome", en: "Welcome to Drooly" },
-  { key: "login", en: "Log in" },
-  { key: "signup", en: "Sign up" },
-  { key: "save", en: "Save" },
-  { key: "cancel", en: "Cancel" },
-  { key: "delete", en: "Delete" },
-  { key: "edit", en: "Edit" },
-  { key: "publish", en: "Publish" },
-  { key: "save_draft", en: "Save as Draft" },
-  { key: "invite_users", en: "Invite Users" },
-  { key: "send_invite", en: "Send Invite" },
-  { key: "add_language", en: "Add Language" },
-  { key: "search", en: "Search" },
-  // Adding new page-related translations
-  { key: "home.hero.title", en: "Search for almost anything" },
-  { key: "home.hero.description", en: "Explore recipes, find inspiration, and create your own dishes with AI-powered search - discover recipes based on ingredients you have or want to use." },
-  { key: "home.search.placeholder", en: "Search recipes, ingredients, or paste a recipe URL..." },
-  { key: "home.ai.assist", en: "AI Assist" },
-  { key: "home.kitchen.action", en: "What's in your kitchen?" },
-  { key: "home.kitchen.description", en: "Find recipes using ingredients you have" },
-  { key: "home.cuisines.action", en: "Explore cuisines" },
-  { key: "home.cuisines.description", en: "Discover recipes from around the world" },
-  { key: "home.import.url.action", en: "Import from URL" },
-  { key: "home.import.url.description", en: "Convert any recipe to your collection" },
-  { key: "home.import.clipboard.action", en: "Paste from clipboard" },
-  { key: "home.import.clipboard.description", en: "Import recipe from your clipboard" }
+  { key: "welcome", en: "Welcome to Drooly", sv: "Välkommen till Drooly" },
+  { key: "login", en: "Log in", sv: "Logga in" },
+  { key: "signup", en: "Sign up", sv: "Registrera dig" },
+  { key: "save", en: "Save", sv: "Spara" },
+  { key: "cancel", en: "Cancel", sv: "Avbryt" },
+  { key: "delete", en: "Delete", sv: "Radera" },
+  { key: "edit", en: "Edit", sv: "Redigera" },
+  { key: "publish", en: "Publish", sv: "Publicera" },
+  { key: "save_draft", en: "Save as Draft", sv: "Spara som utkast" },
+  { key: "invite_users", en: "Invite Users", sv: "Bjud in användare" },
+  { key: "send_invite", en: "Send Invite", sv: "Skicka inbjudan" },
+  { key: "add_language", en: "Add Language", sv: "Lägg till språk" },
+  { key: "search", en: "Search", sv: "Sök" },
+  // Adding new page-related translations with Swedish support
+  { key: "home.hero.title", en: "Search for almost anything", sv: "Sök efter nästan vad som helst" },
+  { key: "home.hero.description", en: "Explore recipes, find inspiration, and create your own dishes with AI-powered search - discover recipes based on ingredients you have or want to use.", sv: "Utforska recept, hitta inspiration och skapa dina egna rätter med AI-driven sökning - upptäck recept baserade på ingredienser du har eller vill använda." },
+  { key: "home.search.placeholder", en: "Search recipes, ingredients, or paste a recipe URL...", sv: "Sök recept, ingredienser eller klistra in en recept-URL..." },
+  { key: "home.ai.assist", en: "AI Assist", sv: "AI-assistans" },
+  { key: "home.kitchen.action", en: "What's in your kitchen?", sv: "Vad finns i ditt kök?" },
+  { key: "home.kitchen.description", en: "Find recipes using ingredients you have", sv: "Hitta recept med ingredienser du har" },
+  { key: "home.cuisines.action", en: "Explore cuisines", sv: "Utforska olika kök" },
+  { key: "home.cuisines.description", en: "Discover recipes from around the world", sv: "Upptäck recept från hela världen" },
+  { key: "home.import.url.action", en: "Import from URL", sv: "Importera från URL" },
+  { key: "home.import.url.description", en: "Convert any recipe to your collection", sv: "Konvertera valfritt recept till din samling" },
+  { key: "home.import.clipboard.action", en: "Paste from clipboard", sv: "Klistra in från urklipp" },
+  { key: "home.import.clipboard.description", en: "Import recipe from your clipboard", sv: "Importera recept från urklipp" }
 ];
 
 export function BackofficeTranslations() {

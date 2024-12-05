@@ -16,6 +16,36 @@
     "en": "Engelska",
     "sv": "Svenska"
   },
+  "home": {
+    "hero": {
+      "title": "Sök efter nästan vad som helst",
+      "description": "Utforska recept, hitta inspiration och skapa dina egna rätter med AI-driven sökning - upptäck recept baserade på ingredienser du har eller vill använda."
+    },
+    "search": {
+      "placeholder": "Sök recept, ingredienser eller klistra in en recept-URL..."
+    },
+    "ai": {
+      "assist": "AI-assistans"
+    },
+    "kitchen": {
+      "action": "Vad finns i ditt kök?",
+      "description": "Hitta recept med ingredienser du har"
+    },
+    "cuisines": {
+      "action": "Utforska olika kök",
+      "description": "Upptäck recept från hela världen"
+    },
+    "import": {
+      "url": {
+        "action": "Importera från URL",
+        "description": "Konvertera valfritt recept till din samling"
+      },
+      "clipboard": {
+        "action": "Klistra in från urklipp",
+        "description": "Importera recept från urklipp"
+      }
+    }
+  },
   "recipe": {
     "ingredients": {
       "title": "Ingredienser",
