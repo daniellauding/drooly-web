@@ -3,9 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Search, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TranslationLanguageBadges } from "./TranslationLanguageBadges";
+import { TranslationControls } from "./TranslationControls";
+import { Save } from "lucide-react";
 
 interface Translation {
   key: string;
@@ -63,6 +64,7 @@ export function BackofficeTranslations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [newLanguage, setNewLanguage] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const { toast } = useToast();
 
   const handleAddLanguage = () => {
@@ -73,6 +75,7 @@ export function BackofficeTranslations() {
         [newLanguage]: ""
       } as Translation)));
       setNewLanguage("");
+      setHasUnsavedChanges(true);
       toast({
         title: "Language added",
         description: `Added ${newLanguage} to available languages`
@@ -92,6 +95,7 @@ export function BackofficeTranslations() {
     
     setLanguages(languages.filter(l => l !== lang));
     setTranslations(translations.map(({ [lang]: _, ...rest }) => rest as Translation));
+    setHasUnsavedChanges(true);
     toast({
       title: "Language removed",
       description: `Removed ${lang} from available languages`
@@ -102,6 +106,17 @@ export function BackofficeTranslations() {
     setTranslations(translations.map(t => 
       t.key === key ? { ...t, [lang]: value } : t
     ));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSave = () => {
+    // Here you would typically save the translations to your backend
+    console.log('Saving translations:', translations);
+    setHasUnsavedChanges(false);
+    toast({
+      title: "Changes saved",
+      description: "All translation changes have been saved successfully"
+    });
   };
 
   const filteredTranslations = translations.filter(t => {
@@ -117,49 +132,28 @@ export function BackofficeTranslations() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap">
-        {languages.map(lang => (
-          <Badge
-            key={lang}
-            variant={lang === "sv" ? "default" : "secondary"}
-            className="flex items-center gap-1"
-          >
-            {lang.toUpperCase()}
-            {lang !== "en" && lang !== "sv" && (
-              <button
-                onClick={() => handleRemoveLanguage(lang)}
-                className="ml-1 hover:text-destructive"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </Badge>
-        ))}
+      <div className="flex justify-between items-start">
+        <TranslationLanguageBadges
+          languages={languages}
+          onRemoveLanguage={handleRemoveLanguage}
+        />
+        <Button
+          onClick={handleSave}
+          disabled={!hasUnsavedChanges}
+          className="ml-4"
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Save Changes
+        </Button>
       </div>
 
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search translations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Add new language (e.g., es, fr)"
-            value={newLanguage}
-            onChange={(e) => setNewLanguage(e.target.value)}
-            className="w-48"
-          />
-          <Button onClick={handleAddLanguage}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Language
-          </Button>
-        </div>
-      </div>
+      <TranslationControls
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        newLanguage={newLanguage}
+        onNewLanguageChange={setNewLanguage}
+        onAddLanguage={handleAddLanguage}
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
