@@ -2,6 +2,7 @@ import { Search, Link, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface HeroProps {
   onSearch?: (query: string) => void;
@@ -9,6 +10,8 @@ interface HeroProps {
 
 export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  console.log('Current translations loaded for Hero component');
 
   const handleCreateRecipe = () => {
     navigate('/create');
@@ -25,16 +28,16 @@ export function Hero({ onSearch }: HeroProps) {
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Search for <span className="italic">almost</span> anything
+            {t('home.hero.title')}
           </h1>
           
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Explore recipes, find inspiration, and create your own dishes with AI-powered search - discover recipes based on ingredients you have or want to use.
+            {t('home.hero.description')}
           </p>
 
           <div className="relative max-w-2xl mx-auto">
             <Input 
-              placeholder="Search recipes, ingredients, or paste a recipe URL..."
+              placeholder={t('home.search.placeholder')}
               className="h-12 pl-12 pr-32 text-lg shadow-sm"
               onChange={handleSearchChange}
             />
@@ -44,7 +47,7 @@ export function Hero({ onSearch }: HeroProps) {
               onClick={handleCreateRecipe}
             >
               <Wand2 className="mr-2 h-4 w-4" />
-              AI Assist
+              {t('home.ai.assist')}
             </Button>
           </div>
         </div>

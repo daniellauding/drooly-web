@@ -7,9 +7,13 @@ import { IngredientSearchModal } from "@/components/ingredients/IngredientSearch
 import { CuisineMapDialog } from "./CuisineMapDialog";
 import { RecipeUrlDialog } from "@/components/recipe/RecipeUrlDialog";
 import { ClipboardImportDialog } from "@/components/recipe/ClipboardImportDialog";
+import { useTranslation } from "react-i18next";
 
 export function SearchExamples() {
   const { user } = useAuth();
+  const { t } = useTranslation();
+  console.log('Current translations loaded for SearchExamples component');
+  
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showKitchenModal, setShowKitchenModal] = useState(false);
   const [showCuisineMap, setShowCuisineMap] = useState(false);
@@ -27,26 +31,26 @@ export function SearchExamples() {
   const examples = [
     {
       icon: CookingPot,
-      title: "What's in your kitchen?",
-      description: "Find recipes using ingredients you have",
+      title: t('home.kitchen.action'),
+      description: t('home.kitchen.description'),
       onClick: () => handleAuthRequired(() => setShowKitchenModal(true))
     },
     {
       icon: Globe,
-      title: "Explore cuisines",
-      description: "Discover recipes from around the world",
+      title: t('home.cuisines.action'),
+      description: t('home.cuisines.description'),
       onClick: () => handleAuthRequired(() => setShowCuisineMap(true))
     },
     {
       icon: Link,
-      title: "Import from URL",
-      description: "Convert any recipe to your collection",
+      title: t('home.import.url.action'),
+      description: t('home.import.url.description'),
       onClick: () => handleAuthRequired(() => setShowUrlDialog(true))
     },
     {
       icon: ClipboardPaste,
-      title: "Paste from clipboard",
-      description: "Import recipe from your clipboard",
+      title: t('home.import.clipboard.action'),
+      description: t('home.import.clipboard.description'),
       onClick: () => handleAuthRequired(() => setShowClipboardDialog(true))
     }
   ];
