@@ -56,6 +56,19 @@ const UI_TRANSLATIONS: Translation[] = [
   { key: "send_invite", en: "Send Invite" },
   { key: "add_language", en: "Add Language" },
   { key: "search", en: "Search" },
+  // Adding new page-related translations
+  { key: "home.hero.title", en: "Search for almost anything" },
+  { key: "home.hero.description", en: "Explore recipes, find inspiration, and create your own dishes with AI-powered search - discover recipes based on ingredients you have or want to use." },
+  { key: "home.search.placeholder", en: "Search recipes, ingredients, or paste a recipe URL..." },
+  { key: "home.ai.assist", en: "AI Assist" },
+  { key: "home.kitchen.action", en: "What's in your kitchen?" },
+  { key: "home.kitchen.description", en: "Find recipes using ingredients you have" },
+  { key: "home.cuisines.action", en: "Explore cuisines" },
+  { key: "home.cuisines.description", en: "Discover recipes from around the world" },
+  { key: "home.import.url.action", en: "Import from URL" },
+  { key: "home.import.url.description", en: "Convert any recipe to your collection" },
+  { key: "home.import.clipboard.action", en: "Paste from clipboard" },
+  { key: "home.import.clipboard.description", en: "Import recipe from your clipboard" }
 ];
 
 export function BackofficeTranslations() {
