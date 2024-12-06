@@ -1,20 +1,27 @@
-const admin = require('firebase-admin');
-const fs = require('fs');
-const path = require('path');
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Initialize Firebase Admin
-const serviceAccount = require('../service-account.json');
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+const serviceAccount = JSON.parse(
+  readFileSync(join(__dirname, '../service-account.json'), 'utf8')
+);
+
+initializeApp({
+  credential: cert(serviceAccount)
 });
 
-const db = admin.firestore();
+const db = getFirestore();
 
 async function updateTranslations() {
   try {
     // Read local translation files
-    const enTranslations = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/i18n/locales/en.json'), 'utf8'));
-    const svTranslations = JSON.parse(fs.readFileSync(path.join(__dirname, '../src/i18n/locales/sv.json'), 'utf8'));
+    const enTranslations = JSON.parse(readFileSync(join(__dirname, '../src/i18n/locales/en.json'), 'utf8'));
+    const svTranslations = JSON.parse(readFileSync(join(__dirname, '../src/i18n/locales/sv.json'), 'utf8'));
 
     // Function to flatten nested objects
     const flattenObject = (obj, prefix = '') => {
@@ -33,6 +40,7 @@ async function updateTranslations() {
     const flatEn = flattenObject(enTranslations);
     const flatSv = flattenObject(svTranslations);
 
+    console.log('Uploading English translations...');
     // Update English translations
     const enBatch = db.batch();
     Object.entries(flatEn).forEach(([key, value]) => {
@@ -42,6 +50,7 @@ async function updateTranslations() {
     await enBatch.commit();
     console.log('English translations updated');
 
+    console.log('Uploading Swedish translations...');
     // Update Swedish translations
     const svBatch = db.batch();
     Object.entries(flatSv).forEach(([key, value]) => {
