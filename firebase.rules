@@ -23,6 +23,10 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
+    match /users/{userId}/shoppingHistory/{historyId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
     match /translations/{locale}/strings/{string} {
       allow read: if true;  // Allow public read access to translations
       allow write: if request.auth != null && 
