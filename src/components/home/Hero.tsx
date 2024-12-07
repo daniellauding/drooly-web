@@ -1,4 +1,4 @@
-import { Search, Link, Wand2 } from "lucide-react";
+import { Search, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ interface HeroProps {
 export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+
   console.log('Rendering Hero with translations');
 
   const handleCreateRecipe = () => {

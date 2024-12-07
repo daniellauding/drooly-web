@@ -12,13 +12,14 @@ import { useTranslation } from "react-i18next";
 export function SearchExamples() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  console.log('Rendering SearchExamples with translations');
   
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showKitchenModal, setShowKitchenModal] = useState(false);
   const [showCuisineMap, setShowCuisineMap] = useState(false);
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [showClipboardDialog, setShowClipboardDialog] = useState(false);
+
+  console.log('Rendering SearchExamples with translations');
 
   const handleAuthRequired = (action: () => void) => {
     if (!user) {
