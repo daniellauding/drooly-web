@@ -1,8 +1,8 @@
-import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { IngredientSuggestions } from "../ingredients/IngredientSuggestions";
+import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { IngredientSuggestions } from "../ingredients/IngredientSuggestions";
 import { IngredientForm } from "./IngredientForm";
 
 interface CustomIngredientAddProps {
