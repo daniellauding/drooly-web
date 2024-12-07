@@ -35,6 +35,8 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
     }
   };
 
+  console.log("Rendering CustomIngredientAdd with input:", customIngredientInput);
+
   return (
     <Card className="p-4">
       <h3 className="font-medium mb-4">{t('recipe.ingredients.addCustom')}</h3>
