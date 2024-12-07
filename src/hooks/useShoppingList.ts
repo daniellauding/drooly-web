@@ -7,11 +7,14 @@ import { useShoppingItems } from './shopping/useShoppingItems';
 import { useRecurringItems } from './shopping/useRecurringItems';
 import { useIngredientOperations } from './shopping/useIngredientOperations';
 
-const STORAGE_KEY = 'custom_ingredients';
-
 export function useShoppingList(userId: string | undefined) {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const { checkedItems, setCheckedItems, saveCheckedItems } = useShoppingItems(userId);
+  const { 
+    checkedItems, 
+    setCheckedItems, 
+    saveCheckedItems,
+    customIngredients 
+  } = useShoppingItems(userId);
   const { setRecurring } = useRecurringItems(userId);
   const { 
     ingredients, 
@@ -20,30 +23,7 @@ export function useShoppingList(userId: string | undefined) {
     addCustomIngredient 
   } = useIngredientOperations(userId);
 
-  useEffect(() => {
-    if (!userId) return;
-    
-    const storedIngredients = localStorage.getItem(`${STORAGE_KEY}_${userId}`);
-    if (storedIngredients) {
-      const parsedIngredients = JSON.parse(storedIngredients);
-      console.log("Loaded custom ingredients from storage:", parsedIngredients);
-      setIngredients(prev => {
-        const nonCustomIngredients = prev.filter(ing => ing.recipeId !== 'custom');
-        return [...nonCustomIngredients, ...parsedIngredients];
-      });
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-    
-    const customIngredients = ingredients.filter(ing => ing.recipeId === 'custom');
-    if (customIngredients.length > 0) {
-      console.log("Saving custom ingredients to storage:", customIngredients);
-      localStorage.setItem(`${STORAGE_KEY}_${userId}`, JSON.stringify(customIngredients));
-    }
-  }, [ingredients, userId]);
-
+  // Load recipes and their ingredients
   useEffect(() => {
     if (!userId) {
       console.log("No userId provided to useShoppingList");
@@ -74,7 +54,7 @@ export function useShoppingList(userId: string | undefined) {
       console.log("Fetched recipes count:", fetchedRecipes.length);
       setRecipes(fetchedRecipes);
 
-      const allIngredients = fetchedRecipes.flatMap(recipe =>
+      const recipeIngredients = fetchedRecipes.flatMap(recipe =>
         recipe.ingredients.map(ing => ({
           ...ing,
           recipeId: recipe.id,
@@ -83,6 +63,8 @@ export function useShoppingList(userId: string | undefined) {
         }))
       );
 
+      // Combine recipe ingredients with custom ingredients
+      const allIngredients = [...recipeIngredients, ...customIngredients];
       console.log("Total ingredients:", allIngredients.length);
       setIngredients(allIngredients);
     } catch (error) {
@@ -131,15 +113,16 @@ export function useShoppingList(userId: string | undefined) {
     if (!userId) return;
 
     console.log("Removing ingredient:", ingredient);
-    setIngredients(prev => prev.filter(ing => 
+    const updatedIngredients = ingredients.filter(ing => 
       !(ing.recipeId === ingredient.recipeId && ing.name === ingredient.name)
-    ));
+    );
+    setIngredients(updatedIngredients);
     
     const key = `${ingredient.recipeId}-${ingredient.name}`;
     if (checkedItems.has(key)) {
       const newChecked = new Set(checkedItems);
       newChecked.delete(key);
-      await saveCheckedItems(newChecked, ingredients);
+      await saveCheckedItems(newChecked, updatedIngredients);
     }
   };
 
