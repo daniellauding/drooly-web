@@ -9,7 +9,6 @@ export function useShoppingItems(userId: string | undefined) {
   const [customIngredients, setCustomIngredients] = useState<IngredientItem[]>([]);
   const { toast } = useToast();
 
-  // Load checked items and custom ingredients on mount
   useEffect(() => {
     const loadItems = async () => {
       if (!userId) return;
@@ -57,6 +56,11 @@ export function useShoppingItems(userId: string | undefined) {
 
       // Update local state
       setCustomIngredients(customIngs);
+      
+      toast({
+        title: "Success",
+        description: "Shopping list saved successfully"
+      });
 
     } catch (error) {
       console.error("Error saving checked items and custom ingredients:", error);
