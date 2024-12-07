@@ -37,7 +37,7 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
 
   return (
     <Card className="p-4">
-      <h3 className="font-medium mb-4">Add Custom Ingredient</h3>
+      <h3 className="font-medium mb-4">{t('recipe.ingredients.addCustom', 'Add Custom Ingredient')}</h3>
       <div className="space-y-4">
         <div className="relative">
           <Input
@@ -45,7 +45,7 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
             onChange={(e) => setCustomIngredientInput(e.target.value)}
             onKeyDown={handleCustomIngredientKeyDown}
             onClick={() => !showSuggestions && setShowSuggestions(true)}
-            placeholder={t('recipe.ingredients.searchOrAdd')}
+            placeholder={t('recipe.ingredients.searchOrAdd', 'Search or add ingredient...')}
             className="w-full"
           />
 
