@@ -17,6 +17,8 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
   const [unit, setUnit] = useState("piece");
   const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">("none");
 
+  console.log("Rendering CustomIngredientAdd with input:", customIngredientInput);
+
   const handleCustomIngredientKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && customIngredientInput.trim()) {
       e.preventDefault();
@@ -34,8 +36,6 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
       setShowSuggestions(false);
     }
   };
-
-  console.log("Rendering CustomIngredientAdd with input:", customIngredientInput);
 
   return (
     <Card className="p-4">
