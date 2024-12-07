@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
-import { IngredientSuggestions } from "../ingredients/IngredientSuggestions";
 import { IngredientForm } from "./IngredientForm";
+import { IngredientSuggestions } from "../ingredients/IngredientSuggestions";
 
 interface CustomIngredientAddProps {
   onAdd: (name: string, amount: string, unit: string, recurrence?: "none" | "weekly" | "monthly") => void;
@@ -11,8 +11,8 @@ interface CustomIngredientAddProps {
 
 export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
   const { t } = useTranslation();
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [customIngredientInput, setCustomIngredientInput] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [amount, setAmount] = useState("");
   const [unit, setUnit] = useState("piece");
   const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">("none");

@@ -16,6 +16,12 @@
     "en": "Engelska",
     "sv": "Svenska"
   },
+  "recipe": {
+    "ingredients": {
+      "addCustom": "Lägg till egen ingrediens",
+      "searchOrAdd": "Sök eller lägg till ingrediens..."
+    }
+  },
   "home": {
     "hero": {
       "title": "Sök efter nästan vad som helst",

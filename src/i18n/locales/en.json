@@ -64,5 +64,11 @@
       "title": "Join Our Community",
       "description": "Whether you're a home cook or a professional chef, Droo.ly is the perfect place to store your recipes, find inspiration, and connect with other food lovers."
     }
+  },
+  "recipe": {
+    "ingredients": {
+      "addCustom": "Add Custom Ingredient",
+      "searchOrAdd": "Search or add ingredient..."
+    }
   }
 }
