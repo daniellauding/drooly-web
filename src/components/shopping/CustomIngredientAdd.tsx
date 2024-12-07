@@ -10,12 +10,12 @@ interface CustomIngredientAddProps {
 }
 
 export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
+  const { t } = useTranslation();
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [customIngredientInput, setCustomIngredientInput] = useState("");
   const [amount, setAmount] = useState("");
   const [unit, setUnit] = useState("piece");
   const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">("none");
-  const { t } = useTranslation();
 
   const handleCustomIngredientKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && customIngredientInput.trim()) {
