@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,7 @@ interface CustomIngredientAddProps {
 }
 
 export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
+  // Move all hooks to the top level
   const { t } = useTranslation();
   const [customIngredientInput, setCustomIngredientInput] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -17,14 +18,14 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
   const [unit, setUnit] = useState("piece");
   const [recurrence, setRecurrence] = useState<"none" | "weekly" | "monthly">("none");
 
-  const handleCustomIngredientKeyDown = (e: React.KeyboardEvent) => {
+  const handleCustomIngredientKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && customIngredientInput.trim()) {
       e.preventDefault();
       handleAddCustomIngredient();
     }
-  };
+  }, [customIngredientInput]);
 
-  const handleAddCustomIngredient = () => {
+  const handleAddCustomIngredient = useCallback(() => {
     if (customIngredientInput.trim()) {
       onAdd(customIngredientInput.trim(), amount, unit, recurrence);
       setCustomIngredientInput("");
@@ -33,7 +34,7 @@ export function CustomIngredientAdd({ onAdd }: CustomIngredientAddProps) {
       setRecurrence("none");
       setShowSuggestions(false);
     }
-  };
+  }, [customIngredientInput, amount, unit, recurrence, onAdd]);
 
   return (
     <Card className="p-4">
