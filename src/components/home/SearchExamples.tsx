@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 
 export function SearchExamples() {
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
   
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showKitchenModal, setShowKitchenModal] = useState(false);
@@ -19,7 +19,7 @@ export function SearchExamples() {
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [showClipboardDialog, setShowClipboardDialog] = useState(false);
 
-  console.log('Rendering SearchExamples with translations');
+  console.log('Rendering SearchExamples, i18n ready:', ready);
 
   const handleAuthRequired = (action: () => void) => {
     if (!user) {
@@ -28,6 +28,10 @@ export function SearchExamples() {
     }
     action();
   };
+
+  if (!ready) {
+    return null; // Don't render until translations are ready
+  }
 
   const examples = [
     {

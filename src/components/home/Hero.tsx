@@ -10,9 +10,9 @@ interface HeroProps {
 
 export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, ready } = useTranslation();
 
-  console.log('Rendering Hero with translations');
+  console.log('Rendering Hero, i18n ready:', ready);
 
   const handleCreateRecipe = () => {
     navigate('/create');
@@ -23,6 +23,10 @@ export function Hero({ onSearch }: HeroProps) {
       onSearch(e.target.value);
     }
   };
+
+  if (!ready) {
+    return null; // Don't render until translations are ready
+  }
 
   return (
     <div className="relative bg-[#F7F9FC] py-20 overflow-hidden">
