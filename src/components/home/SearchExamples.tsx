@@ -19,7 +19,7 @@ export function SearchExamples() {
   const [showUrlDialog, setShowUrlDialog] = useState(false);
   const [showClipboardDialog, setShowClipboardDialog] = useState(false);
 
-  console.log('Rendering SearchExamples, i18n ready:', ready);
+  console.log('SearchExamples - Translation ready:', ready);
 
   const handleAuthRequired = (action: () => void) => {
     if (!user) {
@@ -29,8 +29,9 @@ export function SearchExamples() {
     action();
   };
 
+  // Wait for translations to be ready
   if (!ready) {
-    return null; // Don't render until translations are ready
+    return <div className="container mx-auto px-4 py-12 bg-background" />;
   }
 
   const examples = [

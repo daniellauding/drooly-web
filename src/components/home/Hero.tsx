@@ -12,7 +12,7 @@ export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
   const { t, ready } = useTranslation();
 
-  console.log('Rendering Hero, i18n ready:', ready);
+  console.log('Hero - Translation ready:', ready);
 
   const handleCreateRecipe = () => {
     navigate('/create');
@@ -24,8 +24,9 @@ export function Hero({ onSearch }: HeroProps) {
     }
   };
 
+  // Wait for translations to be ready
   if (!ready) {
-    return null; // Don't render until translations are ready
+    return <div className="h-[50vh] bg-[#F7F9FC]" />;
   }
 
   return (
