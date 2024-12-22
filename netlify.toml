@@ -6,6 +6,21 @@
   NODE_VERSION = "18.18.0"
   NPM_VERSION = "9.8.1"
 
+# Development context
+[context.dev]
+  command = "npm run build:dev"
+  environment = { VITE_APP_ENV = "development" }
+
+# Staging context
+[context.staging]
+  command = "npm run build:stage"
+  environment = { VITE_APP_ENV = "staging" }
+
+# Production context
+[context.production]
+  command = "npm run build:prod"
+  environment = { VITE_APP_ENV = "production" }
+
 [[redirects]]
   from = "https://drooly.firebaseapp.com/*"
   to = "https://droo.ly/:splat"

@@ -28,3 +28,11 @@ dist-ssr
 
 # Sensitive credentials
 service-account.json
+
+# Environment files
+.env*
+!.env.example
+
+# Firebase
+.firebase/
+firebase-debug.log
