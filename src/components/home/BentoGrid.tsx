@@ -1,71 +1,25 @@
-import { useState } from "react";
-import { Recipe } from "@/services/recipeService";
-import { useAuth } from "@/contexts/AuthContext";
-import { ImageRecognitionDialog } from "../recipe/ImageRecognitionDialog";
-import { AuthModal } from "../auth/AuthModal";
-import { CuisineMapDialog } from "./CuisineMapDialog";
-import { RecipeFilter } from "../recipe/RecipeFilter";
-import { BentoGridHeader } from "./BentoGridHeader";
-import { BentoGridContent } from "./BentoGridContent";
-import { WeeklyStoriesSection } from "./WeeklyStoriesSection";
+import { Recipe } from "@/types/recipe";
+import { RecipeCard } from "@/components/RecipeCard";
 
 interface BentoGridProps {
   recipes: Recipe[];
   onAuthModalOpen?: () => void;
 }
 
-export function BentoGrid({ recipes, onAuthModalOpen }: BentoGridProps) {
-  const { user } = useAuth();
-  const [generatedRecipes, setGeneratedRecipes] = useState<Recipe[]>([]);
-  const [showImageRecognition, setShowImageRecognition] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showCuisineMap, setShowCuisineMap] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-
-  console.log('BentoGrid received recipes count:', recipes.length);
+export function BentoGrid({ recipes = [], onAuthModalOpen }: BentoGridProps) {
+  if (!recipes?.length) {
+    return null;
+  }
 
   return (
-    <div className="relative">
-      <BentoGridHeader 
-        onMethodSelect={setSelectedMethod}
-        selectedMethod={selectedMethod}
-        onShowFilters={() => setShowFilters(true)}
-      />
-
-      <WeeklyStoriesSection />
-      
-      <BentoGridContent 
-        recipes={recipes}
-        generatedRecipes={generatedRecipes}
-        user={user}
-        selectedMethod={selectedMethod}
-        onAuthModalOpen={onAuthModalOpen}
-      />
-
-      <ImageRecognitionDialog
-        open={showImageRecognition}
-        onOpenChange={setShowImageRecognition}
-        onRecipeScanned={() => {}}
-      />
-
-      <CuisineMapDialog 
-        open={showCuisineMap}
-        onOpenChange={setShowCuisineMap}
-        recipes={[...recipes, ...generatedRecipes]}
-      />
-
-      <AuthModal 
-        open={showAuthModal}
-        onOpenChange={setShowAuthModal}
-        defaultTab="login"
-      />
-
-      <RecipeFilter
-        open={showFilters}
-        onOpenChange={setShowFilters}
-        onFilterChange={() => {}}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {recipes.map((recipe) => (
+        <RecipeCard
+          key={recipe.id}
+          {...recipe}
+          onDismiss={onAuthModalOpen}
+        />
+      ))}
     </div>
   );
 }
