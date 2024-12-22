@@ -1,58 +1,60 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 interface HeroProps {
   onSearch?: (query: string) => void;
 }
 
-export function Hero({ onSearch = () => {} }: HeroProps) {
-  const { t, ready } = useTranslation();
+export function Hero({ onSearch }: HeroProps) {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { t, ready } = useTranslation();
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      onSearch(searchQuery);
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+  console.log('Hero - Translation ready:', ready);
+
+  const handleCreateRecipe = () => {
+    navigate('/create');
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onSearch) {
+      onSearch(e.target.value);
     }
   };
 
-  // Show loading state while translations are not ready
+  // Wait for translations to be ready
   if (!ready) {
-    return <div>Loading...</div>;
+    return <div className="h-[50vh] bg-[#F7F9FC]" />;
   }
 
   return (
-    <div className="relative overflow-hidden bg-background py-24">
+    <div className="relative bg-[#F7F9FC] py-20 overflow-hidden">
       <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto space-y-8">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
             {t('home.hero.title')}
           </h1>
-          <p className="text-lg text-muted-foreground">
+          
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {t('home.hero.description')}
           </p>
-          
-          <div className="relative max-w-xl mx-auto">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder={t('home.search.placeholder')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="w-full rounded-lg border bg-white px-9 py-2 text-sm outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <Button onClick={handleSearch}>
-                {t('home.ai.assist')}
-              </Button>
-            </div>
+
+          <div className="relative max-w-2xl mx-auto">
+            <Input 
+              placeholder={t('home.search.placeholder')}
+              className="h-12 pl-12 pr-32 text-lg shadow-sm"
+              onChange={handleSearchChange}
+            />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Button 
+              className="absolute right-1 top-1/2 -translate-y-1/2"
+              onClick={handleCreateRecipe}
+            >
+              <Wand2 className="mr-2 h-4 w-4" />
+              {t('home.ai.assist')}
+            </Button>
           </div>
         </div>
       </div>

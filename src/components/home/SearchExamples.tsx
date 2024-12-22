@@ -1,69 +1,115 @@
-import { useTranslation } from "react-i18next";
+import { CookingPot, Globe, Link, ClipboardPaste } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Utensils, Globe, Link, ClipboardCopy } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/auth/AuthModal";
+import { IngredientSearchModal } from "@/components/ingredients/IngredientSearchModal";
+import { CuisineMapDialog } from "./CuisineMapDialog";
+import { RecipeUrlDialog } from "@/components/recipe/RecipeUrlDialog";
+import { ClipboardImportDialog } from "@/components/recipe/ClipboardImportDialog";
+import { useTranslation } from "react-i18next";
 
 export function SearchExamples() {
-  const { t } = useTranslation();
+  const { user } = useAuth();
+  const { t, ready } = useTranslation();
+  
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showKitchenModal, setShowKitchenModal] = useState(false);
+  const [showCuisineMap, setShowCuisineMap] = useState(false);
+  const [showUrlDialog, setShowUrlDialog] = useState(false);
+  const [showClipboardDialog, setShowClipboardDialog] = useState(false);
+
+  console.log('SearchExamples - Translation ready:', ready);
+
+  const handleAuthRequired = (action: () => void) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    action();
+  };
+
+  // Wait for translations to be ready
+  if (!ready) {
+    return <div className="container mx-auto px-4 py-12 bg-background" />;
+  }
+
+  const examples = [
+    {
+      icon: CookingPot,
+      title: t('home.kitchen.action'),
+      description: t('home.kitchen.description'),
+      onClick: () => handleAuthRequired(() => setShowKitchenModal(true))
+    },
+    {
+      icon: Globe,
+      title: t('home.cuisines.action'),
+      description: t('home.cuisines.description'),
+      onClick: () => handleAuthRequired(() => setShowCuisineMap(true))
+    },
+    {
+      icon: Link,
+      title: t('home.import.url.action'),
+      description: t('home.import.url.description'),
+      onClick: () => handleAuthRequired(() => setShowUrlDialog(true))
+    },
+    {
+      icon: ClipboardPaste,
+      title: t('home.import.clipboard.action'),
+      description: t('home.import.clipboard.description'),
+      onClick: () => handleAuthRequired(() => setShowClipboardDialog(true))
+    }
+  ];
 
   return (
     <div className="container mx-auto px-4 py-12">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Button
-          variant="outline"
-          className="h-auto py-8 flex flex-col items-center gap-4"
-          onClick={() => {}}
-        >
-          <Utensils className="h-8 w-8" />
-          <div className="text-center">
-            <h3 className="font-semibold">{t('home.kitchen.action')}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('home.kitchen.description')}
-            </p>
-          </div>
-        </Button>
-
-        <Button
-          variant="outline"
-          className="h-auto py-8 flex flex-col items-center gap-4"
-          onClick={() => {}}
-        >
-          <Globe className="h-8 w-8" />
-          <div className="text-center">
-            <h3 className="font-semibold">{t('home.cuisines.action')}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('home.cuisines.description')}
-            </p>
-          </div>
-        </Button>
-
-        <Button
-          variant="outline"
-          className="h-auto py-8 flex flex-col items-center gap-4"
-          onClick={() => {}}
-        >
-          <Link className="h-8 w-8" />
-          <div className="text-center">
-            <h3 className="font-semibold">{t('home.import.url.action')}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('home.import.url.description')}
-            </p>
-          </div>
-        </Button>
-
-        <Button
-          variant="outline"
-          className="h-auto py-8 flex flex-col items-center gap-4"
-          onClick={() => {}}
-        >
-          <ClipboardCopy className="h-8 w-8" />
-          <div className="text-center">
-            <h3 className="font-semibold">{t('home.import.clipboard.action')}</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              {t('home.import.clipboard.description')}
-            </p>
-          </div>
-        </Button>
+        {examples.map((example, index) => (
+          <Button
+            key={index}
+            variant="outline"
+            className="h-auto p-6 flex flex-col items-start space-y-2"
+            onClick={example.onClick}
+          >
+            <example.icon className="h-6 w-6 text-primary" />
+            <div className="text-left">
+              <p className="font-medium">{example.title}</p>
+              <p className="text-sm text-muted-foreground">{example.description}</p>
+            </div>
+          </Button>
+        ))}
       </div>
+
+      <AuthModal 
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="login"
+      />
+
+      <IngredientSearchModal
+        open={showKitchenModal}
+        onOpenChange={setShowKitchenModal}
+        onRecipesGenerated={() => {}}
+        isLoading={false}
+      />
+
+      <CuisineMapDialog
+        open={showCuisineMap}
+        onOpenChange={setShowCuisineMap}
+        recipes={[]}
+      />
+
+      <RecipeUrlDialog
+        open={showUrlDialog}
+        onOpenChange={setShowUrlDialog}
+        onRecipeScraped={() => {}}
+      />
+
+      <ClipboardImportDialog
+        open={showClipboardDialog}
+        onOpenChange={setShowClipboardDialog}
+        onRecipeImported={() => {}}
+      />
     </div>
   );
 }
