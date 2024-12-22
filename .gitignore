@@ -25,3 +25,6 @@ dist-ssr
 
 *storybook.log
 .env
+
+# Sensitive credentials
+service-account.json
