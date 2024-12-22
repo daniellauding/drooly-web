@@ -4,6 +4,19 @@
 
 **URL**: https://lovable.dev/projects/b45a2a67-789b-4925-b4c6-d88cbdefbbec
 
+## Setup
+
+### Service Account Configuration
+
+1. Copy `service-account.template.json` to `service-account.json`
+2. Replace the placeholder values in `service-account.json` with your actual Firebase service account credentials
+3. Never commit `service-account.json` to version control
+
+```bash
+cp service-account.template.json service-account.json
+# Then edit service-account.json with your credentials
+```
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
