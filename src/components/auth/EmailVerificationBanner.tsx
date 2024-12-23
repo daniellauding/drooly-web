@@ -6,12 +6,12 @@ import { useToast } from "@/components/ui/use-toast";
 import { auth } from "@/lib/firebase";
 
 export function EmailVerificationBanner() {
-  const { user, sendVerificationEmail } = useAuth();
+  const { user, sendVerificationEmail, loading } = useAuth();
   const [sending, setSending] = useState(false);
   const { toast } = useToast();
 
-  // Don't show banner if user is not loaded yet, not logged in, or already verified
-  if (!user || user.emailVerified || !auth.currentUser) {
+  // Don't show banner if loading, user not logged in, or already verified
+  if (loading || !user || user.emailVerified || !auth.currentUser) {
     return null;
   }
 

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, onIdTokenChanged } from "firebase/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { AuthContextType, AuthUser } from "@/types/auth";
 import * as authService from "@/services/authService";
@@ -15,15 +15,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    // Listen for auth state changes
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Convert Firebase User to AuthUser
         const authUser: AuthUser = {
           ...firebaseUser,
-          role: 'user', // default role
+          role: 'user',
         };
         
-        // Get additional user data from Firestore
         try {
           const userData = await authService.getUserData(firebaseUser);
           if (userData) {
@@ -41,7 +40,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    // Listen for token changes (includes email verification status)
+    const unsubscribeToken = onIdTokenChanged(auth, (firebaseUser) => {
+      if (firebaseUser && user) {
+        setUser(currentUser => currentUser ? {
+          ...currentUser,
+          emailVerified: firebaseUser.emailVerified
+        } : null);
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeToken();
+    };
   }, []);
 
   const sendVerificationEmail = async () => {
