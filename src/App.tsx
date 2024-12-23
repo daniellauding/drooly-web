@@ -21,6 +21,7 @@ import { EventDetailView } from "./components/event/EventDetailView";
 import Todo from "./pages/Todo";
 import Ingredients from "./pages/Ingredients";
 import "./i18n/config";
+import { EmailVerificationBanner } from "./components/auth/EmailVerificationBanner";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
+          <EmailVerificationBanner />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/create" element={<Create />} />

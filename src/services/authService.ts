@@ -127,20 +127,27 @@ export const verifyUserEmail = async (code: string) => {
 };
 
 export const sendVerificationEmailToUser = async (user: User) => {
-  if (!user.emailVerified) {
-    logger.info("Attempting to send verification email to:", user.email);
-    
+  try {
+    // Make sure we have a valid Firebase user
+    if (!auth.currentUser) {
+      throw new Error("No authenticated user found");
+    }
+
+    // Check cooldown to prevent spam
     if (Date.now() - lastEmailSent < EMAIL_COOLDOWN) {
       const waitTime = Math.ceil((EMAIL_COOLDOWN - (Date.now() - lastEmailSent)) / 1000);
-      logger.warn("Email cooldown in effect:", { waitTime });
-      throw new Error(`Please wait ${waitTime} seconds before requesting another verification email.`);
+      throw new Error(`Please wait ${waitTime} seconds before requesting another email`);
     }
     
-    await sendEmailVerification(user, {
+    await sendEmailVerification(auth.currentUser, {
       url: window.location.origin + '/login',
       handleCodeInApp: true,
     });
+    
     lastEmailSent = Date.now();
-    logger.info("Verification email sent successfully");
+    return true;
+  } catch (error: any) {
+    console.error('Error sending verification email:', error);
+    throw error;
   }
 };
