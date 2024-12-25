@@ -4,6 +4,7 @@ import { onAuthStateChanged, onIdTokenChanged } from "firebase/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { AuthContextType, AuthUser } from "@/types/auth";
 import * as authService from "@/services/authService";
+import { logAppState } from '../utils/debugLogger';
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
@@ -15,29 +16,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Listen for auth state changes
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const authUser: AuthUser = {
-          ...firebaseUser,
-          role: 'user',
-        };
-        
-        try {
-          const userData = await authService.getUserData(firebaseUser);
-          if (userData) {
-            authUser.role = userData.role;
-            authUser.manuallyVerified = userData.manuallyVerified;
-          }
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
-        
-        setUser(authUser);
-      } else {
-        setUser(null);
+    console.log('[Auth Context] Setting up auth state listener');
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.group('👤 Auth State Change');
+      console.log('User:', user ? 'Logged in' : 'Logged out');
+      if (user) {
+        console.log('User ID:', user.uid);
+        console.log('Email:', user.email);
+        console.log('Email verified:', user.emailVerified);
+        await logAppState(user.uid);
       }
+      setUser(user);
       setLoading(false);
+      console.groupEnd();
     });
 
     // Listen for token changes (includes email verification status)
@@ -51,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      unsubscribeAuth();
+      unsubscribe();
       unsubscribeToken();
     };
   }, []);

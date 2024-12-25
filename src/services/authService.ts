@@ -10,18 +10,30 @@ import {
 import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { logger } from "@/utils/logger";
+import { logAppState } from '../utils/debugLogger';
 
 const EMAIL_COOLDOWN = 60000; // 1 minute cooldown
 let lastEmailSent = 0;
 
 export const loginUser = async (email: string, password: string) => {
-  console.log("[AuthService] Attempting login for:", email);
+  console.group('🔐 Auth: Login Attempt');
+  console.log('Email:', email);
+  
   try {
-    const { user } = await signInWithEmailAndPassword(auth, email, password);
-    console.log("[AuthService] Login successful for:", user.uid);
-  } catch (error) {
-    console.error("[AuthService] Login failed:", error);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    console.log('✅ Login successful');
+    console.log('User ID:', result.user.uid);
+    console.log('Email verified:', result.user.emailVerified);
+    
+    // Log app state after successful login
+    await logAppState(result.user.uid);
+    
+    return result;
+  } catch (error: any) {
+    console.error('❌ Login failed:', error.code, error.message);
     throw error;
+  } finally {
+    console.groupEnd();
   }
 };
 

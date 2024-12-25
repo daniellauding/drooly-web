@@ -1,20 +1,26 @@
-type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogEntry {
-  timestamp: string;
-  level: LogLevel;
-  message: string;
-  data?: any;
+interface LogGroup {
+  id: string;
+  emoji: string;
+  color?: string;
 }
+
+export const LOG_GROUPS = {
+  FIREBASE: { id: 'Firebase', emoji: '🔥' },
+  AUTH: { id: 'Auth', emoji: '🔐' },
+  SYSTEM: { id: 'System', emoji: '⚙️' },
+  PERFORMANCE: { id: 'Performance', emoji: '⚡' },
+  DATA: { id: 'Data', emoji: '📊' },
+  UI: { id: 'UI', emoji: '🎨' }
+} as const;
 
 class Logger {
   private static instance: Logger;
-  private logs: LogEntry[] = [];
-  private readonly MAX_LOGS = 1000;
+  private isDebugMode: boolean;
 
   private constructor() {
-    // Initialize logger
-    console.log('Logger initialized');
+    this.isDebugMode = import.meta.env.MODE === 'development';
   }
 
   static getInstance(): Logger {
@@ -24,73 +30,48 @@ class Logger {
     return Logger.instance;
   }
 
-  private formatDate(): string {
-    return new Date().toISOString();
+  private formatMessage(group: LogGroup, message: string): string {
+    return `${group.emoji} [${group.id}] ${message}`;
   }
 
-  private addLog(level: LogLevel, message: string, data?: any) {
-    const logEntry: LogEntry = {
-      timestamp: this.formatDate(),
-      level,
-      message,
-      data
-    };
+  group(group: LogGroup, title: string) {
+    if (!this.isDebugMode) return;
+    console.group(this.formatMessage(group, title));
+  }
 
-    // Add to local array
-    this.logs.push(logEntry);
-    
-    // Keep only last MAX_LOGS entries
-    if (this.logs.length > this.MAX_LOGS) {
-      this.logs = this.logs.slice(-this.MAX_LOGS);
-    }
+  groupEnd() {
+    if (!this.isDebugMode) return;
+    console.groupEnd();
+  }
 
-    // Also log to console
-    const consoleMsg = `${logEntry.timestamp} - ${level}: ${message}`;
-    switch (level) {
-      case 'error':
-        console.error(consoleMsg, data);
-        break;
-      case 'warn':
-        console.warn(consoleMsg, data);
-        break;
-      case 'debug':
-        console.debug(consoleMsg, data);
-        break;
-      default:
-        console.log(consoleMsg, data);
-    }
+  log(group: LogGroup, message: string, data?: any) {
+    if (!this.isDebugMode) return;
+    console.log(this.formatMessage(group, message), data || '');
+  }
 
-    // Store in localStorage for persistence
-    try {
-      localStorage.setItem('app_logs', JSON.stringify(this.logs));
-    } catch (error) {
-      console.error('Failed to store logs in localStorage:', error);
+  table(group: LogGroup, title: string, data: any[]) {
+    if (!this.isDebugMode) return;
+    this.log(group, title);
+    if (data.length > 0) {
+      console.table(data);
+    } else {
+      console.log(`${group.emoji} No data available`);
     }
   }
 
-  info(message: string, data?: any) {
-    this.addLog('info', message, data);
-  }
-
-  warn(message: string, data?: any) {
-    this.addLog('warn', message, data);
-  }
-
-  error(message: string, data?: any) {
-    this.addLog('error', message, data);
-  }
-
-  debug(message: string, data?: any) {
-    this.addLog('debug', message, data);
-  }
-
-  getLogs(): LogEntry[] {
-    return this.logs;
-  }
-
-  clearLogs() {
-    this.logs = [];
-    localStorage.removeItem('app_logs');
+  logCollection(group: LogGroup, title: string, snapshot: any) {
+    if (!this.isDebugMode) return;
+    this.group(group, title);
+    this.log(group, `Total count: ${snapshot.size}`);
+    if (snapshot.size > 0) {
+      this.table(group, 'Items:', snapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        ...doc.data()
+      })));
+    } else {
+      this.log(group, 'No items found');
+    }
+    this.groupEnd();
   }
 }
 

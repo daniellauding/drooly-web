@@ -22,10 +22,41 @@ import Todo from "./pages/Todo";
 import Ingredients from "./pages/Ingredients";
 import "./i18n/config";
 import { EmailVerificationBanner } from "./components/auth/EmailVerificationBanner";
+import { useEffect } from 'react';
 
 const queryClient = new QueryClient();
 
 function App() {
+  useEffect(() => {
+    // Log initial render time
+    const renderTime = performance.now();
+    console.group('🚀 App Performance Metrics');
+    console.log('Initial render time:', Math.round(renderTime), 'ms');
+    
+    // Monitor route changes if using React Router
+    const navigationEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    if (navigationEntry) {
+      console.log('Navigation timing:', {
+        'DNS lookup': Math.round(navigationEntry.domainLookupEnd - navigationEntry.domainLookupStart),
+        'Connection time': Math.round(navigationEntry.connectEnd - navigationEntry.connectStart),
+        'Page load': Math.round(navigationEntry.loadEventEnd - navigationEntry.startTime),
+      });
+    }
+    
+    // Log memory usage if available
+    // @ts-ignore Chrome-specific API
+    if (window.performance?.memory) {
+      console.log('Memory usage:', {
+        // @ts-ignore Chrome-specific API
+        'Total JS heap size': Math.round(window.performance.memory.totalJSHeapSize / 1048576) + 'MB',
+        // @ts-ignore Chrome-specific API
+        'Used JS heap size': Math.round(window.performance.memory.usedJSHeapSize / 1048576) + 'MB',
+      });
+    }
+    
+    console.groupEnd();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
