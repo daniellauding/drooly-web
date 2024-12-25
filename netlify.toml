@@ -1,54 +1,18 @@
 [build]
-  command = "npm run build"
+  command = "npm run build:dev"
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18.18.0"
-  NPM_VERSION = "9.8.1"
-
-# Development context
-[context.dev.environment]
-  VITE_APP_ENV = "development"
-  VITE_FIREBASE_PROJECT_ID = "drooly-dev"
-  VITE_FIREBASE_API_KEY = "AIzaSyAwWnJzMj-Ue-9FOHxDeZDJSiNbaV8OrOA"
-  VITE_FIREBASE_AUTH_DOMAIN = "drooly-dev.firebaseapp.com"
-  VITE_FIREBASE_STORAGE_BUCKET = "drooly-dev.firebasestorage.app"
-  VITE_FIREBASE_MESSAGING_SENDER_ID = "998655731139"
-  VITE_FIREBASE_APP_ID = "1:998655731139:web:b5fd6d90fd43cfabe48976"
-  VITE_FIREBASE_MEASUREMENT_ID = "G-MCL6ECZQF2"
-
-[context.dev]
-  command = "npm run build:dev"
-
-# Staging context
-[context.staging.environment]
-  VITE_APP_ENV = "staging"
-  VITE_FIREBASE_PROJECT_ID = "drooly-stage"
-  VITE_FIREBASE_API_KEY = "AIzaSyDSQuIzboknuR99zhHTqWabnYgJPIqpGho"
-  VITE_FIREBASE_AUTH_DOMAIN = "drooly-stage.firebaseapp.com"
-  VITE_FIREBASE_STORAGE_BUCKET = "drooly-stage.firebasestorage.app"
-  VITE_FIREBASE_MESSAGING_SENDER_ID = "276086519407"
-  VITE_FIREBASE_APP_ID = "1:276086519407:web:869bafad1ab6b44856bf9a"
-  VITE_FIREBASE_MEASUREMENT_ID = "G-CY5DWGB0J0"
-
-[context.staging]
-  command = "npm run build:stage"
-
-# Production context
-[context.production.environment]
-  VITE_APP_ENV = "production"
-  VITE_FIREBASE_PROJECT_ID = "drooly"
-  VITE_FIREBASE_API_KEY = "AIzaSyCwP0w894sxwbxwPwCMR7_i6i8Cowdt2dA"
-  VITE_FIREBASE_AUTH_DOMAIN = "drooly.firebaseapp.com"
-  VITE_FIREBASE_STORAGE_BUCKET = "drooly.appspot.com"
-  VITE_FIREBASE_MESSAGING_SENDER_ID = "727727122836"
-  VITE_FIREBASE_APP_ID = "1:727727122836:web:582334a12d884d0ab2c781"
-  VITE_FIREBASE_MEASUREMENT_ID = "G-YKZBQKZ7TK"
-
-[context.production]
-  command = "npm run build:prod"
+  NODE_VERSION = "18"
+  NPM_VERSION = "9"
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[dev]
+  command = "npm run dev"
+  port = 3000
+  publish = "dist"
+  framework = "#custom"
