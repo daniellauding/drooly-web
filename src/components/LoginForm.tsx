@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { User, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useViewLogger } from '@/hooks/useViewLogger';
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -17,6 +18,8 @@ export function LoginForm({ onSubmit, loading = false, onSignUpClick }: LoginFor
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useViewLogger('LoginForm');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

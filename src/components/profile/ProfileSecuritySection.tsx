@@ -1,182 +1,125 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2 } from "lucide-react";
 import { deleteUserAccount } from "@/services/authService";
-import { useAuth } from "@/contexts/AuthContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { debugViews } from "@/utils/debugViews";
+import { useViewLogger } from '@/hooks/useViewLogger';
+import { ConfirmPasswordDialog } from "@/components/profile/ConfirmPasswordDialog";
 
 export function ProfileSecuritySection() {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
+  const viewId = useViewLogger('ProfileSecuritySection');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const { toast } = useToast();
-  const { signOut } = useAuth();
 
-  const handlePasswordUpdate = async () => {
-    if (!auth.currentUser || !auth.currentUser.email) return;
-    
-    try {
-      console.log("Updating password");
-      const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
-      await reauthenticateWithCredential(auth.currentUser, credential);
-      await updatePassword(auth.currentUser, newPassword);
-      
-      toast({
-        title: "Password updated",
-        description: "Your password has been successfully updated.",
-      });
-      
-      setCurrentPassword("");
-      setNewPassword("");
-    } catch (error) {
-      console.error("Error updating password:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update password. Please check your current password and try again.",
-      });
-    }
+  // Log when component mounts
+  useEffect(() => {
+    debugViews.log('ProfileSecuritySection', 'MOUNTED');
+  }, []);
+
+  const handleDeleteClick = () => {
+    debugViews.log('ProfileSecuritySection', 'DELETE_BUTTON_CLICKED', {
+      viewId,
+      timestamp: Date.now()
+    });
+    setShowDeleteDialog(true);
   };
 
-  const handleDeleteAccount = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const handleDeleteDialogChange = (open: boolean) => {
+    debugViews.log('DeleteConfirmationDialog', open ? 'DIALOG_OPENED' : 'DIALOG_CLOSED', {
+      viewId: `${viewId}-delete-confirmation`,
+      dialogName: 'Delete Account Confirmation',
+      isOpen: open,
+      type: 'confirmation',
+      timestamp: Date.now()
+    });
+    setShowDeleteDialog(open);
+  };
+
+  const handleDeleteConfirm = () => {
+    debugViews.log('ProfileSecuritySection', 'DELETE_CONFIRMED', {
+      viewId,
+      timestamp: Date.now()
+    });
+    setShowDeleteDialog(false);
+    setShowPasswordDialog(true);
+  };
+
+  const handlePasswordConfirm = async (password: string) => {
     try {
-      // Disable submit button
-      const submitButton = document.querySelector('button[type="submit"]') as HTMLButtonElement;
-      if (submitButton) {
-        submitButton.disabled = true;
-        submitButton.textContent = "Deleting...";
-      }
-
-      // Attempt account deletion
-      await deleteUserAccount(deletePassword);
-      
-      // Clear form and close dialog
-      setDeleteDialogOpen(false);
-      setDeletePassword("");
-
+      await deleteUserAccount(password);
     } catch (error: any) {
-      console.error("Delete account error:", error);
+      debugViews.log('ProfileSecuritySection', 'DELETE_ERROR', {
+        viewId,
+        error: error.message,
+        timestamp: Date.now()
+      });
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to delete account"
+        description: error.message
       });
-      
-      // Re-enable submit button
-      if (submitButton) {
-        submitButton.disabled = false;
-        submitButton.textContent = "Delete Account";
-      }
     }
   };
 
-  const handleForceLogout = async () => {
-    try {
-      await signOut();
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.href = '/';
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to log out. Please try again."
-      });
-    }
+  const handlePasswordDialogChange = (open: boolean) => {
+    debugViews.log('ConfirmPasswordDialog', open ? 'DIALOG_OPENED' : 'DIALOG_CLOSED', {
+      viewId: `${viewId}-password-confirmation`,
+      dialogName: 'Confirm Password',
+      isOpen: open,
+      timestamp: Date.now()
+    });
+    setShowPasswordDialog(open);
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Security Settings</h3>
-        <div className="grid gap-2">
-          <Label htmlFor="current-password">Current Password</Label>
-          <Input
-            id="current-password"
-            type="password"
-            value={currentPassword}
-            onChange={e => setCurrentPassword(e.target.value)}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="new-password">New Password</Label>
-          <Input
-            id="new-password"
-            type="password"
-            value={newPassword}
-            onChange={e => setNewPassword(e.target.value)}
-          />
-        </div>
-        <Button onClick={handlePasswordUpdate} disabled={!currentPassword || !newPassword}>
-          Update Password
-        </Button>
-      </div>
-
-      <div className="border-t pt-4">
-        <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-          <Trash2 className="h-4 w-4 mr-2" />
+      <div>
+        <h3 className="text-lg font-medium">Delete Account</h3>
+        <p className="text-sm text-muted-foreground">
+          Permanently delete your account and all associated data
+        </p>
+        <Button 
+          variant="destructive" 
+          onClick={handleDeleteClick}
+          className="mt-4"
+        >
           Delete Account
         </Button>
       </div>
 
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Account</DialogTitle>
-            <DialogDescription>
-              This action cannot be undone. Please enter your password to confirm deletion.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleDeleteAccount}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="delete-password">Password</Label>
-                <Input
-                  id="delete-password"
-                  type="password"
-                  value={deletePassword}
-                  onChange={e => setDeletePassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setDeleteDialogOpen(false);
-                  setDeletePassword("");
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                variant="destructive" 
-                disabled={!deletePassword}
-              >
-                Delete Account
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <AlertDialog open={showDeleteDialog} onOpenChange={handleDeleteDialogChange}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm}>
+              Delete Account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <Button 
-        variant="destructive" 
-        onClick={handleForceLogout}
-        className="w-full"
-      >
-        Force Logout
-      </Button>
+      <ConfirmPasswordDialog
+        open={showPasswordDialog}
+        onOpenChange={handlePasswordDialogChange}
+        onConfirm={handlePasswordConfirm}
+      />
     </div>
   );
 }

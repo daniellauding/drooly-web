@@ -9,11 +9,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Settings, LogOut, User, ChevronDown, LayoutDashboard } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
 import { useToast } from "@/hooks/use-toast";
 import { signOut as firebaseSignOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { debugViews } from "@/utils/debugViews";
+import { useViewLogger } from '@/hooks/useViewLogger';
 
 interface ProfileDropdownProps {
   onAuthModalOpen: () => void;
@@ -24,10 +26,19 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
+  const viewId = useViewLogger('ProfileDropdown');
 
-  console.log("User data in ProfileDropdown:", user); // Debug log
-  console.log("Avatar URL:", user?.photoURL || "No avatar URL"); // Debug log for avatar URL
-  console.log("User role:", user?.role || "No role assigned"); // Added role debug log
+  useEffect(() => {
+    if (user) {
+      debugViews.log('ProfileDropdown', 'USER_STATE', {
+        viewId,
+        userId: user.uid,
+        role: user.role,
+        hasAvatar: !!user.photoURL,
+        timestamp: Date.now()
+      });
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {

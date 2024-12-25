@@ -5,6 +5,8 @@ import { ProfileSecuritySettings } from "./ProfileSecuritySettings";
 import { useEffect, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { useViewLogger } from '@/hooks/useViewLogger';
+import { debugViews } from '@/utils/debugViews';
 
 interface EditProfileModalProps {
   open: boolean;
@@ -26,6 +28,38 @@ export function EditProfileModal({
   onUpdate,
   isAdmin = false,
 }: EditProfileModalProps) {
+  const viewId = useViewLogger('EditProfileModal');
+  const [activeTab, setActiveTab] = useState('profile');
+
+  useEffect(() => {
+    if (open) {
+      debugViews.log('EditProfileModal', 'MODAL_STATE', {
+        viewId,
+        state: 'opened',
+        activeTab,
+        userId: userData.id
+      });
+    }
+    
+    return () => {
+      if (!open) {
+        debugViews.log('EditProfileModal', 'MODAL_STATE', {
+          viewId,
+          state: 'closed'
+        });
+      }
+    };
+  }, [open]);
+
+  const handleTabChange = (value: string) => {
+    debugViews.log('EditProfileModal', 'TAB_CHANGED', {
+      viewId,
+      previousTab: activeTab,
+      newTab: value
+    });
+    setActiveTab(value);
+  };
+
   const [fullUserData, setFullUserData] = useState({
     ...userData,
     birthday: "",
@@ -80,7 +114,7 @@ export function EditProfileModal({
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="profile" className="w-full">
+        <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange} value={activeTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="privacy">Privacy & Security</TabsTrigger>

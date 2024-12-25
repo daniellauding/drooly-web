@@ -8,50 +8,38 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { deleteUserAccount } from "@/services/authService";
+import { debugViews } from "@/utils/debugViews";
 
 interface DeleteConfirmationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: () => void;
-  title?: string;
-  description?: string;
-  confirmText?: string;
-  cancelText?: string;
 }
 
 export function DeleteConfirmationDialog({
   open,
   onOpenChange,
-  onConfirm,
-  title = "Are you sure?",
-  description = "This action cannot be undone.",
-  confirmText = "Delete Account",
-  cancelText = "Cancel"
 }: DeleteConfirmationDialogProps) {
+  const [password, setPassword] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    debugViews.log('DeleteConfirmationDialog', `visibility changed to ${open}`);
+  }, [open]);
 
   const handleConfirm = async () => {
     try {
-      await onConfirm();
-      toast({
-        title: "Account deleted",
-        description: "Your account has been successfully deleted."
-      });
-      
-      // Close dialog
+      await deleteUserAccount(password);
       onOpenChange(false);
-      
-      // Force reload after a short delay
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 1000);
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to delete account"
+        description: error.message
       });
     }
   };
@@ -60,12 +48,30 @@ export function DeleteConfirmationDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle>Delete Account</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. Please enter your password to confirm.
+          </AlertDialogDescription>
         </AlertDialogHeader>
+        <div className="py-4">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            className="mt-2"
+          />
+        </div>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm}>{confirmText}</AlertDialogAction>
+          <AlertDialogCancel onClick={() => setPassword("")}>Cancel</AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={handleConfirm}
+            disabled={!password}
+          >
+            Delete Account
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

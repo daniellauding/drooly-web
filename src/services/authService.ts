@@ -13,6 +13,7 @@ import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, query, where } fro
 import { auth, db } from "@/lib/firebase";
 import { logger } from "@/utils/logger";
 import { logAppState } from '../utils/debugLogger';
+import { debugViews } from "@/utils/debugViews";
 
 const EMAIL_COOLDOWN = 60000; // 1 minute cooldown
 let lastEmailSent = 0;
@@ -105,41 +106,37 @@ export const logoutUser = async () => {
   sessionStorage.clear();
 };
 
-export const deleteUserAccount = async (password: string) => {
-  const user = auth.currentUser;
-  if (!user || !user.email) {
-    throw new Error("No authenticated user found");
-  }
-
+export const deleteUserAccount = async () => {
+  debugViews.log('AuthService', 'DELETE_ACCOUNT_STARTED');
+  
   try {
-    // 1. Re-authenticate
-    const credential = EmailAuthProvider.credential(user.email, password);
-    await reauthenticateWithCredential(user, credential);
-
-    // 2. Delete Firestore data
-    await deleteDoc(doc(db, "users", user.uid));
+    const user = auth.currentUser;
+    debugViews.log('AuthService', 'CURRENT_USER', { uid: user?.uid });
     
-    // Delete user's recipes
-    const recipesRef = collection(db, "recipes");
-    const userRecipes = await getDocs(query(recipesRef, where("creatorId", "==", user.uid)));
-    await Promise.all(userRecipes.docs.map(doc => deleteDoc(doc.ref)));
+    if (!user) {
+      debugViews.log('AuthService', 'NO_USER_FOUND');
+      throw new Error("No authenticated user found");
+    }
 
-    // 3. Delete Firebase Auth user
+    debugViews.log('AuthService', 'DELETING_FIRESTORE_DATA');
+    await deleteDoc(doc(db, "users", user.uid));
+    debugViews.log('AuthService', 'FIRESTORE_DATA_DELETED');
+
+    debugViews.log('AuthService', 'DELETING_AUTH_USER');
     await deleteUser(user);
+    debugViews.log('AuthService', 'AUTH_USER_DELETED');
 
-    // 4. Clear local storage and session
+    debugViews.log('AuthService', 'STARTING_CLEANUP');
     localStorage.clear();
     sessionStorage.clear();
+    debugViews.log('AuthService', 'CLEANUP_COMPLETE');
 
-    // 5. Sign out and force reload
-    await signOut(auth);
-    
-    return true;
+    debugViews.log('AuthService', 'REDIRECTING');
+    window.location.href = '/';
+
   } catch (error: any) {
-    if (error.code === 'auth/wrong-password') {
-      throw new Error("Incorrect password");
-    }
-    throw new Error(error.message);
+    debugViews.log('AuthService', 'DELETE_ERROR', error);
+    throw new Error("Failed to delete account");
   }
 };
 
