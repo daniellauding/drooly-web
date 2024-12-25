@@ -1,26 +1,32 @@
-import { db } from '../lib/firebase';
+import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { logger, LOG_GROUPS } from './logger';
 
-export const logAppState = async (userId: string | null) => {
-  logger.group(LOG_GROUPS.DATA, 'Application State');
-  logger.log(LOG_GROUPS.DATA, `Timestamp: ${new Date().toISOString()}`);
+// Define log groups
+export const LOG_GROUPS = {
+  AUTH: 'Authentication',
+  DATA: 'Data',
+  ERROR: 'Error'
+} as const;
+
+export const logAppState = async (userId: string) => {
+  console.group('Application State');
+  console.log(`Timestamp: ${new Date().toISOString()}`);
 
   try {
     if (userId) {
       const userDocRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userDocRef);
       
-      logger.group(LOG_GROUPS.AUTH, 'User Data');
-      logger.log(LOG_GROUPS.AUTH, 'User ID:', userId);
+      console.group('User Data');
+      console.log('User ID:', userId);
       
       if (userDoc.exists()) {
-        logger.log(LOG_GROUPS.AUTH, 'User Document:', {
+        console.log('User Document:', {
           ...userDoc.data(),
           createdAt: userDoc.data().createdAt?.toDate?.()
         });
       }
-      logger.groupEnd();
+      console.groupEnd();
     }
 
     // Log collections
@@ -35,13 +41,15 @@ export const logAppState = async (userId: string | null) => {
 
     // Log each collection
     Object.entries(collections).forEach(([name, snapshot]) => {
-      logger.logCollection(LOG_GROUPS.DATA, name.toUpperCase(), snapshot);
+      console.group(name.toUpperCase());
+      console.log(`Total documents: ${snapshot.size}`);
+      console.groupEnd();
     });
 
-    logger.log(LOG_GROUPS.DATA, '✅ Debug info collected successfully');
+    console.log('✅ Debug info collected successfully');
   } catch (error) {
-    logger.log(LOG_GROUPS.DATA, '❌ Error collecting debug info:', error);
+    console.error('Error logging app state:', error);
   }
 
-  logger.groupEnd();
+  console.groupEnd();
 }; 

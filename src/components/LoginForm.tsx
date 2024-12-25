@@ -3,6 +3,8 @@ import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { User, Lock } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface LoginFormProps {
   onSubmit: (email: string, password: string) => Promise<void>;
@@ -11,12 +13,25 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSubmit, loading = false, onSignUpClick }: LoginFormProps) {
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit(email, password);
+
+    try {
+      await signIn(email, password);
+      // Clear any old session data
+      sessionStorage.clear();
+      
+      // Redirect to home page
+      navigate('/');
+    } catch (error) {
+      // ... error handling ...
+    }
   };
 
   return (

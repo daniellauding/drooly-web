@@ -1,10 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { onAuthStateChanged, onIdTokenChanged } from "firebase/auth";
+import { onAuthStateChanged, onIdTokenChanged, signOut as firebaseSignOut } from "firebase/auth";
 import { useToast } from "@/components/ui/use-toast";
 import { AuthContextType, AuthUser } from "@/types/auth";
 import * as authService from "@/services/authService";
-import { logAppState } from '../utils/debugLogger';
 import { doc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -20,11 +19,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!firebaseUser) return null;
     
     try {
-      // Fetch additional user data from Firestore
       const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
       const userData = userDoc.data();
       
-      // Merge Firebase Auth user with Firestore data
       return {
         ...firebaseUser,
         ...userData,
@@ -39,34 +36,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('[Auth Context] Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.group('👤 Auth State Change');
-      console.log('User:', firebaseUser ? 'Logged in' : 'Logged out');
-      
       if (firebaseUser) {
-        console.log('User ID:', firebaseUser.uid);
-        console.log('Email:', firebaseUser.email);
+        console.log('User:', 'Logged in');
         console.log('Email verified:', firebaseUser.emailVerified);
         
-        // Merge user data and set the state
         const mergedUser = await mergeUserData(firebaseUser);
         setUser(mergedUser);
-        await logAppState(firebaseUser.uid);
       } else {
         setUser(null);
       }
-      
       setLoading(false);
       console.groupEnd();
     });
 
-    // Listen for token changes (includes email verification status)
     const unsubscribeToken = onIdTokenChanged(auth, async (firebaseUser) => {
-      if (firebaseUser && user) {
+      if (firebaseUser) {
+        await firebaseUser.getIdToken(true);
         const mergedUser = await mergeUserData(firebaseUser);
-        setUser(currentUser => currentUser ? {
+        setUser(currentUser => ({
           ...currentUser,
           ...mergedUser,
           emailVerified: firebaseUser.emailVerified
-        } : null);
+        }));
       }
     });
 
@@ -76,11 +67,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const sendVerificationEmail = async () => {
-    if (!user) {
-      throw new Error("No user logged in");
+  const signOut = async () => {
+    try {
+      await firebaseSignOut(auth);
+      setUser(null);
+      localStorage.clear();
+      sessionStorage.clear();
+      return true;
+    } catch (error) {
+      console.error("Signout error:", error);
+      throw error;
     }
-    await authService.sendVerificationEmailToUser(user);
   };
 
   const value = {
@@ -88,14 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     login: authService.loginUser,
     register: authService.registerUser,
-    logout: authService.logoutUser,
+    signOut,
     verifyEmail: authService.verifyUserEmail,
-    sendVerificationEmail,
+    sendVerificationEmail: authService.sendVerificationEmailToUser,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

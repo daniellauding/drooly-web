@@ -5,9 +5,11 @@ import {
   applyActionCode,
   signOut,
   User,
-  deleteUser
+  deleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential
 } from "firebase/auth";
-import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { logger } from "@/utils/logger";
 import { logAppState } from '../utils/debugLogger';
@@ -16,24 +18,15 @@ const EMAIL_COOLDOWN = 60000; // 1 minute cooldown
 let lastEmailSent = 0;
 
 export const loginUser = async (email: string, password: string) => {
-  console.group('🔐 Auth: Login Attempt');
-  console.log('Email:', email);
-  
   try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    console.log('✅ Login successful');
-    console.log('User ID:', result.user.uid);
-    console.log('Email verified:', result.user.emailVerified);
-    
-    // Log app state after successful login
-    await logAppState(result.user.uid);
-    
-    return result;
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    if (userCredential.user) {
+      await logAppState(userCredential.user.uid);
+    }
+    return userCredential.user;
   } catch (error: any) {
-    console.error('❌ Login failed:', error.code, error.message);
+    console.error("Login error:", error);
     throw error;
-  } finally {
-    console.groupEnd();
   }
 };
 
@@ -112,24 +105,41 @@ export const logoutUser = async () => {
   sessionStorage.clear();
 };
 
-export const deleteUserAccount = async (userId: string) => {
-  logger.info("Starting account deletion process for:", userId);
+export const deleteUserAccount = async (password: string) => {
+  const user = auth.currentUser;
+  if (!user || !user.email) {
+    throw new Error("No authenticated user found");
+  }
+
   try {
-    // Delete user document and related data
-    await deleteDoc(doc(db, "users", userId));
+    // 1. Re-authenticate
+    const credential = EmailAuthProvider.credential(user.email, password);
+    await reauthenticateWithCredential(user, credential);
+
+    // 2. Delete Firestore data
+    await deleteDoc(doc(db, "users", user.uid));
     
-    // Force logout and clear all sessions
-    await logoutUser();
+    // Delete user's recipes
+    const recipesRef = collection(db, "recipes");
+    const userRecipes = await getDocs(query(recipesRef, where("creatorId", "==", user.uid)));
+    await Promise.all(userRecipes.docs.map(doc => deleteDoc(doc.ref)));
+
+    // 3. Delete Firebase Auth user
+    await deleteUser(user);
+
+    // 4. Clear local storage and session
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // 5. Sign out and force reload
+    await signOut(auth);
     
-    // Delete the user from Firebase Auth
-    if (auth.currentUser) {
-      await deleteUser(auth.currentUser);
+    return true;
+  } catch (error: any) {
+    if (error.code === 'auth/wrong-password') {
+      throw new Error("Incorrect password");
     }
-    
-    logger.info("Successfully deleted user account:", userId);
-  } catch (error) {
-    logger.error("Error deleting user account:", error);
-    throw error;
+    throw new Error(error.message);
   }
 };
 
@@ -160,6 +170,20 @@ export const sendVerificationEmailToUser = async (user: User) => {
     return true;
   } catch (error: any) {
     console.error('Error sending verification email:', error);
+    throw error;
+  }
+};
+
+export const forceLogout = async () => {
+  try {
+    console.log("Force logging out...");
+    await signOut(auth);
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.replace('/');
+    return true;
+  } catch (error) {
+    console.error("Error during force logout:", error);
     throw error;
   }
 };

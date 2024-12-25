@@ -11,14 +11,18 @@ import {
 import { Settings, LogOut, User, ChevronDown, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/profile/EditProfileModal";
+import { useToast } from "@/hooks/use-toast";
+import { signOut as firebaseSignOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 interface ProfileDropdownProps {
   onAuthModalOpen: () => void;
 }
 
 export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [editProfileOpen, setEditProfileOpen] = useState(false);
 
   console.log("User data in ProfileDropdown:", user); // Debug log
@@ -27,10 +31,28 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
 
   const handleLogout = async () => {
     try {
-      await logout();
-      navigate('/');
+      // First try Firebase signout
+      await firebaseSignOut(auth);
+      
+      // Then clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Show success message
+      toast({
+        title: "Success",
+        description: "You have been logged out successfully"
+      });
+
+      // Force page reload to clear any cached states
+      window.location.href = '/';
     } catch (error) {
-      console.error('Error logging out:', error);
+      console.error("Logout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to log out. Please try again."
+      });
     }
   };
 
@@ -88,7 +110,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
             <span>Settings</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>
+          <DropdownMenuItem onSelect={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
           </DropdownMenuItem>
