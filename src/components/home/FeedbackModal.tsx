@@ -9,6 +9,7 @@ import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { logger, LOG_GROUPS } from "@/utils/logger";
 
 const SUBJECT_OPTIONS = [
   { value: "help", label: "I wanna help" },
@@ -45,10 +46,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Starting feedback submission process");
+    logger.log(LOG_GROUPS.UI, "Starting feedback submission process");
     
     if (!email || !subject || !message) {
-      console.log("Validation failed:", { email, subject, message });
+      logger.log(LOG_GROUPS.UI, "Validation failed:", { email, subject, message });
       toast({
         variant: "destructive",
         title: "Missing fields",
@@ -60,7 +61,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     // Validate email format
     const emailRegex = /^[^@]+@[^@]+\.[^@]+$/;
     if (!emailRegex.test(email)) {
-      console.log("Invalid email format:", email);
+      logger.log(LOG_GROUPS.UI, "Invalid email format:", email);
       toast({
         variant: "destructive",
         title: "Invalid email",
@@ -70,22 +71,23 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     }
 
     setSending(true);
-    console.log("Preparing feedback data for submission");
+    logger.log(LOG_GROUPS.UI, "Preparing feedback data for submission");
 
     try {
       const feedbackRef = collection(db, 'feedback');
       
-      // Only include the allowed fields
       const feedbackData = {
         email,
         subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
-        message
+        message,
+        createdAt: new Date(),
+        userId: user?.uid || null
       };
 
-      console.log("Submitting feedback data:", feedbackData);
+      logger.log(LOG_GROUPS.UI, "Submitting feedback data:", feedbackData);
       
       const docRef = await addDoc(feedbackRef, feedbackData);
-      console.log("Feedback submitted successfully with ID:", docRef.id);
+      logger.log(LOG_GROUPS.UI, "Feedback submitted successfully with ID:", docRef.id);
 
       toast({
         title: "Thank you for your feedback!",
@@ -95,7 +97,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       resetForm();
       onOpenChange(false);
     } catch (error) {
-      console.error("Error sending feedback:", error);
+      logger.log(LOG_GROUPS.UI, "Error sending feedback:", error);
       
       toast({
         variant: "destructive",
