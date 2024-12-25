@@ -1,34 +1,50 @@
-import { auth, db } from '../lib/firebase';
+import { auth, db, storage } from '@/lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
 
-export const checkSystemStatus = async () => {
+export async function checkSystemStatus() {
   console.group('🔧 System Status Check');
-  const startTime = performance.now();
-
-  // Check Firebase Auth Status
-  console.log('Checking Auth Service...');
-  const authStatus = auth.currentUser 
-    ? `Authenticated as ${auth.currentUser.email}` 
-    : 'Not authenticated';
-  console.log('Auth Status:', authStatus);
-
-  // Check Firestore Connection
-  console.log('Checking Firestore Connection...');
+  
   try {
-    const testQuery = query(collection(db, 'recipes'), limit(1));
+    // Check Firebase Auth
+    console.log('Checking Firebase Auth...');
+    const authStatus = auth.currentUser !== undefined;
+    console.log('📱 Firebase Auth:', authStatus ? '✅ Connected' : '⚠️ Not initialized');
+
+    // Check Firestore
+    console.log('Checking Firestore...');
+    const testQuery = query(collection(db, 'system_status'), limit(1));
     await getDocs(testQuery);
-    console.log('✅ Firestore Connection: OK');
+    console.log('💾 Firestore:', '✅ Connected');
+
+    // Check Storage
+    console.log('Checking Firebase Storage...');
+    const storageStatus = storage !== undefined;
+    console.log('📦 Firebase Storage:', storageStatus ? '✅ Connected' : '⚠️ Not initialized');
+
+    // Check API
+    console.log('Checking API...');
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (apiUrl) {
+      try {
+        const response = await fetch(`${apiUrl}/health`);
+        console.log('🌐 API:', response.ok ? '✅ Connected' : '⚠️ Error');
+      } catch (error) {
+        console.log('🌐 API:', '⚠️ Not reachable');
+      }
+    }
+
+    // Log Firebase config
+    console.group('📝 Firebase Configuration');
+    console.log('Project ID:', import.meta.env.VITE_FIREBASE_PROJECT_ID);
+    console.log('Auth Domain:', import.meta.env.VITE_FIREBASE_AUTH_DOMAIN);
+    console.log('Storage Bucket:', import.meta.env.VITE_FIREBASE_STORAGE_BUCKET);
+    console.groupEnd();
+
+    console.groupEnd();
+    return true;
   } catch (error) {
-    console.error('❌ Firestore Connection Failed:', error);
+    console.error('System status check failed:', error);
+    console.groupEnd();
+    throw error;
   }
-
-  // Check Browser Features
-  console.log('Browser Features:');
-  console.log('- IndexedDB:', window.indexedDB ? '✓ Available' : '❌ Not Available');
-  console.log('- ServiceWorker:', 'serviceWorker' in navigator ? '✓ Available' : '❌ Not Available');
-  console.log('- WebSocket:', 'WebSocket' in window ? '✓ Available' : '❌ Not Available');
-
-  const endTime = performance.now();
-  console.log(`System check completed in ${(endTime - startTime).toFixed(2)}ms`);
-  console.groupEnd();
-}; 
+} 
