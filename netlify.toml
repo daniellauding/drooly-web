@@ -5,6 +5,8 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
+  VITE_APP_ENV = "development"
+  # Add other necessary environment variables here
 
 [[redirects]]
   from = "/*"
