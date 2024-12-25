@@ -23,6 +23,7 @@ export function ProfileDropdown({ onAuthModalOpen }: ProfileDropdownProps) {
 
   console.log("User data in ProfileDropdown:", user); // Debug log
   console.log("Avatar URL:", user?.photoURL || "No avatar URL"); // Debug log for avatar URL
+  console.log("User role:", user?.role || "No role assigned"); // Added role debug log
 
   const handleLogout = async () => {
     try {

@@ -1,6 +1,11 @@
 import { User } from "firebase/auth";
 
-export interface AuthUser extends User {
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  emailVerified: boolean;
+  displayName?: string | null;
+  photoURL?: string | null;
   role?: string;
   manuallyVerified?: boolean;
   avatarUrl?: string;
