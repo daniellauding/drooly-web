@@ -9,25 +9,42 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential
 } from "firebase/auth";
-import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { logger } from "@/utils/logger";
 import { logAppState } from '../utils/debugLogger';
 import { debugViews } from "@/utils/debugViews";
+import { useToast } from "@/hooks/use-toast";
 
 const EMAIL_COOLDOWN = 60000; // 1 minute cooldown
 let lastEmailSent = 0;
 
 export const loginUser = async (email: string, password: string) => {
+  console.log('Attempting login for:', email);
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log('Login successful for user:', userCredential.user.uid);
     if (userCredential.user) {
       await logAppState(userCredential.user.uid);
     }
     return userCredential.user;
   } catch (error: any) {
-    console.error("Login error:", error);
-    throw error;
+    console.error('Login error details:', {
+      code: error.code,
+      message: error.message,
+      email
+    });
+    
+    // Specific error messages
+    if (error.code === 'auth/wrong-password') {
+      throw new Error('Incorrect password. Please try again.');
+    } else if (error.code === 'auth/user-not-found') {
+      throw new Error('No account found with this email.');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Invalid email format.');
+    } else {
+      throw new Error('Login failed. Please try again.');
+    }
   }
 };
 
@@ -182,5 +199,67 @@ export const forceLogout = async () => {
   } catch (error) {
     console.error("Error during force logout:", error);
     throw error;
+  }
+};
+
+export const signUp = async (email: string, password: string) => {
+  console.log('Starting signup process for:', email);
+  
+  try {
+    // Validate password
+    if (password.length < 6) {
+      console.error('Password too short');
+      throw new Error('Password must be at least 6 characters long');
+    }
+
+    // Step 1: Create auth user
+    console.log('Creating auth user...');
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    console.log('Auth user created successfully:', user.uid);
+
+    // Step 2: Prepare user data
+    const userData = {
+      email: email,
+      createdAt: new Date().toISOString(),
+      role: 'user',
+      isVerified: false,
+      displayName: '',
+      photoURL: '',
+      uid: user.uid
+    };
+
+    console.log('Creating user document with data:', userData);
+
+    // Step 3: Create user document
+    const userRef = doc(db, 'users', user.uid);
+    await setDoc(userRef, userData);
+    console.log('User document created successfully');
+
+    // Step 4: Send verification email
+    await sendEmailVerification(user);
+    console.log('Verification email sent');
+
+    return userCredential;
+  } catch (error: any) {
+    console.error('Signup error details:', {
+      code: error.code,
+      message: error.message,
+      email,
+      timestamp: new Date().toISOString()
+    });
+
+    // Throw specific error messages for the UI
+    if (error.code === 'auth/email-already-in-use') {
+      throw new Error('This email is already registered.');
+    } else if (error.code === 'auth/invalid-email') {
+      throw new Error('Please enter a valid email address.');
+    } else if (error.code === 'auth/weak-password') {
+      throw new Error('Password is too weak. Please use at least 6 characters.');
+    } else if (error.code === 'auth/operation-not-allowed') {
+      throw new Error('Registration is currently disabled.');
+    } else {
+      throw new Error('Registration failed. Please try again.');
+    }
   }
 };

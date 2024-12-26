@@ -59,6 +59,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
             onSubmit={handleRegister} 
             loading={loading} 
             onSignInClick={() => setIsLogin(true)}
+            onOpenChange={onOpenChange}
           />
         )}
       </DialogContent>

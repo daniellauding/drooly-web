@@ -3,21 +3,48 @@ import { Card } from "./ui/card";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { User, Lock, Mail } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { signUp } from "@/services/authService";
 
 interface RegisterFormProps {
   onSubmit: (email: string, password: string, name: string) => Promise<void>;
   loading?: boolean;
   onSignInClick: () => void;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function RegisterForm({ onSubmit, loading = false, onSignInClick }: RegisterFormProps) {
+export function RegisterForm({ onSubmit, loading: externalLoading = false, onSignInClick, onOpenChange }: RegisterFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(email, password, name);
+    setIsLoading(true);
+
+    try {
+      console.log('Attempting to register with:', email);
+      await signUp(email, password);
+      
+      toast({
+        title: "Account created successfully!",
+        description: "Please check your email for verification.",
+      });
+      
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: error.message || "Something went wrong. Please try again.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,9 +93,9 @@ export function RegisterForm({ onSubmit, loading = false, onSignInClick }: Regis
         <Button 
           type="submit" 
           className="w-full bg-[#4ECDC4] hover:bg-[#45B8B0] text-white font-medium rounded-xl h-12"
-          disabled={loading}
+          disabled={isLoading || externalLoading}
         >
-          {loading ? "Creating Account..." : "Create Account"}
+          {isLoading || externalLoading ? "Creating Account..." : "Create Account"}
         </Button>
       </form>
       <p className="text-center mt-6 text-sm text-gray-600">

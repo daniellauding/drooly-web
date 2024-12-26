@@ -10,6 +10,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { logger, LOG_GROUPS } from "@/utils/logger";
+import { submitFeedback } from "@/services/feedbackService";
 
 const SUBJECT_OPTIONS = [
   { value: "help", label: "I wanna help" },
@@ -29,7 +30,9 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [selectedType, setSelectedType] = useState("bug");
 
   useEffect(() => {
     if (user?.email) {
@@ -46,66 +49,38 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    logger.log(LOG_GROUPS.UI, "Starting feedback submission process");
-    
-    if (!email || !subject || !message) {
-      logger.log(LOG_GROUPS.UI, "Validation failed:", { email, subject, message });
-      toast({
-        variant: "destructive",
-        title: "Missing fields",
-        description: "Please fill in all required fields.",
-      });
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^@]+@[^@]+\.[^@]+$/;
-    if (!emailRegex.test(email)) {
-      logger.log(LOG_GROUPS.UI, "Invalid email format:", email);
-      toast({
-        variant: "destructive",
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-      });
-      return;
-    }
-
-    setSending(true);
-    logger.log(LOG_GROUPS.UI, "Preparing feedback data for submission");
+    setIsSubmitting(true);
 
     try {
-      const feedbackRef = collection(db, 'feedback');
-      
-      const feedbackData = {
-        email,
-        subject: SUBJECT_OPTIONS.find(opt => opt.value === subject)?.label || subject,
-        message,
-        createdAt: new Date(),
-        userId: user?.uid || null
-      };
-
-      logger.log(LOG_GROUPS.UI, "Submitting feedback data:", feedbackData);
-      
-      const docRef = await addDoc(feedbackRef, feedbackData);
-      logger.log(LOG_GROUPS.UI, "Feedback submitted successfully with ID:", docRef.id);
+      await submitFeedback({
+        type: selectedType,
+        message: message,
+        userId: user?.uid || null,
+        userEmail: user?.email || 'anonymous',
+        metadata: {
+          url: window.location.href,
+          timestamp: new Date(),
+          browser: navigator.userAgent
+        }
+      });
 
       toast({
         title: "Thank you for your feedback!",
-        description: "We appreciate your input and will review it soon.",
+        description: "We appreciate you taking the time to help us improve.",
       });
 
-      resetForm();
+      setMessage('');
+      setSelectedType('bug');
       onOpenChange(false);
     } catch (error) {
-      logger.log(LOG_GROUPS.UI, "Error sending feedback:", error);
-      
+      console.error('Error submitting feedback:', error);
       toast({
-        variant: "destructive",
-        title: "Error sending feedback",
+        title: "Error submitting feedback",
         description: "Please try again later.",
+        variant: "destructive",
       });
     } finally {
-      setSending(false);
+      setIsSubmitting(false);
     }
   };
 
