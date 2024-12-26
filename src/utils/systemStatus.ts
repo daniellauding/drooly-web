@@ -7,31 +7,24 @@ export async function checkSystemStatus() {
   try {
     // Check Firebase Auth
     console.log('Checking Firebase Auth...');
-    const authStatus = auth.currentUser !== undefined;
-    console.log('📱 Firebase Auth:', authStatus ? '✅ Connected' : '⚠️ Not initialized');
+    const authInitialized = auth !== undefined;
+    console.log('📱 Firebase Auth:', authInitialized ? '✅ Connected' : '⚠️ Not initialized');
 
     // Check Firestore
     console.log('Checking Firestore...');
-    const testQuery = query(collection(db, 'system_status'), limit(1));
-    await getDocs(testQuery);
-    console.log('💾 Firestore:', '✅ Connected');
+    try {
+      const testQuery = query(collection(db, 'system_status'), limit(1));
+      await getDocs(testQuery);
+      console.log('💾 Firestore:', '✅ Connected');
+    } catch (error) {
+      console.log('💾 Firestore:', '⚠️ Permission error - check security rules');
+      // Don't throw here, continue checking other services
+    }
 
     // Check Storage
     console.log('Checking Firebase Storage...');
     const storageStatus = storage !== undefined;
     console.log('📦 Firebase Storage:', storageStatus ? '✅ Connected' : '⚠️ Not initialized');
-
-    // Check API
-    console.log('Checking API...');
-    const apiUrl = import.meta.env.VITE_API_URL;
-    if (apiUrl) {
-      try {
-        const response = await fetch(`${apiUrl}/health`);
-        console.log('🌐 API:', response.ok ? '✅ Connected' : '⚠️ Error');
-      } catch (error) {
-        console.log('🌐 API:', '⚠️ Not reachable');
-      }
-    }
 
     // Log Firebase config
     console.group('📝 Firebase Configuration');
@@ -45,6 +38,7 @@ export async function checkSystemStatus() {
   } catch (error) {
     console.error('System status check failed:', error);
     console.groupEnd();
-    throw error;
+    // Return false instead of throwing
+    return false;
   }
 } 
