@@ -22,8 +22,13 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
       setLoading(true);
       await login(email, password);
       onOpenChange(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.message || "Something went wrong. Please try again.",
+      });
     } finally {
       setLoading(false);
     }
@@ -38,8 +43,13 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login" }: AuthModa
         description: "Please check your email to verify your account before logging in.",
       });
       setIsLogin(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: error.message || "Something went wrong. Please try again.",
+      });
     } finally {
       setLoading(false);
     }

@@ -35,15 +35,20 @@ export const loginUser = async (email: string, password: string) => {
       email
     });
     
-    // Specific error messages
-    if (error.code === 'auth/wrong-password') {
-      throw new Error('Incorrect password. Please try again.');
-    } else if (error.code === 'auth/user-not-found') {
-      throw new Error('No account found with this email.');
-    } else if (error.code === 'auth/invalid-email') {
-      throw new Error('Invalid email format.');
-    } else {
-      throw new Error('Login failed. Please try again.');
+    // Return user-friendly error messages
+    switch (error.code) {
+      case 'auth/invalid-email':
+        throw new Error('Please enter a valid email address.');
+      case 'auth/user-disabled':
+        throw new Error('This account has been disabled. Please contact support.');
+      case 'auth/user-not-found':
+        throw new Error('No account found with this email.');
+      case 'auth/wrong-password':
+        throw new Error('Incorrect password. Please try again.');
+      case 'auth/too-many-requests':
+        throw new Error('Too many failed attempts. Please try again later.');
+      default:
+        throw new Error('Login failed. Please check your credentials and try again.');
     }
   }
 };
