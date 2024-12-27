@@ -98,27 +98,28 @@ export const createUserDocument = async (user: User) => {
 };
 
 export const registerUser = async (email: string, password: string, name: string) => {
-  logger.info("Registering new user:", email);
-  const { user } = await createUserWithEmailAndPassword(auth, email, password);
-  
-  if (Date.now() - lastEmailSent > EMAIL_COOLDOWN) {
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Create user document in Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      name,
+      email,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isPrivate: false,
+    });
+
+    // Send verification email
     await sendEmailVerification(user, {
       url: window.location.origin + '/login',
-      handleCodeInApp: true,
     });
-    lastEmailSent = Date.now();
+
+    return user;
+  } catch (error) {
+    throw error; // Let the component handle the error
   }
-  
-  await setDoc(doc(db, "users", user.uid), {
-    email,
-    name,
-    role: "user",
-    createdAt: new Date(),
-    emailVerified: false,
-    manuallyVerified: false
-  });
-  
-  return user;
 };
 
 export const logoutUser = async () => {
