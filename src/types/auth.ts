@@ -14,9 +14,9 @@ export interface AuthUser {
 export interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<any>;
+  register: (email: string, password: string, name: string) => Promise<any>;
   logout: () => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
-  sendVerificationEmail: () => Promise<void>;
+  sendVerificationEmail: (user: any) => Promise<boolean>;
 }

@@ -40,6 +40,11 @@ export function TopBar() {
     navigate('/?mood=' + category);
   };
 
+  const handleAuthModalChange = (open: boolean) => {
+    console.log('[TopBar] Setting auth modal state:', open);
+    setAuthModalOpen(open);
+  };
+
   return (
     <div>
       <FeedbackBanner onFeedbackClick={handleFeedbackClick} />
@@ -93,7 +98,7 @@ export function TopBar() {
 
         <AuthModal 
           open={authModalOpen}
-          onOpenChange={setAuthModalOpen}
+          onOpenChange={handleAuthModalChange}
           defaultTab="login"
         />
         

@@ -83,12 +83,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const logout = async () => {
+    try {
+      await authService.logoutUser();
+      setUser(null);
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  };
+
   const value = {
     user,
     loading,
     login: authService.loginUser,
     register: authService.registerUser,
-    signOut,
+    logout,
     verifyEmail: authService.verifyUserEmail,
     sendVerificationEmail: authService.sendVerificationEmailToUser,
   };

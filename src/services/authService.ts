@@ -123,11 +123,16 @@ export const registerUser = async (email: string, password: string, name: string
 };
 
 export const logoutUser = async () => {
-  logger.info("Logging out user");
-  await signOut(auth);
-  // Clear any stored session data
-  localStorage.clear();
-  sessionStorage.clear();
+  try {
+    console.log("Logging out user...");
+    await signOut(auth);
+    // Clear any stored session data
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch (error) {
+    console.error("Error during logout:", error);
+    throw error;
+  }
 };
 
 export const deleteUserAccount = async () => {

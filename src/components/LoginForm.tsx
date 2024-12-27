@@ -27,6 +27,14 @@ export function LoginForm({ onSignUpClick, onOpenChange = () => {}, loading = fa
 
   useViewLogger('LoginForm');
 
+  const clearForm = () => {
+    setEmail("");
+    setPassword("");
+    setResetEmail("");
+    setShowResetView(false);
+    setIsResetting(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -34,12 +42,17 @@ export function LoginForm({ onSignUpClick, onOpenChange = () => {}, loading = fa
       console.log('[LoginForm] Attempting login...');
       await login(email, password);
       
-      console.log('[LoginForm] Login successful, closing modal...');
+      // First clear form and close modal
+      clearForm();
       onOpenChange(false);
-      console.log('[LoginForm] onOpenChange(false) called');
       
+      // Wait for modal to close before navigating
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Then clear session and navigate
       sessionStorage.clear();
-      navigate('/');
+      window.location.href = '/'; // Force page reload instead of using navigate
+      
     } catch (error: unknown) {
       const err = error as Error;
       console.error('[LoginForm] Login failed:', err);
