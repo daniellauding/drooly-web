@@ -7,7 +7,8 @@ import {
   User,
   deleteUser,
   EmailAuthProvider,
-  reauthenticateWithCredential
+  reauthenticateWithCredential,
+  sendPasswordResetEmail
 } from "firebase/auth";
 import { doc, setDoc, getDoc, deleteDoc, collection, getDocs, query, where, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -265,6 +266,29 @@ export const signUp = async (email: string, password: string) => {
       throw new Error('Registration is currently disabled.');
     } else {
       throw new Error('Registration failed. Please try again.');
+    }
+  }
+};
+
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email, {
+      url: window.location.origin + '/login',
+      handleCodeInApp: true,
+    });
+    return true;
+  } catch (error: any) {
+    console.error('Password reset error:', error);
+    
+    switch (error.code) {
+      case 'auth/invalid-email':
+        throw new Error('Please enter a valid email address.');
+      case 'auth/user-not-found':
+        throw new Error('No account found with this email.');
+      case 'auth/too-many-requests':
+        throw new Error('Too many attempts. Please try again later.');
+      default:
+        throw new Error('Failed to send reset email. Please try again.');
     }
   }
 };
