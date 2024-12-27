@@ -10,13 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { resetPassword } from "@/services/authService";
 
 interface LoginFormProps {
-  onSubmit: (email: string, password: string) => Promise<void>;
-  loading?: boolean;
   onSignUpClick: () => void;
+  onOpenChange?: (open: boolean) => void;
+  loading?: boolean;
 }
 
-export function LoginForm({ onSubmit, loading = false, onSignUpClick }: LoginFormProps) {
-  const { signIn } = useAuth();
+export function LoginForm({ onSignUpClick, onOpenChange = () => {}, loading = false }: LoginFormProps) {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,17 +29,24 @@ export function LoginForm({ onSubmit, loading = false, onSignUpClick }: LoginFor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit(email, password);
-
+    
     try {
-      await signIn(email, password);
+      await login(email, password);
       // Clear any old session data
       sessionStorage.clear();
       
-      // Redirect to home page
+      // Close modal first
+      onOpenChange(false);
+      
+      // Then navigate
       navigate('/');
-    } catch (error) {
-      // ... error handling ...
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: err.message || "Failed to sign in. Please try again.",
+      });
     }
   };
 
@@ -57,12 +64,14 @@ export function LoginForm({ onSubmit, loading = false, onSignUpClick }: LoginFor
     try {
       setIsResetting(true);
       await resetPassword(resetEmail);
+      
+      // Close modal first
+      onOpenChange(false);
+      
       toast({
         title: "Reset Email Sent",
         description: "Check your email for password reset instructions.",
       });
-      // Switch back to login view after successful reset request
-      setShowResetView(false);
     } catch (error: any) {
       toast({
         variant: "destructive",

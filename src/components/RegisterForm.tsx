@@ -4,43 +4,68 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { User, Lock, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { signUp } from "@/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { FirebaseError } from 'firebase/app';
 
 interface RegisterFormProps {
-  onSubmit: (email: string, password: string, name: string) => Promise<void>;
-  loading?: boolean;
   onSignInClick: () => void;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange?: (open: boolean) => void;
+  loading?: boolean;
 }
 
-export function RegisterForm({ onSubmit, loading: externalLoading = false, onSignInClick, onOpenChange }: RegisterFormProps) {
+export function RegisterForm({ onSignInClick, onOpenChange = () => {}, loading: externalLoading = false }: RegisterFormProps) {
+  const { register } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      console.log('Attempting to register with:', email);
-      await signUp(email, password);
+      await register(email, password, name);
+      
+      // Close modal first
+      onOpenChange(false);
       
       toast({
         title: "Account created successfully!",
         description: "Please check your email for verification.",
       });
       
-      onOpenChange(false);
-    } catch (error: any) {
-      console.error('Registration error:', error);
+      // Then navigate
+      navigate('/');
+    } catch (error: unknown) {
+      let errorMessage = "Failed to create account. Please try again.";
+      
+      if (error instanceof FirebaseError) {
+        // Handle Firebase specific errors
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = "This email is already registered.";
+            break;
+          case 'auth/invalid-email':
+            errorMessage = "Please enter a valid email address.";
+            break;
+          case 'auth/weak-password':
+            errorMessage = "Password should be at least 6 characters.";
+            break;
+          default:
+            errorMessage = error.message;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error.message || "Something went wrong. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);

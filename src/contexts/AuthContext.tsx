@@ -5,6 +5,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { AuthContextType, AuthUser } from "@/types/auth";
 import * as authService from "@/services/authService";
 import { doc, getDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
+import { setDoc } from "firebase/firestore";
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
@@ -80,11 +83,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const register = async (email: string, password: string, name: string) => {
+    try {
+      // Create the user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Update the user's profile
+      await updateProfile(user, {
+        displayName: name,
+      });
+
+      // Create user document in Firestore
+      await setDoc(doc(db, "users", user.uid), {
+        name,
+        email,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isPrivate: false,
+      });
+
+      return user;
+    } catch (error) {
+      const err = error as FirebaseError;
+      throw new Error(err.message || "Failed to create account");
+    }
+  };
+
   const value = {
     user,
     loading,
     login: authService.loginUser,
-    register: authService.registerUser,
+    register,
     signOut,
     verifyEmail: authService.verifyUserEmail,
     sendVerificationEmail: authService.sendVerificationEmailToUser,
