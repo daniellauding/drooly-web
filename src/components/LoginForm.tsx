@@ -31,17 +31,18 @@ export function LoginForm({ onSignUpClick, onOpenChange = () => {}, loading = fa
     e.preventDefault();
     
     try {
+      console.log('[LoginForm] Attempting login...');
       await login(email, password);
-      // Clear any old session data
-      sessionStorage.clear();
       
-      // Close modal first
+      console.log('[LoginForm] Login successful, closing modal...');
       onOpenChange(false);
+      console.log('[LoginForm] onOpenChange(false) called');
       
-      // Then navigate
+      sessionStorage.clear();
       navigate('/');
     } catch (error: unknown) {
       const err = error as Error;
+      console.error('[LoginForm] Login failed:', err);
       toast({
         variant: "destructive",
         title: "Login Failed",
