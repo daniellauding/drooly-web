@@ -5,12 +5,12 @@
 # Production deployment (main branch)
 [context.main]
   command = "CI= npm install && npm run build:prod"
-  environment = { NODE_ENV = "production", VITE_APP_ENV = "production", VITE_FIREBASE_PROJECT_ID = "drooly", VITE_FIREBASE_API_KEY = "AIzaSyBFnvI7bqhDFmg-kEE9QlcGZU8fXNY8jQo", VITE_FIREBASE_AUTH_DOMAIN = "drooly.firebaseapp.com", VITE_FIREBASE_STORAGE_BUCKET = "drooly.appspot.com", VITE_FIREBASE_MESSAGING_SENDER_ID = "998655731139", VITE_FIREBASE_APP_ID = "1:998655731139:web:b5fd6d90fd43cfabe48976", VITE_FIREBASE_MEASUREMENT_ID = "G-MCL6ECZQF2", VITE_API_URL = "https://droo.ly" }
+  environment = { NODE_ENV = "production", VITE_APP_ENV = "production", VITE_FIREBASE_PROJECT_ID = "drooly", VITE_FIREBASE_API_KEY = "AIzaSyCwP0w894sxwbxwPwCMR7_i6i8Cowdt2dA", VITE_FIREBASE_AUTH_DOMAIN = "drooly.firebaseapp.com", VITE_FIREBASE_STORAGE_BUCKET = "drooly.appspot.com", VITE_FIREBASE_MESSAGING_SENDER_ID = "727727122836", VITE_FIREBASE_APP_ID = "1:727727122836:web:582334a12d884d0ab2c781", VITE_FIREBASE_MEASUREMENT_ID = "G-YKZBQKZ7TK", VITE_API_URL = "https://droo.ly" }
 
 # Staging deployment (stage branch)
 [context.stage]
   command = "CI= npm install && npm run build:stage"
-  environment = { NODE_ENV = "production", VITE_APP_ENV = "staging", VITE_FIREBASE_PROJECT_ID = "drooly-stage", VITE_FIREBASE_API_KEY = "AIzaSyDJ_j9TjFIGypQgqm5ZhYUlVPzPd3W6Hy0", VITE_FIREBASE_AUTH_DOMAIN = "drooly-stage.firebaseapp.com", VITE_FIREBASE_STORAGE_BUCKET = "drooly-stage.appspot.com", VITE_FIREBASE_MESSAGING_SENDER_ID = "998655731139", VITE_FIREBASE_APP_ID = "1:998655731139:web:b5fd6d90fd43cfabe48976", VITE_FIREBASE_MEASUREMENT_ID = "G-MCL6ECZQF2", VITE_API_URL = "https://stage.droo.ly" }
+  environment = { NODE_ENV = "production", VITE_APP_ENV = "staging", VITE_FIREBASE_PROJECT_ID = "drooly-stage", VITE_FIREBASE_API_KEY = "AIzaSyDSQuIzboknuR99zhHTqWabnYgJPIqpGho", VITE_FIREBASE_AUTH_DOMAIN = "drooly-stage.firebaseapp.com", VITE_FIREBASE_STORAGE_BUCKET = "drooly-stage.firebasestorage.app", VITE_FIREBASE_MESSAGING_SENDER_ID = "276086519407", VITE_FIREBASE_APP_ID = "1:276086519407:web:869bafad1ab6b44856bf9a", VITE_FIREBASE_MEASUREMENT_ID = "G-CY5DWGB0J0", VITE_API_URL = "https://stage.droo.ly" }
 
 # Development deployment (dev branch)
 [context.dev]
