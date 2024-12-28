@@ -1,26 +1,10 @@
-[build]
-  command = "npm run build:dev"
-  publish = "dist"
-
-[build.environment]
-  NODE_VERSION = "18"
-  NPM_VERSION = "9"
-  VITE_APP_ENV = "development"
-  VITE_FIREBASE_PROJECT_ID = "drooly-dev"
-  VITE_FIREBASE_API_KEY = "AIzaSyAwWnJzMj-Ue-9FOHxDeZDJSiNbaV8OrOA"
-  VITE_FIREBASE_AUTH_DOMAIN = "drooly-dev.firebaseapp.com"
-  VITE_FIREBASE_STORAGE_BUCKET = "drooly-dev.firebasestorage.app"
-  VITE_FIREBASE_MESSAGING_SENDER_ID = "998655731139"
-  VITE_FIREBASE_APP_ID = "1:998655731139:web:b5fd6d90fd43cfabe48976"
-  VITE_FIREBASE_MEASUREMENT_ID = "G-MCL6ECZQF2"
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[dev]
-  command = "npm run dev"
-  port = 3000
-  publish = "dist"
-  framework = "#custom"
+{
+  "projects": {
+    "default": "drooly-dev",
+    "dev": "drooly-dev",
+    "stage": "drooly-stage",
+    "prod": "drooly"
+  },
+  "targets": {},
+  "etags": {}
+}
