@@ -1,5 +1,17 @@
 # Welcome to your Lovable project
 
+## Environment Configuration
+
+This project supports three environments:
+
+- Development (`drooly-dev`)
+- Staging (`drooly-stage`)
+- Production (`drooly`)
+
+### Environment Setup
+
+1. Use the correct Firebase project:
+
 ## Project info
 
 **URL**: https://lovable.dev/projects/b45a2a67-789b-4925-b4c6-d88cbdefbbec

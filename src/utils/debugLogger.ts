@@ -2,11 +2,20 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 // Define log groups
-export const LOG_GROUPS = {
-  AUTH: 'Authentication',
-  DATA: 'Data',
-  ERROR: 'Error'
-} as const;
+const LOG_GROUPS = {
+  SYSTEM: '🔧 System',
+  AUTH: '🔑 Authentication',
+  DATA: '💾 Data Operations',
+  UI: '🎨 UI Events'
+};
+
+export const logSystemInfo = () => {
+  console.group(LOG_GROUPS.SYSTEM);
+  console.log('Environment:', import.meta.env.VITE_APP_ENV);
+  console.log('Firebase Project:', import.meta.env.VITE_FIREBASE_PROJECT_ID);
+  console.log('API URL:', import.meta.env.VITE_API_URL);
+  console.groupEnd();
+};
 
 export const logAppState = async (userId: string) => {
   console.group('Application State');
