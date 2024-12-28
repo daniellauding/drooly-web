@@ -3,16 +3,16 @@
   publish = "dist"
 
 [context.production]
-  command = "npm run build"
-  environment = { NODE_ENV = "production" }
+  command = "npm run build:prod"
+  environment = { NODE_ENV = "production", VITE_APP_ENV = "production" }
 
 [context.staging]
   command = "npm run build:staging"
-  environment = { NODE_ENV = "staging" }
+  environment = { NODE_ENV = "production", VITE_APP_ENV = "staging" }
 
 [context.development]
   command = "npm run build:dev"
-  environment = { NODE_ENV = "development" }
+  environment = { NODE_ENV = "production", VITE_APP_ENV = "development" }
 
 [[redirects]]
   from = "/*"

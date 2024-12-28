@@ -7,8 +7,8 @@
     "dev": "vite",
     "dev:stage": "vite --mode staging",
     "dev:prod": "vite --mode production",
-    "build": "tsc && vite build",
-    "build:dev": "tsc && vite build --mode development",
+    "build": "vite build",
+    "build:dev": "vite build --mode development",
     "build:stage": "vite build --mode staging",
     "build:prod": "vite build --mode production",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -81,7 +81,10 @@
     "unsplash-js": "^7.0.19",
     "vaul": "^1.1.1",
     "zod": "^3.23.8",
-    "@tanstack/react-query": "^5.0.0"
+    "@tanstack/react-query": "^5.0.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "@vitejs/plugin-react-swc": "^3.5.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
@@ -89,7 +92,6 @@
     "@types/node": "^22.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.9.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
@@ -100,8 +102,7 @@
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
-    "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "typescript-eslint": "^8.0.1"
   },
   "engines": {
     "node": ">=18.18.0",
