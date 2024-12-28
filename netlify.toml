@@ -9,7 +9,7 @@
 
 # Staging deployment (stage branch)
 [context.stage]
-  command = "CI= npm install && npm run build:staging"
+  command = "CI= npm install && npm run build:stage"
   environment = { NODE_ENV = "production", VITE_APP_ENV = "staging", VITE_FIREBASE_PROJECT_ID = "drooly-stage", VITE_FIREBASE_API_KEY = "AIzaSyDJ_j9TjFIGypQgqm5ZhYUlVPzPd3W6Hy0", VITE_FIREBASE_AUTH_DOMAIN = "drooly-stage.firebaseapp.com", VITE_FIREBASE_STORAGE_BUCKET = "drooly-stage.appspot.com", VITE_FIREBASE_MESSAGING_SENDER_ID = "998655731139", VITE_FIREBASE_APP_ID = "1:998655731139:web:b5fd6d90fd43cfabe48976", VITE_FIREBASE_MEASUREMENT_ID = "G-MCL6ECZQF2", VITE_API_URL = "https://stage.droo.ly" }
 
 # Development deployment (dev branch)
@@ -19,11 +19,11 @@
 
 # Branch deployments
 [context.branch-deploy]
-  command = "CI= npm install && npm run build:staging"
+  command = "CI= npm install && npm run build:stage"
 
 # Deploy Preview context
 [context.deploy-preview]
-  command = "CI= npm install && npm run build:staging"
+  command = "CI= npm install && npm run build:stage"
 
 [[redirects]]
   from = "/*"
