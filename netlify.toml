@@ -1,10 +1,20 @@
-{
-  "projects": {
-    "default": "drooly-dev",
-    "dev": "drooly-dev",
-    "stage": "drooly-stage",
-    "prod": "drooly"
-  },
-  "targets": {},
-  "etags": {}
-}
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[context.production]
+  command = "npm run build"
+  environment = { NODE_ENV = "production" }
+
+[context.staging]
+  command = "npm run build:staging"
+  environment = { NODE_ENV = "staging" }
+
+[context.development]
+  command = "npm run build:dev"
+  environment = { NODE_ENV = "development" }
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
