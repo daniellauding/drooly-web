@@ -25,6 +25,7 @@ import { EmailVerificationBanner } from "./components/auth/EmailVerificationBann
 import { useEffect } from 'react';
 import { useViewLogger } from '@/hooks/useViewLogger';
 import { debugViews } from '@/utils/debugViews';
+import { initializeAnalytics } from './services/analyticsService';
 
 const queryClient = new QueryClient();
 
@@ -107,6 +108,10 @@ function AppContent() {
 }
 
 function App() {
+  useEffect(() => {
+    initializeAnalytics();
+  }, []);
+
   useEffect(() => {
     // Performance logging
     const renderTime = performance.now();

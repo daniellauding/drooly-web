@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "./ui/card";
 import { RecipeImage } from "./recipe/RecipeImage";
 import { RecipeInfo } from "./recipe/RecipeInfo";
+import { trackEvent } from '../services/analyticsService';
 
 export interface RecipeCardProps {
   id: string;
@@ -44,6 +45,10 @@ export function RecipeCard({
       return;
     }
     console.log('Navigating to recipe:', id);
+    trackEvent('recipe_view', {
+      recipe_id: id,
+      user_type: 'registered'
+    });
     navigate(`/recipe/${id}`);
   };
 

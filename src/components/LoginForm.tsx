@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useViewLogger } from '@/hooks/useViewLogger';
 import { useToast } from "@/hooks/use-toast";
 import { resetPassword } from "@/services/authService";
+import { trackLogin, trackError } from '../services/analyticsService';
 
 interface LoginFormProps {
   onSignUpClick: () => void;
@@ -41,6 +42,7 @@ export function LoginForm({ onSignUpClick, onOpenChange = () => {}, loading = fa
     try {
       console.log('[LoginForm] Attempting login...');
       await login(email, password);
+      trackLogin('email');
       
       // First clear form and close modal
       clearForm();
@@ -61,6 +63,7 @@ export function LoginForm({ onSignUpClick, onOpenChange = () => {}, loading = fa
         title: "Login Failed",
         description: err.message || "Failed to sign in. Please try again.",
       });
+      trackError('login_error', err.message);
     }
   };
 

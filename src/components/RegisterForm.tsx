@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { FirebaseError } from 'firebase/app';
+import { trackSignup, trackError } from '../services/analyticsService';
 
 interface RegisterFormProps {
   onSignInClick: () => void;
@@ -29,6 +30,7 @@ export function RegisterForm({ onSignInClick, onOpenChange = () => {}, loading: 
 
     try {
       await register(email, password, name);
+      trackSignup('email');
       
       // Close modal first
       onOpenChange(false);
@@ -41,6 +43,7 @@ export function RegisterForm({ onSignInClick, onOpenChange = () => {}, loading: 
       // Then navigate
       navigate('/');
     } catch (error: unknown) {
+      trackError('signup_error', error instanceof Error ? error.message : 'Unknown error');
       let errorMessage = "Failed to create account. Please try again.";
       
       if (error instanceof FirebaseError) {
@@ -69,6 +72,16 @@ export function RegisterForm({ onSignInClick, onOpenChange = () => {}, loading: 
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      await signUpWithGoogle();
+      trackSignup('google');
+    } catch (error) {
+      trackError('google_signup_error', error instanceof Error ? error.message : 'Unknown error');
+      // ... your existing error handling
     }
   };
 
