@@ -52,7 +52,8 @@ const TRACKING_CONFIGS: TrackingConfig[] = [
 ];
 
 export const initializeAnalytics = () => {
-  const trackingId = import.meta.env.VITE_GA_TRACKING_ID;
+  // Try GA tracking ID first, fallback to Firebase measurement ID
+  const trackingId = import.meta.env.VITE_GA_TRACKING_ID || import.meta.env.VITE_FIREBASE_MEASUREMENT_ID;
   const environment = import.meta.env.VITE_APP_ENV;
 
   console.group('🔍 Analytics Initialization');
