@@ -51,6 +51,24 @@ const TRACKING_CONFIGS: TrackingConfig[] = [
   }
 ];
 
+// Add these interfaces
+interface UserProperties {
+  userId?: string;
+  userRole: UserRole;
+  language: Language;
+  isNewUser: boolean;
+  isPremium?: boolean;
+}
+
+interface RecipeProperties {
+  recipeId: string;
+  recipeType: RecipeType[];
+  language: Language;
+  difficulty: 'easy' | 'medium' | 'hard';
+  cookingTime: number; // in minutes
+  creatorType: UserRole;
+}
+
 export const initializeAnalytics = () => {
   // Try GA tracking ID first, fallback to Firebase measurement ID
   const trackingId = import.meta.env.VITE_GA_TRACKING_ID || import.meta.env.VITE_FIREBASE_MEASUREMENT_ID;
@@ -184,23 +202,13 @@ export const trackFeatureUsage = (feature: string, action: string, details?: Rec
   });
 };
 
-export const setUserProperties = (user: {
-  userId?: string;
-  userRole?: string;
-  isNewUser?: boolean;
-}) => {
+export const setUserProperties = (props: UserProperties) => {
   if (window.gtag) {
-    // Set user ID
-    if (user.userId) {
-      window.gtag('config', import.meta.env.VITE_GA_TRACKING_ID, {
-        user_id: user.userId
-      });
-    }
-
-    // Set user properties
     window.gtag('set', 'user_properties', {
-      user_role: user.userRole || 'anonymous',
-      is_new_user: user.isNewUser || false,
+      user_role: props.userRole,
+      language: props.language,
+      is_new_user: props.isNewUser,
+      is_premium: props.isPremium || false,
       environment: import.meta.env.VITE_APP_ENV
     });
   }
@@ -218,5 +226,31 @@ export const trackUserSession = (userId: string | null, sessionData: {
     user_role: sessionData.userRole,
     last_login: sessionData.lastLoginAt,
     session_start: new Date().toISOString()
+  });
+};
+
+// Add recipe tracking
+export const trackRecipeCreation = (recipe: RecipeProperties) => {
+  trackEvent('recipe_create', {
+    recipe_id: recipe.recipeId,
+    recipe_type: recipe.recipeType,
+    language: recipe.language,
+    difficulty: recipe.difficulty,
+    cooking_time: recipe.cookingTime,
+    creator_type: recipe.creatorType,
+    timestamp: new Date().toISOString()
+  });
+};
+
+// Track user counts by type
+export const trackUserMetrics = (metrics: {
+  total_users: number;
+  active_users: number;
+  user_types: Record<UserRole, number>;
+  languages: Record<Language, number>;
+}) => {
+  trackEvent('user_metrics', {
+    ...metrics,
+    timestamp: new Date().toISOString()
   });
 }; 
