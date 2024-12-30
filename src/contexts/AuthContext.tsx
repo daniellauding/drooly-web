@@ -8,6 +8,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { setDoc } from "firebase/firestore";
+import { setUserProperties, trackUserSession } from '../services/analyticsService';
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
@@ -45,8 +46,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const mergedUser = await mergeUserData(firebaseUser);
         setUser(mergedUser);
+
+        // Set user properties in GA4
+        setUserProperties({
+          userId: firebaseUser.uid,
+          userRole: 'registered',
+          isNewUser: firebaseUser.metadata.creationTime === firebaseUser.metadata.lastSignInTime
+        });
+
+        // Track user session
+        trackUserSession(firebaseUser.uid, {
+          isNewUser: firebaseUser.metadata.creationTime === firebaseUser.metadata.lastSignInTime,
+          userRole: 'registered',
+          lastLoginAt: firebaseUser.metadata.lastSignInTime
+        });
       } else {
         setUser(null);
+
+        // Track anonymous session
+        trackUserSession(null, {
+          isNewUser: false,
+          userRole: 'anonymous'
+        });
       }
       setLoading(false);
       console.groupEnd();

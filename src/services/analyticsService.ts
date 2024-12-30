@@ -182,4 +182,41 @@ export const trackFeatureUsage = (feature: string, action: string, details?: Rec
     ...details,
     timestamp: new Date().toISOString()
   });
+};
+
+export const setUserProperties = (user: {
+  userId?: string;
+  userRole?: string;
+  isNewUser?: boolean;
+}) => {
+  if (window.gtag) {
+    // Set user ID
+    if (user.userId) {
+      window.gtag('config', import.meta.env.VITE_GA_TRACKING_ID, {
+        user_id: user.userId
+      });
+    }
+
+    // Set user properties
+    window.gtag('set', 'user_properties', {
+      user_role: user.userRole || 'anonymous',
+      is_new_user: user.isNewUser || false,
+      environment: import.meta.env.VITE_APP_ENV
+    });
+  }
+};
+
+// Add this to track user sessions
+export const trackUserSession = (userId: string | null, sessionData: {
+  isNewUser: boolean;
+  userRole: string;
+  lastLoginAt?: string;
+}) => {
+  trackEvent('user_session', {
+    user_id: userId,
+    is_new_user: sessionData.isNewUser,
+    user_role: sessionData.userRole,
+    last_login: sessionData.lastLoginAt,
+    session_start: new Date().toISOString()
+  });
 }; 
