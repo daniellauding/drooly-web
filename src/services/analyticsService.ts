@@ -29,7 +29,7 @@ const TRACKING_CONFIGS: TrackingConfig[] = [
     name: 'Recipe Interactions',
     description: 'Recipe-related user actions',
     events: ['recipe_view', 'recipe_action'],
-    params: ['recipe_id', 'action', 'user_type']
+    params: ['recipe_id', 'action', 'user_role']
   },
   {
     name: 'Search',
@@ -51,22 +51,117 @@ const TRACKING_CONFIGS: TrackingConfig[] = [
   }
 ];
 
-// Add these interfaces
+// User Types
+export type UserRole = 
+  | 'anonymous'      // Not logged in
+  | 'registered'     // Basic user
+  | 'chef'          // Verified chef
+  | 'admin'         // Administrator
+  | 'moderator';    // Content moderator
+
+// Languages
+export type Language = 
+  | 'sv_SE'  // Swedish
+  | 'en_US'  // English (US)
+  | 'no_NO'  // Norwegian
+  | 'da_DK'  // Danish
+  | 'fi_FI'; // Finnish
+
+// Recipe Types
+export type RecipeType =
+  | 'breakfast'
+  | 'lunch'
+  | 'dinner'
+  | 'dessert'
+  | 'snack'
+  | 'drink'
+  | 'vegetarian'
+  | 'vegan'
+  | 'gluten_free'
+  | 'lactose_free';
+
+// Recipe Difficulty
+export type RecipeDifficulty = 'easy' | 'medium' | 'hard';
+
+// Recipe Categories (for filtering/searching)
+export type RecipeCategory =
+  | 'quick'         // Under 30 mins
+  | 'budget'        // Budget-friendly
+  | 'family'        // Family-friendly
+  | 'party'         // Party food
+  | 'healthy'       // Healthy options
+  | 'seasonal';     // Seasonal recipes
+
+// User Interaction Types
+export type UserInteractionType =
+  | 'view'          // Viewing content
+  | 'create'        // Creating content
+  | 'edit'          // Editing content
+  | 'delete'        // Deleting content
+  | 'save'          // Saving/bookmarking
+  | 'share'         // Sharing content
+  | 'rate'          // Rating content
+  | 'comment';      // Commenting
+
+// Feature Types (for tracking feature usage)
+export type FeatureType =
+  | 'search'        // Recipe search
+  | 'filter'        // Recipe filtering
+  | 'shopping_list' // Shopping list
+  | 'meal_plan'     // Meal planning
+  | 'favorites'     // Favorites/bookmarks
+  | 'sharing'       // Social sharing
+  | 'printing';     // Recipe printing
+
+// Update interfaces with new types
 interface UserProperties {
   userId?: string;
   userRole: UserRole;
   language: Language;
   isNewUser: boolean;
   isPremium?: boolean;
+  preferences?: {
+    dietaryRestrictions?: string[];
+    favoriteCategories?: RecipeCategory[];
+    cookingSkillLevel?: RecipeDifficulty;
+  };
 }
 
 interface RecipeProperties {
   recipeId: string;
   recipeType: RecipeType[];
+  category: RecipeCategory[];
   language: Language;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: RecipeDifficulty;
   cookingTime: number; // in minutes
   creatorType: UserRole;
+  ingredients: number; // number of ingredients
+  steps: number;      // number of steps
+  cuisine?: string;   // e.g., 'italian', 'thai'
+}
+
+// Analytics Event Types
+export type AnalyticsEventType =
+  | 'page_view'
+  | 'recipe_view'
+  | 'recipe_create'
+  | 'recipe_edit'
+  | 'recipe_delete'
+  | 'user_login'
+  | 'user_signup'
+  | 'user_logout'
+  | 'search'
+  | 'filter_use'
+  | 'error'
+  | 'feature_use';
+
+// Analytics Event Parameters
+interface AnalyticsEventParams {
+  timestamp: string;
+  environment: string;
+  user_role?: UserRole;
+  language?: Language;
+  [key: string]: any;
 }
 
 export const initializeAnalytics = () => {
@@ -140,6 +235,11 @@ export const trackEvent = (eventName: string, params?: Record<string, any>) => {
 };
 
 export const trackLogin = (method: string) => {
+  console.group('🔐 Login Event');
+  console.log('Method:', method);
+  console.log('Timestamp:', new Date().toISOString());
+  console.groupEnd();
+
   trackEvent('login', {
     method,
     timestamp: new Date().toISOString()
@@ -147,6 +247,11 @@ export const trackLogin = (method: string) => {
 };
 
 export const trackSignup = (method: string) => {
+  console.group('📝 Signup Event');
+  console.log('Method:', method);
+  console.log('Timestamp:', new Date().toISOString());
+  console.groupEnd();
+
   trackEvent('sign_up', {
     method,
     timestamp: new Date().toISOString()
