@@ -12,11 +12,11 @@ export interface AuthUser {
 }
 
 export interface AuthContextType {
-  user: AuthUser | null;
+  user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<any>;
-  register: (email: string, password: string, name: string) => Promise<any>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (email: string, password: string, displayName: string) => Promise<User>;
   logout: () => Promise<void>;
-  verifyEmail: (code: string) => Promise<void>;
-  sendVerificationEmail: (user: any) => Promise<boolean>;
+  verifyEmail: () => Promise<boolean>;
+  sendVerificationEmail: () => Promise<boolean>;
 }

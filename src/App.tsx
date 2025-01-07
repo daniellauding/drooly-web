@@ -26,6 +26,7 @@ import { useEffect } from 'react';
 import { useViewLogger } from '@/hooks/useViewLogger';
 import { debugViews } from '@/utils/debugViews';
 import { initializeAnalytics } from './services/analyticsService';
+import { VerifyEmail } from '@/components/VerifyEmail';
 
 const queryClient = new QueryClient();
 
@@ -99,6 +100,7 @@ function AppContent() {
         <Route path="/about" element={<About />} />
         <Route path="/todo" element={<Todo />} />
         <Route path="/ingredients" element={<Ingredients />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
       </Routes>
       <MobileNav />
       <CookieConsent />

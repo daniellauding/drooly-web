@@ -1,0 +1,14 @@
+{
+  "auth": {
+    "email_verification": "Email Verification",
+    "verifying_email": "Verifying your email...",
+    "verification_success": "Your email has been verified successfully!",
+    "verification_failed": "Email verification failed",
+    "email_verified": "Email Verified",
+    "email_verified_description": "Your email has been verified successfully. You can now use all features of the application.",
+    "unknown_error": "An unknown error occurred"
+  },
+  "common": {
+    "return_to_home": "Return to Home"
+  }
+} 

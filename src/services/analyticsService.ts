@@ -114,17 +114,17 @@ export type FeatureType =
   | 'printing';     // Recipe printing
 
 // Update interfaces with new types
-interface UserProperties {
-  userId?: string;
-  userRole: UserRole;
-  language: Language;
+export interface UserProperties {
+  userId: string;
+  userRole: string;
+  isVerified?: boolean;
+}
+
+export interface SessionData {
   isNewUser: boolean;
-  isPremium?: boolean;
-  preferences?: {
-    dietaryRestrictions?: string[];
-    favoriteCategories?: RecipeCategory[];
-    cookingSkillLevel?: RecipeDifficulty;
-  };
+  email?: string;
+  userRole?: string;
+  lastLoginAt?: string;
 }
 
 interface RecipeProperties {
@@ -156,9 +156,9 @@ export type AnalyticsEventType =
   | 'feature_use';
 
 // Analytics Event Parameters
-interface AnalyticsEventParams {
-  timestamp: string;
-  environment: string;
+export interface AnalyticsEventParams {
+  timestamp?: string;
+  environment?: string;
   user_role?: UserRole;
   language?: Language;
   [key: string]: any;
@@ -216,11 +216,12 @@ export const initializeAnalytics = () => {
   console.groupEnd();
 };
 
-export const trackEvent = (eventName: string, params?: Record<string, any>) => {
+export const trackEvent = (eventName: string, params?: AnalyticsEventParams) => {
   if (window.gtag) {
-    const eventParams = {
-      ...params,
-      environment: import.meta.env.VITE_APP_ENV
+    const eventParams: AnalyticsEventParams = {
+      environment: import.meta.env.VITE_APP_ENV,
+      timestamp: new Date().toISOString(),
+      ...params
     };
     
     console.log('📊 Tracking Event:', {
@@ -234,117 +235,95 @@ export const trackEvent = (eventName: string, params?: Record<string, any>) => {
   }
 };
 
+// Update tracking functions to use the base event params
+const createEventParams = (params: Record<string, any>): AnalyticsEventParams => ({
+  environment: import.meta.env.VITE_APP_ENV,
+  timestamp: new Date().toISOString(),
+  ...params
+});
+
 export const trackLogin = (method: string) => {
   console.group('🔐 Login Event');
   console.log('Method:', method);
   console.log('Timestamp:', new Date().toISOString());
   console.groupEnd();
 
-  trackEvent('login', {
-    method,
-    timestamp: new Date().toISOString()
-  });
+  trackEvent('login', createEventParams({ method }));
 };
 
 export const trackSignup = (method: string) => {
-  console.group('📝 Signup Event');
-  console.log('Method:', method);
-  console.log('Timestamp:', new Date().toISOString());
-  console.groupEnd();
-
-  trackEvent('sign_up', {
-    method,
-    timestamp: new Date().toISOString()
-  });
+  trackEvent('sign_up', createEventParams({ method }));
 };
 
 export const trackError = (errorType: string, errorMessage: string) => {
-  trackEvent('error', {
+  trackEvent('error', createEventParams({
     error_type: errorType,
-    error_message: errorMessage,
-    timestamp: new Date().toISOString()
-  });
+    error_message: errorMessage
+  }));
 };
 
 export const trackPageView = (pageName: string, params?: Record<string, any>) => {
-  trackEvent('page_view', {
+  trackEvent('page_view', createEventParams({
     page_name: pageName,
-    ...params,
-    timestamp: new Date().toISOString()
-  });
+    ...params
+  }));
 };
 
 export const trackRecipeAction = (action: 'create' | 'edit' | 'delete' | 'save' | 'share', recipeId: string) => {
-  trackEvent('recipe_action', {
+  trackEvent('recipe_action', createEventParams({
     action,
-    recipe_id: recipeId,
-    timestamp: new Date().toISOString()
-  });
+    recipe_id: recipeId
+  }));
 };
 
 export const trackSearch = (query: string, resultCount: number) => {
-  trackEvent('search', {
+  trackEvent('search', createEventParams({
     query,
-    result_count: resultCount,
-    timestamp: new Date().toISOString()
-  });
+    result_count: resultCount
+  }));
 };
 
 export const trackUserInteraction = (action: string, details?: Record<string, any>) => {
-  trackEvent('user_interaction', {
+  trackEvent('user_interaction', createEventParams({
     action,
-    ...details,
-    timestamp: new Date().toISOString()
-  });
+    ...details
+  }));
 };
 
 export const trackFeatureUsage = (feature: string, action: string, details?: Record<string, any>) => {
-  trackEvent('feature_usage', {
+  trackEvent('feature_usage', createEventParams({
     feature,
     action,
-    ...details,
-    timestamp: new Date().toISOString()
-  });
+    ...details
+  }));
 };
 
 export const setUserProperties = (props: UserProperties) => {
-  if (window.gtag) {
-    window.gtag('set', 'user_properties', {
-      user_role: props.userRole,
-      language: props.language,
-      is_new_user: props.isNewUser,
-      is_premium: props.isPremium || false,
-      environment: import.meta.env.VITE_APP_ENV
-    });
-  }
+  window.gtag('set', 'user_properties', props);
 };
 
 // Add this to track user sessions
-export const trackUserSession = (userId: string | null, sessionData: {
-  isNewUser: boolean;
-  userRole: string;
-  lastLoginAt?: string;
-}) => {
-  trackEvent('user_session', {
+export const trackUserSession = (userId: string | null, sessionData: SessionData) => {
+  if (!userId) return;
+  
+  // Track session data
+  window.gtag('event', 'user_session', {
     user_id: userId,
-    is_new_user: sessionData.isNewUser,
-    user_role: sessionData.userRole,
-    last_login: sessionData.lastLoginAt,
-    session_start: new Date().toISOString()
+    ...sessionData,
+    timestamp: new Date().toISOString()
   });
 };
 
 // Add recipe tracking
 export const trackRecipeCreation = (recipe: RecipeProperties) => {
-  trackEvent('recipe_create', {
+  trackEvent('recipe_create', createEventParams({
     recipe_id: recipe.recipeId,
     recipe_type: recipe.recipeType,
     language: recipe.language,
     difficulty: recipe.difficulty,
     cooking_time: recipe.cookingTime,
-    creator_type: recipe.creatorType,
-    timestamp: new Date().toISOString()
-  });
+    creator_type: recipe.creatorType
+  }));
 };
 
 // Track user counts by type
@@ -354,8 +333,5 @@ export const trackUserMetrics = (metrics: {
   user_types: Record<UserRole, number>;
   languages: Record<Language, number>;
 }) => {
-  trackEvent('user_metrics', {
-    ...metrics,
-    timestamp: new Date().toISOString()
-  });
+  trackEvent('user_metrics', createEventParams(metrics));
 }; 

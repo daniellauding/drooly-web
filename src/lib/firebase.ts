@@ -14,6 +14,18 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+const auth = getAuth(app);
+
+// Enable email verification
+auth.useDeviceLanguage();
+
+// Configure action code settings
+const actionCodeSettings = {
+  url: `${window.location.origin}/verify-email`,
+  handleCodeInApp: true
+};
+
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+
+export { app, auth, actionCodeSettings };

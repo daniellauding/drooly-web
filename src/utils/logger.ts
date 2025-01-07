@@ -1,27 +1,17 @@
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogGroup {
-  id: string;
-  emoji: string;
-  color?: string;
-}
-
 export const LOG_GROUPS = {
-  FIREBASE: { id: 'Firebase', emoji: '🔥' },
-  AUTH: { id: 'Auth', emoji: '🔐' },
-  SYSTEM: { id: 'System', emoji: '⚙️' },
-  PERFORMANCE: { id: 'Performance', emoji: '⚡' },
-  DATA: { id: 'Data', emoji: '📊' },
-  UI: { id: 'UI', emoji: '🎨' }
-} as const;
+  SYSTEM: '🔧 System',
+  AUTH: '🔑 Authentication',
+  DATA: '💾 Data Operations',
+  UI: '🎨 UI Events'
+};
 
 class Logger {
   private static instance: Logger;
-  private isDebugMode: boolean;
+  private logLevel: LogLevel = 'info';
 
-  private constructor() {
-    this.isDebugMode = import.meta.env.MODE === 'development';
-  }
+  private constructor() {}
 
   static getInstance(): Logger {
     if (!Logger.instance) {
@@ -30,48 +20,37 @@ class Logger {
     return Logger.instance;
   }
 
-  private formatMessage(group: LogGroup, message: string): string {
-    return `${group.emoji} [${group.id}] ${message}`;
+  setLogLevel(level: LogLevel) {
+    this.logLevel = level;
   }
 
-  group(group: LogGroup, title: string) {
-    if (!this.isDebugMode) return;
-    console.group(this.formatMessage(group, title));
+  private shouldLog(level: LogLevel): boolean {
+    const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+    return levels.indexOf(level) >= levels.indexOf(this.logLevel);
   }
 
-  groupEnd() {
-    if (!this.isDebugMode) return;
-    console.groupEnd();
-  }
-
-  log(group: LogGroup, message: string, data?: any) {
-    if (!this.isDebugMode) return;
-    console.log(this.formatMessage(group, message), data || '');
-  }
-
-  table(group: LogGroup, title: string, data: any[]) {
-    if (!this.isDebugMode) return;
-    this.log(group, title);
-    if (data.length > 0) {
-      console.table(data);
-    } else {
-      console.log(`${group.emoji} No data available`);
+  debug(message: string, ...args: any[]) {
+    if (this.shouldLog('debug')) {
+      console.debug(`[DEBUG] ${message}`, ...args);
     }
   }
 
-  logCollection(group: LogGroup, title: string, snapshot: any) {
-    if (!this.isDebugMode) return;
-    this.group(group, title);
-    this.log(group, `Total count: ${snapshot.size}`);
-    if (snapshot.size > 0) {
-      this.table(group, 'Items:', snapshot.docs.map((doc: any) => ({
-        id: doc.id,
-        ...doc.data()
-      })));
-    } else {
-      this.log(group, 'No items found');
+  info(message: string, ...args: any[]) {
+    if (this.shouldLog('info')) {
+      console.info(`[INFO] ${message}`, ...args);
     }
-    this.groupEnd();
+  }
+
+  warn(message: string, ...args: any[]) {
+    if (this.shouldLog('warn')) {
+      console.warn(`[WARN] ${message}`, ...args);
+    }
+  }
+
+  error(message: string, ...args: any[]) {
+    if (this.shouldLog('error')) {
+      console.error(`[ERROR] ${message}`, ...args);
+    }
   }
 }
 
