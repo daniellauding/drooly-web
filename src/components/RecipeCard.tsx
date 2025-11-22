@@ -4,6 +4,7 @@ import { RecipeImage } from "./recipe/RecipeImage";
 import { RecipeInfo } from "./recipe/RecipeInfo";
 import { trackEvent } from '../services/analyticsService';
 import type { UserRole } from '../services/analyticsService';
+import { useAuth } from '../contexts/AuthContext';
 
 export interface RecipeCardProps {
   id: string;
@@ -39,6 +40,7 @@ export function RecipeCard({
   onDismiss
 }: RecipeCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleClick = () => {
     if (!id) {
