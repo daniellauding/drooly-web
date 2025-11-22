@@ -10,11 +10,15 @@
 [context.stage]
   command = "CI= npm install && npm run build:stage"
 
-# Development deployment (dev branch)
+# Development deployment (new branch - for dev.droo.ly)
+[context.new]
+  command = "CI= npm install && npm run build:dev"
+
+# Development deployment (dev branch - legacy support)
 [context.dev]
   command = "CI= npm install && npm run build:dev"
 
-# Branch deployments
+# Branch deployments (other branches default to staging)
 [context.branch-deploy]
   command = "CI= npm install && npm run build:stage"
 
