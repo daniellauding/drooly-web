@@ -1,12 +1,15 @@
 import { collection, getDocs, query, orderBy, where, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
 import { Recipe } from '@/types/recipe';
 import { Timestamp } from 'firebase/firestore';
+import { SAMPLE_RECIPES } from '@/data/sampleRecipes';
 
 const FALLBACK_IMAGE = "/placeholder.svg";
 
 export const fetchFirebaseRecipes = async (): Promise<Recipe[]> => {
   console.log('Fetching recipes from Firebase...');
+  console.log('Current user:', auth.currentUser?.uid || 'Not authenticated');
+  console.log('User email:', auth.currentUser?.email || 'No email');
   try {
     const recipesRef = collection(db, 'recipes');
     const q = query(
@@ -56,6 +59,14 @@ export const fetchFirebaseRecipes = async (): Promise<Recipe[]> => {
     });
   } catch (error) {
     console.error('Error fetching recipes:', error);
+    
+    // Only fallback to sample data if it's a permission error (for local development)
+    if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+      console.log('Permission denied - falling back to sample recipes for local development...');
+      return SAMPLE_RECIPES;
+    }
+    
+    // For other errors, throw them so the app can handle them properly
     throw error;
   }
 };
@@ -93,6 +104,14 @@ export const fetchRecipeById = async (id: string): Promise<Recipe | null> => {
     } as Recipe;
   } catch (error) {
     console.error('Error fetching recipe:', error);
+    
+    // Only fallback to sample data if it's a permission error (for local development)
+    if (error.code === 'permission-denied' || error.message?.includes('permission')) {
+      console.log('Permission denied - falling back to sample recipe for local development...');
+      return SAMPLE_RECIPES.find(recipe => recipe.id === id) || null;
+    }
+    
+    // For other errors, throw them so the app can handle them properly
     throw error;
   }
 };
